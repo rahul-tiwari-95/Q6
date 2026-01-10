@@ -1,0 +1,166 @@
+PRE-TRAINING CHECKLIST
+======================
+
+Before running training, verify everything is in place:
+
+ENVIRONMENT:
+☐ Virtual environment activated: source venv/bin/activate
+☐ In Q6 directory: cd /Users/rahul/SRSWTI/sui_generis/Q6
+☐ Requirements installed: pip list (should show numpy, torch, gymnasium, etc.)
+
+VALIDATION:
+☐ Run validation: python validate.py
+  Should see:
+  ✓ NumPy - OK
+  ✓ PyTorch - OK
+  ✓ Gymnasium - OK
+  ✓ Matplotlib - OK
+  ✓ HunterGridworld - OK
+  ✓ DQNAgent - OK
+  ✓ QNetwork - OK
+  ✓ TrainingLogger - OK
+  ✓ EnvironmentWrapper - OK
+  ✓ Environment initialized
+  ✓ Agent initialized
+  ✓ All tests passed!
+
+CRITICAL FIX VERIFICATION:
+☐ Check reward structure in environment/hunter_gridworld.py line ~137
+  Should see: reward = -0.01 (NOT -0.1)
+  
+  Line should look like:
+  # REWARD STRUCTURE (IMPROVED):
+  # Changed from -0.1 to -0.01 per step.
+  reward = -0.01
+
+TRAINING SCRIPT:
+☐ main.py exists and is updated
+☐ main.py imports are present:
+  - from utils.logger import TrainingLogger
+  - from utils.environment_wrapper import EnvironmentMetricsWrapper
+☐ main.py has verbose output functions
+
+LOGGING SYSTEM:
+☐ utils/logger.py exists
+☐ utils/environment_wrapper.py exists
+☐ utils/__init__.py exists
+
+DOCUMENTATION:
+☐ README.md - overview (exists)
+☐ QUICK_START.txt - how to run (exists)
+☐ TRAINING_IMPROVEMENTS.txt - what changed (exists)
+☐ PROJECT_STATUS.txt - status (exists)
+☐ IMPLEMENTATION_SUMMARY.txt - this summary (exists)
+
+READY TO TRAIN:
+✓ All above items checked
+✓ Ready to run: python main.py
+
+DURING TRAINING - WHAT TO WATCH:
+===============================
+
+Minutes 1-5 (Episodes 1-100):
+☐ Output should show configuration at top
+☐ Episode progress lines should appear
+☐ Scores should be very negative (normal - exploring)
+☐ Every 10 episodes: detailed summary printed
+☐ Action distribution should be ~25% each (exploring)
+
+Minutes 5-10 (Episodes 100-300):
+☐ Progress lines continuous
+☐ Avg(100) should be improving slightly
+☐ Occasionally collecting 1 pellet
+☐ Times caught decreasing slightly
+☐ ε decreasing from 1.0 toward 0.9
+
+Minutes 10-30 (Episodes 300-1000):
+☐ Clear improvement trend in Avg(100)
+☐ Regular pellet collection (0-2)
+☐ Action distribution becoming non-uniform
+☐ Wall hits decreasing
+☐ ε around 0.3-0.5
+
+IF TRAINING WORKS:
+==================
+
+You should see output like:
+
+[Episode  100/2000] Score: -50.23 | Avg(100): -75.45 | ε: 0.9950 | Collected: 0 | Caught: 3
+[Episode  101/2000] Score: -45.12 | Avg(100): -70.34 | ε: 0.9949 | Collected: 1 | Caught: 2
+[Episode  102/2000] Score: -40.56 | Avg(100): -65.23 | ε: 0.9948 | Collected: 0 | Caught: 3
+...
+
+With Avg(100) trending upward and intermediate metrics improving!
+
+CHECKPOINT SAVING:
+==================
+
+Every 100 episodes:
+☐ Console shows: "✓ Checkpoint saved: training_runs/2025XXX_XXXXXX/checkpoints/checkpoint_100.pth"
+☐ Console shows: "✓ Plot saved: training_runs/2025XXX_XXXXXX/plots/training_progress_100.png"
+☐ Files appear in training_runs/ directory
+
+EARLY STOPPING:
+===============
+
+Training stops when:
+☐ Agent reaches average score of 200.0 over 100 episodes (WON!)
+☐ OR 2000 episodes completed
+☐ OR you press Ctrl+C (last checkpoint is saved)
+
+IF SOMETHING GOES WRONG:
+=======================
+
+Error: "ModuleNotFoundError"
+Solution: 
+☐ Make sure venv is activated: source venv/bin/activate
+☐ Make sure you're in Q6 directory
+☐ Run: pip install -r requirements.txt
+
+Error: "CUDA out of memory"
+Solution:
+☐ Edit main.py, in DQNAgent initialization, add: device="cpu"
+
+Error: "Training seems stuck (no improvement after 500 episodes)"
+Solution:
+☐ Check QUICK_START.txt and TRAINING_IMPROVEMENTS.txt
+☐ Watch intermediate metrics (pellets, wall hits) - they might be improving
+☐ The -0.01 reward change is in place (verify above)
+
+Error: "Can't understand the output"
+Solution:
+☐ Read QUICK_START.txt for output interpretation
+☐ Run first 100 episodes and note what metrics mean
+☐ Everything is explained in detail there
+
+AFTER TRAINING COMPLETES:
+=========================
+
+Check training_runs/<timestamp>/ for:
+☐ checkpoints/ - Model files (can resume training with these)
+☐ logs/ - Detailed episode logs in JSON
+  - episodes.jsonl - One JSON per episode (analyzable)
+  - stats.json - Final statistics
+☐ plots/ - Training progress visualizations
+  - final_training_progress.png - Shows learning curve
+
+ANALYSIS:
+☐ Open final_training_progress.png
+  - Red line should be trending upward
+  - Shows agent learned something
+☐ Check stats.json
+  - win_rate should be > 0 if successful
+  - average_reward should be positive or close to 0
+
+READY TO BEGIN?
+===============
+
+Checklist complete? Then:
+
+1. source venv/bin/activate
+2. python validate.py  (optional but recommended)
+3. python main.py
+
+Sit back and watch Kṛṣṇa learn!
+
+Good luck! 🚀

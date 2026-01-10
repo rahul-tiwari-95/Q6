@@ -1,0 +1,155 @@
+"""
+QUICK START GUIDE
+=================
+
+To run the improved training:
+
+1. From the Q6 directory, activate your virtual environment:
+   source venv/bin/activate
+
+2. Run the training:
+   python main.py
+
+3. Watch the output! You'll see:
+   - Configuration info at startup
+   - Episode progress bar
+   - Detailed summaries every 10 episodes
+   - Checkpoints saved every 100 episodes
+
+4. Training logs are saved to:
+   training_runs/<timestamp>/
+   ├── checkpoints/     # Model files
+   ├── logs/           # Detailed episode logs (JSON)
+   └── plots/          # Training progress visualizations
+
+
+UNDERSTANDING THE OUTPUT:
+
+Each episode line shows:
+[Episode  100/2000] Score: -50.23 | Avg(100): -75.45 | ε: 0.9950
+
+Breaking down each part:
+- Episode 100/2000      = Which episode out of total
+- Score: -50.23         = Total reward for this episode
+- Avg(100): -75.45      = Average of last 100 episodes (most important!)
+- ε: 0.9950             = Exploration rate (starts 1.0, goes to 0.01)
+- Collected: 0          = Pellets collected this episode
+- Caught: 3             = Times enemy caught you this episode
+
+
+THE KEY CHANGE WE MADE:
+
+Step penalty: -0.1 → -0.01 per step
+
+This is CRITICAL. Why?
+- Old: 1000 steps × -0.1 = -100 penalty just for playing
+- New: 1000 steps × -0.01 = -10 penalty for playing
+- One pellet = +50 reward
+
+Old math: Need 5 pellets to break even = Impossible to learn
+New math: 1 pellet = +40 net = Learning possible!
+
+
+WHAT TO EXPECT:
+
+First training run with these improvements:
+
+Episodes 1-100:
+- Scores very negative (exploring randomly)
+- Agent learning what movements do
+- 0 pellets collected usually
+- ε dropping from 1.0 toward 0.95
+
+Episodes 100-500:
+- Scores improving (less negative)
+- Occasional pellet collection
+- Avoiding some hits
+- ε around 0.5-0.8
+
+Episodes 500-1000:
+- Scores maybe near 0 or slightly positive
+- Regular pellet collection
+- Good at not getting hit early
+- ε around 0.2-0.4
+
+Episodes 1000+:
+- Positive scores possible!
+- Consistent pellet collection
+- Rarely caught early
+- ε near 0.01 (exploitation)
+
+
+IF IT'S NOT WORKING:
+
+After 500 episodes, if Avg(100) isn't improving from -1200 to something better:
+
+1. Check you're using the latest code
+2. The improvement might be subtle at first
+3. Watch the detailed logs (printed every 10 episodes)
+4. Look for: fewer wall hits, more pellet collections
+
+These intermediate indicators show learning even if total score is still negative!
+
+
+FILES TO UNDERSTAND:
+
+If you want to understand the training better:
+
+1. main.py - Where training happens
+   - Look at the MAIN TRAINING LOOP section
+   - This is what runs each episode
+
+2. environment/hunter_gridworld.py - The game world
+   - Look at the step() method
+   - This is the reward structure (the -0.01 change is here!)
+
+3. agent/dq_agent.py - The learning algorithm
+   - The act() method chooses actions (exploration vs exploitation)
+   - The learn() method updates the neural network
+
+4. utils/logger.py - The logging system
+   - This captures what's happening
+   - Helps you understand what the agent is doing
+
+
+EDUCATIONAL VALUE:
+
+As an RL beginner, pay attention to:
+
+1. How epsilon (ε) decreases over time
+   - High ε early = lots of random exploration
+   - Low ε late = exploitation of learned knowledge
+   
+2. How rewards accumulate
+   - Single pellet = +50
+   - Getting caught = -20
+   - Each step = -0.01 (survival cost)
+   
+3. How the neural network learns
+   - From random exploration → goal-directed behavior
+   
+4. The importance of reward structure
+   - Small changes in rewards can DRAMATICALLY affect learning
+   - This is why we changed -0.1 to -0.01
+
+
+NEXT LEVEL EXPERIMENTS:
+
+After first run succeeds, try:
+
+1. Different epsilon decay (slower learning of what's best)
+2. Different reward for pellets (is +50 optimal?)
+3. Fewer enemies (easier task)
+4. Bigger grid (harder task)
+5. Different network size (256-128 vs others)
+
+
+Questions to ask while watching:
+
+1. Is Avg(100) trending upward? (Sign of learning)
+2. Are pellets being collected? (Sign of goal recognition)
+3. Is agent hitting walls less? (Sign of planning)
+4. Is action distribution becoming non-uniform? (Sign of strategy)
+
+Good luck! The improvements should make training visible and understandable!
+"""
