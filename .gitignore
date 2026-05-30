@@ -34,10 +34,17 @@ wheels/
 # PyCharm
 .idea/
 
-# Training logs and checkpoints
+# Training logs, checkpoints, and runs
 logs/
 checkpoints/
 runs/
+training_runs/
+
+# Plots
+plots/
+
+# Node.js
+node_modules/
 
 # System Files
 .DS_Store

@@ -16,12 +16,12 @@ WHAT WAS FIXED:
 ===============
 
 PROBLEM: Training was failing with scores averaging -1200 to -2200
-CAUSE:   Reward structure was too punishing (-0.1 per step)
-SOLUTION: Changed to -0.01 per step, making learning possible
+CAUSE:   Reward structure was too punishing (-0.01 per step)
+SOLUTION: Changed to -0.001 per step, making learning possible
 
 MATH:
-Old: 1000 steps = -100 penalty. Need 5 pellets (+250) to break even = Impossible
-New: 1000 steps = -10 penalty. 1 pellet (+50) = +40 net = Learning possible!
+Old: 1000 steps = -10 penalty. 1 pellet (+50) = +40 net = Still hard to learn
+New: 1000 steps = -1 penalty. 1 pellet (+50) = +49 net = Learning possible!
 
 
 WHAT WAS ADDED:

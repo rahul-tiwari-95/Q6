@@ -39,15 +39,16 @@ Breaking down each part:
 
 THE KEY CHANGE WE MADE:
 
-Step penalty: -0.1 → -0.01 per step
+Step penalty: -0.001 per step
 
 This is CRITICAL. Why?
-- Old: 1000 steps × -0.1 = -100 penalty just for playing
-- New: 1000 steps × -0.01 = -10 penalty for playing
+- Old (v0.1): 1000 steps × -0.1 = -100 penalty just for playing
+- Then:       1000 steps × -0.01 = -10 penalty
+- Current:    1000 steps × -0.001 = -1 penalty
 - One pellet = +50 reward
 
 Old math: Need 5 pellets to break even = Impossible to learn
-New math: 1 pellet = +40 net = Learning possible!
+New math: 1 pellet = +49 net = Learning possible!
 
 
 WHAT TO EXPECT:

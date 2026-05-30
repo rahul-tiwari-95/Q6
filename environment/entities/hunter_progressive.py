@@ -90,7 +90,7 @@ class BaseProgressiveHunter:
         
         for direction, (nx, ny) in moves.items():
             if 0 <= nx < self.grid_size and 0 <= ny < self.grid_size:
-                if grid[ny][nx] != 1:  # Not a wall
+                if grid[ny, nx] != 0:  # Not a wall (0 = WALL, not 1 = PELLET)
                     valid.append(direction)
         
         return valid if valid else ['UP']  # Fallback if somehow no valid moves
@@ -475,7 +475,7 @@ class AStarHunter(BaseProgressiveHunter):
             for nx, ny in neighbors:
                 # Validate neighbor
                 if 0 <= nx < self.grid_size and 0 <= ny < self.grid_size:
-                    if grid[ny][nx] != 1:  # Not a wall
+                    if grid[ny, nx] != 0:  # Not a wall (0 = WALL, not 1 = PELLET)
                         neighbor = (nx, ny)
                         tentative_g = g_score[current] + 1
                         

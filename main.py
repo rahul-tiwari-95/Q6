@@ -886,9 +886,6 @@ def train(n_episodes: int = 15000,
         # V0.5 NEW: Print episode progress with terminal display
         TerminalDisplay.print_episode_progress(i_episode, n_episodes, episode_data)
         
-        # Decay epsilon
-        agent.epsilon = max(agent.epsilon_min, agent.epsilon * agent.epsilon_decay)
-        
         # Save checkpoint and plot every 100 episodes
         if i_episode % 100 == 0:
             # Save agent checkpoint
@@ -979,7 +976,7 @@ if __name__ == '__main__':
     print("═"*80 + "\n")
     
     train(
-        n_episodes=15000,
+        n_episodes=18000,  # Match sum of PHASE_EPISODES: 3000+3000+3000+9000=18000
         max_steps=1000,
         verbose_every=10,
         phase_episodes=[3000, 3000, 3000, 9000]
