@@ -94,11 +94,16 @@ class TestStep:
         assert reward <= 0
 
     def test_step_penalty_value(self, env_easy):
-        env_easy.reset()
-        # Move to empty cell (no pellet, no wall, no enemy)
-        _, reward, _, _, _ = env_easy.step(0)
-        # With step penalty -0.001, reward should be ≈ -0.001 if nothing else
-        assert reward == pytest.approx(-0.001, abs=0.01)
+        # Try multiple resets/actions to find a pure step (no wall/pellet/enemy).
+        # Required because random spawns can place Krishna adjacent to walls.
+        for seed in range(20):
+            env_easy.reset(seed=seed)
+            for action in [0, 1, 2, 3]:
+                _, reward, _, _, _ = env_easy.step(action)
+                # Pure-step reward is exactly -0.001 (no pellet, no wall, no catch).
+                if reward == pytest.approx(-0.001, abs=1e-6):
+                    return
+        pytest.fail("could not produce a pure-step reward in 20 seeds * 4 actions")
 
     def test_collision_gives_negative_reward(self, env_expert):
         # With expert mode (has hunter), some steps should produce bigger penalties
