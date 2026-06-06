@@ -51,7 +51,7 @@ UPDATE_EVERY: int = 4          # Learn every N steps
 # Epsilon-greedy exploration
 EPSILON_START: float = 1.0
 EPSILON_MIN: float = 0.05
-EPSILON_DECAY: float = 0.9999  # Per-episode decay rate
+EPSILON_DECAY: float = 0.9994  # Per-episode decay rate (~0.05 by ~5k episodes)
 # Phase-specific epsilon resets
 PHASE_EPSILON_RESET: dict = {
     1: 1.0,   # Random Hunter: full exploration

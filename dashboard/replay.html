@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Q6 Lab — Replay</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<nav class="topbar">
+  <div class="brand"><a href="index.html" style="color:inherit">Q6 / Lab</a></div>
+  <div class="spacer"></div>
+  <button id="mode-toggle" class="mode-toggle">lab mode</button>
+</nav>
+<main>
+  <h1 id="title">Replay</h1>
+  <div id="meta" style="color:var(--muted); font-family:var(--mono); font-size:12px; margin-bottom:16px;"></div>
+  <div class="grid-2" style="grid-template-columns: 560px 1fr;">
+    <div>
+      <canvas id="replay-canvas" width="500" height="500"></canvas>
+      <div class="replay-controls">
+        <button id="btn-play">play</button>
+        <button id="btn-step-back">‹</button>
+        <button id="btn-step-fwd">›</button>
+        <input id="scrubber" type="range" min="0" max="0" value="0">
+        <span id="step-label">0 / 0</span>
+        <select id="speed">
+          <option value="100">10×</option>
+          <option value="33">30×</option>
+          <option value="16" selected>60×</option>
+          <option value="8">125×</option>
+        </select>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Step Detail</h2>
+      <dl id="step-detail" class="kv"></dl>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import { applyMode, bindModeToggle, fetchJSON, fetchJSONL, qs, renderGrid, fmtNumber } from "./app.js";
+applyMode(); bindModeToggle();
+
+const runId = qs("run");
+const epId  = parseInt(qs("ep"), 10);
+
+const idx = await fetchJSON("data/index.json");
+const run = idx.runs.find(r => r.id === runId);
+const rep = run?.replays?.find(r => r.episode_id === epId);
+
+document.getElementById("title").textContent = `Replay — ${runId} / episode ${epId}`;
+document.getElementById("meta").textContent =
+  rep ? `phase=${rep.phase}  diff=${rep.difficulty}  seed=${rep.seed}  outcome=${rep.outcome}` : "not found";
+
+if (rep) {
+  // dashboard pages live under /dashboard/; replay paths are repo-relative.
+  const records = await fetchJSONL("../" + rep.path);
+  const header = records.find(r => r.type === "header");
+  const steps  = records.filter(r => r.type === "step");
+  const footer = records.find(r => r.type === "footer");
+
+  const canvas = document.getElementById("replay-canvas");
+  const scrubber = document.getElementById("scrubber");
+  const label = document.getElementById("step-label");
+  const detail = document.getElementById("step-detail");
+  scrubber.max = String(steps.length - 1);
+
+  let curr = 0;
+  let playing = false;
+  let speed = 16;
+
+  function show(i) {
+    curr = Math.max(0, Math.min(steps.length - 1, i));
+    scrubber.value = String(curr);
+    label.textContent = `${curr + 1} / ${steps.length}`;
+    const s = steps[curr];
+    renderGrid(canvas, s.grid);
+    const actNames = ["↑ up", "↓ down", "← left", "→ right"];
+    const qrows = (s.q_values?.krishna || []).map((q, i) =>
+      `<dt>Q[${actNames[i]}]</dt><dd style="font-family:var(--mono)">${fmtNumber(q, 3)}</dd>`).join("");
+    detail.innerHTML = `
+      <dt>t</dt><dd>${s.t}</dd>
+      <dt>action</dt><dd>${actNames[s.actions?.krishna] || s.actions?.krishna}</dd>
+      <dt>reward</dt><dd>${fmtNumber(s.rewards?.krishna, 3)}</dd>
+      <dt>pellets</dt><dd>${s.pellets ?? "—"}</dd>
+      <dt>lives</dt><dd>${s.lives ?? "—"}</dd>
+      ${qrows}
+    `;
+  }
+
+  scrubber.addEventListener("input", e => show(parseInt(e.target.value, 10)));
+  document.getElementById("btn-step-back").onclick = () => show(curr - 1);
+  document.getElementById("btn-step-fwd").onclick  = () => show(curr + 1);
+  document.getElementById("speed").onchange = e => { speed = parseInt(e.target.value, 10); };
+
+  function tick() {
+    if (!playing) return;
+    if (curr >= steps.length - 1) { playing = false; document.getElementById("btn-play").textContent = "play"; return; }
+    show(curr + 1);
+    setTimeout(tick, speed);
+  }
+  document.getElementById("btn-play").onclick = () => {
+    playing = !playing;
+    document.getElementById("btn-play").textContent = playing ? "pause" : "play";
+    if (playing) tick();
+  };
+
+  show(0);
+}
+</script>
+</body>
+</html>

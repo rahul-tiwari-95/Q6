@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Q6 Lab — Run</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<nav class="topbar">
+  <div class="brand"><a href="index.html" style="color:inherit">Q6 / Lab</a></div>
+  <div class="spacer"></div>
+  <button id="mode-toggle" class="mode-toggle">lab mode</button>
+</nav>
+<main>
+  <h1 id="title">Loading…</h1>
+  <div id="content"></div>
+</main>
+
+<script type="module">
+import { applyMode, bindModeToggle, fetchJSON, qs, fmtNumber, fmtDuration, drawLineChart } from "./app.js";
+applyMode(); bindModeToggle();
+
+const id = qs("id");
+const idx = await fetchJSON("data/index.json");
+const run = idx.runs.find(r => r.id === id);
+const root = document.getElementById("content");
+
+if (!run) {
+  document.getElementById("title").textContent = "Run not found";
+  root.innerHTML = `<p>No run with id <code>${id}</code>.</p>`;
+} else {
+  document.getElementById("title").textContent = run.name || run.id;
+
+  const h = run.hyperparams || {}, t = run.training || {}, res = run.results || {};
+  const per = res.per_phase || [];
+  const algo = run.algo || {};
+
+  const perPhaseRows = per.map(p => `
+    <tr>
+      <td>${p.phase}</td>
+      <td>${p.episodes}</td>
+      <td>${(p.win_rate * 100).toFixed(1)}%</td>
+      <td>${fmtNumber(p.avg_reward)}</td>
+      <td>${fmtNumber(p.avg_pellets, 2)}</td>
+      <td>${fmtNumber(p.avg_caught, 2)}</td>
+    </tr>`).join("");
+
+  const replayRows = (run.replays || []).map(rp => `
+    <tr>
+      <td><a href="replay.html?run=${encodeURIComponent(id)}&ep=${rp.episode_id}">ep ${rp.episode_id}</a></td>
+      <td>${rp.phase ?? "—"}</td>
+      <td><span class="pill ${rp.outcome || ""}">${rp.outcome ?? "—"}</span></td>
+      <td>${rp.total_steps ?? "—"}</td>
+      <td>${rp.pellets_collected ?? "—"}</td>
+      <td>${fmtNumber(rp.total_reward?.krishna)}</td>
+    </tr>`).join("");
+
+  root.innerHTML = `
+    <div class="grid-3">
+      <div class="panel">
+        <h2>Algorithm</h2>
+        <dl class="kv">
+          <dt>name</dt><dd>${algo.name || "—"}</dd>
+          <dt>network</dt><dd>${algo.network || "—"}</dd>
+          <dt>state</dt><dd>${algo.state_encoding || "—"}</dd>
+          <dt>loss</dt><dd>${algo.loss || "—"}</dd>
+        </dl>
+      </div>
+      <div class="panel">
+        <h2>Hyperparams</h2>
+        <dl class="kv">
+          <dt>lr</dt><dd>${h.learning_rate}</dd>
+          <dt>γ</dt><dd>${h.gamma}</dd>
+          <dt>τ</dt><dd>${h.tau}</dd>
+          <dt>batch</dt><dd>${h.batch_size}</dd>
+          <dt>buffer</dt><dd>${h.buffer_size}</dd>
+          <dt>upd_every</dt><dd>${h.update_every}</dd>
+          <dt>ε decay</dt><dd>${h.epsilon_decay}</dd>
+        </dl>
+      </div>
+      <div class="panel">
+        <h2>Training</h2>
+        <dl class="kv">
+          <dt>episodes</dt><dd>${t.total_episodes ?? "—"}</dd>
+          <dt>duration</dt><dd>${fmtDuration(t.duration_seconds)}</dd>
+          <dt>branch</dt><dd>${t.git_branch ?? "—"}</dd>
+          <dt>commit</dt><dd style="font-family:var(--mono);font-size:11px">${t.git_commit?.slice(0,12) ?? "—"}</dd>
+          <dt>started</dt><dd>${t.started_at ?? "—"}</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Per-Phase Results</h2>
+      <table class="runs">
+        <thead><tr><th>phase</th><th>eps</th><th>win rate</th><th>avg reward</th><th>avg pellets</th><th>avg caught</th></tr></thead>
+        <tbody>${perPhaseRows || `<tr><td colspan=6 style="color:var(--muted)">no per-phase data</td></tr>`}</tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Training Curves</h2>
+      <div class="grid-2">
+        <div><canvas id="ch-reward" class="chart"></canvas></div>
+        <div><canvas id="ch-pellets" class="chart"></canvas></div>
+        <div><canvas id="ch-eps" class="chart"></canvas></div>
+        <div><canvas id="ch-loss" class="chart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Replays (${(run.replays || []).length})</h2>
+      <table class="runs">
+        <thead><tr><th>episode</th><th>phase</th><th>outcome</th><th>steps</th><th>pellets</th><th>krishna reward</th></tr></thead>
+        <tbody>${replayRows || `<tr><td colspan=6 style="color:var(--muted)">no replays recorded</td></tr>`}</tbody>
+      </table>
+    </div>
+  `;
+
+  const s = run.summary || {};
+  if (s.rewards) {
+    drawLineChart(document.getElementById("ch-reward"),  s.rewards,  { title: "reward / episode" });
+    drawLineChart(document.getElementById("ch-pellets"), s.pellets,  { title: "pellets / episode" });
+    drawLineChart(document.getElementById("ch-eps"),     s.epsilons, { title: "epsilon" });
+    drawLineChart(document.getElementById("ch-loss"),    s.losses,   { title: "loss" });
+  }
+}
+</script>
+</body>
+</html>

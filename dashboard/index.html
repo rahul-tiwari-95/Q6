@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Q6 Lab — Experiment Registry</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<nav class="topbar">
+  <div class="brand">Q6 / Lab</div>
+  <div class="spacer"></div>
+  <button id="mode-toggle" class="mode-toggle">lab mode</button>
+</nav>
+<main>
+  <h1>Experiments</h1>
+  <p style="color:var(--muted)">All training runs in <code>training_runs/</code>. Regenerate this index with <code>python dashboard/scan.py</code>.</p>
+  <div id="runs"></div>
+</main>
+
+<script type="module">
+import { applyMode, bindModeToggle, fetchJSON, fmtNumber, fmtDuration } from "./app.js";
+
+applyMode(); bindModeToggle();
+
+function row(r) {
+  if (r.legacy) {
+    return `<tr>
+      <td>${r.id}</td>
+      <td colspan="6" style="color:var(--muted)">legacy run (no experiment.json) — ${r.replays?.length || 0} replays</td>
+    </tr>`;
+  }
+  const t = r.training || {}, h = r.hyperparams || {}, res = r.results || {};
+  const phaseWins = (res.per_phase || []).map(p => `${(p.win_rate * 100).toFixed(0)}%`).join(" / ");
+  return `<tr>
+    <td><a href="run.html?id=${encodeURIComponent(r.id)}">${r.id}</a></td>
+    <td>${r.phase_label || ""}</td>
+    <td>${r.algo?.name || ""}</td>
+    <td>${t.total_episodes ?? "—"}</td>
+    <td>${phaseWins || "—"}</td>
+    <td>${fmtDuration(t.duration_seconds)}</td>
+    <td>${r.replays?.length ?? 0}</td>
+    <td style="color:var(--muted)">${(t.git_branch ?? "") + (t.git_commit ? "@" + t.git_commit.slice(0,7) : "")}</td>
+  </tr>`;
+}
+
+const idx = await fetchJSON("data/index.json");
+const el = document.getElementById("runs");
+if (!idx.runs.length) {
+  el.innerHTML = `<p style="color:var(--muted)">No runs found. Train one with <code>python train_v2.py --smoke</code>.</p>`;
+} else {
+  el.innerHTML = `<table class="runs">
+    <thead><tr>
+      <th>id</th><th>phase</th><th>algo</th><th>eps</th><th>win/phase</th><th>dur</th><th>replays</th><th>commit</th>
+    </tr></thead>
+    <tbody>${idx.runs.map(row).join("")}</tbody>
+  </table>`;
+}
+</script>
+</body>
+</html>
