@@ -47,11 +47,19 @@ def _read_log_summary(log_path: Path) -> dict[str, Any]:
     with open(log_path) as fh:
         for row in csv.DictReader(fh):
             episodes.append(int(row["episode"]))
-            rewards.append(float(row["reward"]))
+            # Phase 1 CSV: "reward"; Phase 2 CSV: "krishna_reward"
+            reward_val = row.get("reward") or row.get("krishna_reward") or "0"
+            rewards.append(float(reward_val))
             pellets.append(float(row["pellets"]))
-            wins.append(1 if row["won"] in ("True", "true", "1") else 0)
-            epsilons.append(float(row["epsilon"]))
-            losses.append(float(row["loss"]) if row.get("loss") not in (None, "", "None") else float("nan"))
+            # Phase 1 CSV: "won"; Phase 2 CSV: "winner"
+            won_val = row.get("won") or row.get("winner") or ""
+            wins.append(1 if won_val in ("True", "true", "1", "krishna") else 0)
+            # Phase 1 CSV: "epsilon"; Phase 2 CSV: "krishna_eps"
+            eps_val = row.get("epsilon") or row.get("krishna_eps") or "0"
+            epsilons.append(float(eps_val))
+            # Phase 1 CSV: "loss"; Phase 2 CSV: "krishna_loss"
+            loss_val = row.get("loss") or row.get("krishna_loss") or ""
+            losses.append(float(loss_val) if loss_val not in (None, "", "None") else float("nan"))
     return {
         "n_episodes": len(episodes),
         "episodes": _downsample(episodes),

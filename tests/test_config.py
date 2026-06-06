@@ -51,7 +51,7 @@ class TestConfigConstants:
         from config import EPSILON_START, EPSILON_MIN, EPSILON_DECAY, PHASE_EPSILON_RESET
         assert EPSILON_START == 1.0
         assert EPSILON_MIN == 0.05
-        assert EPSILON_DECAY == 0.9999
+        assert EPSILON_DECAY == 0.9994
         assert PHASE_EPSILON_RESET == {1: 1.0, 2: 0.5, 3: 0.3, 4: 0.2}
 
     def test_curriculum_phases(self):
