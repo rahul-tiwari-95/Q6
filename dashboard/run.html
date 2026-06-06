@@ -92,6 +92,7 @@ if (!run) {
 
     <div class="panel">
       <h2>Per-Phase Results</h2>
+      <p class="panel-subtitle">Phase 1 = random Hunter · Phase 2 = greedy Hunter · Phase 3 = smart greedy · Phase 4 = A* Hunter. Win rate and reward should increase across phases.</p>
       <table class="runs">
         <thead><tr><th>phase</th><th>eps</th><th>win rate</th><th>avg reward</th><th>avg pellets</th><th>avg caught</th></tr></thead>
         <tbody>${perPhaseRows || `<tr><td colspan=6 style="color:var(--muted)">no per-phase data</td></tr>`}</tbody>
@@ -100,30 +101,58 @@ if (!run) {
 
     <div class="panel">
       <h2>Training Curves</h2>
+      <p class="panel-subtitle">All series sampled once per episode. Individual values are noisy — read the shape, not the spikes.</p>
       <div class="grid-2">
-        <div><canvas id="ch-reward" class="chart"></canvas></div>
-        <div><canvas id="ch-pellets" class="chart"></canvas></div>
-        <div><canvas id="ch-eps" class="chart"></canvas></div>
-        <div><canvas id="ch-loss" class="chart"></canvas></div>
+        <div class="chart-block">
+          <div class="chart-label">Krishna reward</div>
+          <div class="chart-hint">↑ higher is better · spikes to −1000 = wall-hugging collapse · watch for upward drift in the baseline</div>
+          <canvas id="ch-reward" class="chart"></canvas>
+        </div>
+        <div class="chart-block">
+          <div class="chart-label">Pellets / episode</div>
+          <div class="chart-hint">4 = win condition · rises independently of reward · confirms pellet-collection learning separate from evasion</div>
+          <canvas id="ch-pellets" class="chart"></canvas>
+        </div>
+        <div class="chart-block">
+          <div class="chart-label">Epsilon (ε — exploration rate)</div>
+          <div class="chart-hint">↓ decays 1.0 → 0.05 · step-shaped drops = curriculum phase resets · flat tail = decay too slow for episode budget</div>
+          <canvas id="ch-eps" class="chart"></canvas>
+        </div>
+        <div class="chart-block">
+          <div class="chart-label">TD loss</div>
+          <div class="chart-hint">rising then stabilising = healthy convergence · near-zero early = no gradient (check reward scale) · sustained spikes = instability</div>
+          <canvas id="ch-loss" class="chart"></canvas>
+        </div>
       </div>
     </div>
 
     <div class="panel">
-      <h2>Replays (${(run.replays || []).length})</h2>
-      <table class="runs">
-        <thead><tr><th>episode</th><th>phase</th><th>outcome</th><th>steps</th><th>pellets</th><th>krishna reward</th></tr></thead>
-        <tbody>${replayRows || `<tr><td colspan=6 style="color:var(--muted)">no replays recorded</td></tr>`}</tbody>
-      </table>
+      <h2>Replays</h2>
+      <p class="panel-subtitle">Recorded every 25 episodes. Click any episode to step through the full grid frame-by-frame.</p>
+      <details class="replay-details">
+        <summary>${(run.replays || []).length} replays — expand to browse</summary>
+        <select class="replay-jump" id="replay-jump">
+          <option value="">— jump to episode —</option>
+          ${(run.replays || []).map(rp => `<option value="replay.html?run=${encodeURIComponent(id)}&ep=${rp.episode_id}">ep ${rp.episode_id} · ${rp.outcome ?? '?'} · ${rp.pellets_collected ?? 0} pellets</option>`).join('')}
+        </select>
+        <table class="runs">
+          <thead><tr><th>episode</th><th>phase</th><th>outcome</th><th>steps</th><th>pellets</th><th>krishna reward</th></tr></thead>
+          <tbody>${replayRows || `<tr><td colspan=6 style="color:var(--muted)">no replays recorded</td></tr>`}</tbody>
+        </table>
+      </details>
     </div>
   `;
 
   const s = run.summary || {};
   if (s.rewards) {
-    drawLineChart(document.getElementById("ch-reward"),  s.rewards,  { title: "reward / episode" });
-    drawLineChart(document.getElementById("ch-pellets"), s.pellets,  { title: "pellets / episode" });
-    drawLineChart(document.getElementById("ch-eps"),     s.epsilons, { title: "epsilon" });
-    drawLineChart(document.getElementById("ch-loss"),    s.losses,   { title: "loss" });
+    drawLineChart(document.getElementById("ch-reward"),  s.rewards,  { color: "#7cd1ff", zeroLine: true });
+    drawLineChart(document.getElementById("ch-pellets"), s.pellets,  { color: "#6ee7b7" });
+    drawLineChart(document.getElementById("ch-eps"),     s.epsilons, { color: "#fcd34d" });
+    drawLineChart(document.getElementById("ch-loss"),    s.losses,   { color: "#fb923c" });
   }
+  document.getElementById("replay-jump")?.addEventListener("change", e => {
+    if (e.target.value) location.href = e.target.value;
+  });
 }
 </script>
 </body>

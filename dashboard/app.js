@@ -77,6 +77,18 @@ export function drawLineChart(canvas, series, opts = {}) {
   ctx.fillText(yMax.toFixed(1), 2, padT + 8);
   ctx.fillText(yMin.toFixed(1), 2, padT + plotH);
 
+  // optional zero line
+  if (opts.zeroLine && yMin < 0 && yMax > 0) {
+    const zy = padT + plotH - ((0 - yMin) / Math.max(1e-9, yMax - yMin)) * plotH;
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(padL, zy); ctx.lineTo(padL + plotW, zy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
   // line
   ctx.strokeStyle = accent;
   ctx.lineWidth = 1.5;
