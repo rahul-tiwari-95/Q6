@@ -1,236 +1,211 @@
-README - Q6 IMPLEMENTATION
-==========================
+# Q6 — Kṛṣṇa vs Hunter: Deep RL Self-Play
 
-PROJECT: Kṛṣṇa - A Learning Agent in HunterGridworld
+A two-agent reinforcement learning project where **Kṛṣṇa** (a pellet-collecting agent) and **Hunter** (a chasing agent) both learn entirely through self-play. Built with PyTorch, Double DQN, Dueling networks, and Fictitious Self-Play (FSP).
 
-QUICK START:
-============
+---
 
-1. source venv/bin/activate
-2. python main.py
+## Quick Start
 
-That's it! Watch the training happen with detailed logs.
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
 
+# Verify everything works
+python -m pytest tests/ -q              # 147 tests
 
-WHAT WAS FIXED:
-===============
+# Phase 1: Krishna learns vs scripted A* Hunter
+python3 train_v2.py --episodes 6000 --device mps
 
-PROBLEM: Training was failing with scores averaging -1200 to -2200
-CAUSE:   Reward structure was too punishing (-0.01 per step)
-SOLUTION: Changed to -0.001 per step, making learning possible
+# Phase 2: both agents learn via self-play
+python3 train_phase2.py --episodes 6000 --device mps --name my_run
 
-MATH:
-Old: 1000 steps = -10 penalty. 1 pellet (+50) = +40 net = Still hard to learn
-New: 1000 steps = -1 penalty. 1 pellet (+50) = +49 net = Learning possible!
+# Visualise results in browser
+python3 dashboard/scan.py
+python3 -m http.server 8080
+# open http://localhost:8080/dashboard/
+```
 
-
-WHAT WAS ADDED:
-===============
-
-1. Comprehensive Logging System
-   - See exactly what agent does each episode
-   - Track pellets, collisions, wall hits
-   - Save metrics to JSON for analysis
-
-2. Verbose Training Output
-   - Beautiful formatted console output
-   - Shows learning progress clearly
-   - Prints every 10 episodes with detailed breakdown
-   - Shows action distribution (what did agent prefer?)
-
-3. Validation Script
-   - Run: python validate.py
-   - Tests that everything works before training
-
-4. Documentation
-   - PROJECT_STATUS.txt - What's done, what's next
-   - QUICK_START.txt - How to run and interpret
-   - TRAINING_IMPROVEMENTS.txt - What changed and why
+---
 
 
-HOW TO UNDERSTAND TRAINING OUTPUT:
-==================================
+## The Game
 
-Each episode line shows:
-[Episode  100/2000] Score: -50.23 | Avg(100): -75.45 | ε: 0.9950 | Collected: 0 | Caught: 3
+25×25 gridworld with walls (~20% density). Krishna collects 4 pellets to win. Hunter catches Krishna 3 times to win. Episodes end on win, hunter-win, or 1000-step timeout.
 
-Episode 100/2000:  Which episode out of total episodes
-Score: -50.23:     Reward for this specific episode
-Avg(100): -75.45:  Average of last 100 episodes (MOST IMPORTANT - shows learning!)
-ε: 0.9950:         Exploration rate (starts 1.0, decreases to 0.01)
-Collected: 0:      Pellets collected this episode
-Caught: 3:         Times caught by enemies
+```
+Grid cell IDs:  WALL=0  PELLET=1  KRISHNA=2  HUNTER=3  EMPTY=6
+Actions:        UP=0    DOWN=1    LEFT=2     RIGHT=3
+```
 
+---
 
-Every 10 episodes you see detailed breakdown:
-- Total reward
-- Steps taken  
-- Pellets collected
-- Times caught
-- Walls hit
-- Action preferences (UP/DOWN/LEFT/RIGHT distribution)
+## Phase 1 — Krishna vs Scripted Hunter
 
-This tells you what the agent actually did!
+Krishna learns with a DQNv2 agent against a progressively harder scripted Hunter (random → greedy → A*).
 
+**Network architecture** (`model/cnn_q_network.py`):
+- Input: 6-channel 25×25 binary tensor (one channel per cell type)
+- Conv: 32 filters (3×3) → 64 filters (3×3), ReLU
+- FC: 256 hidden → Dueling heads: Value V(s) + Advantage A(s,a)
+- Output: Q(s,a) for 4 actions
 
-KEY CHANGES MADE:
-=================
+**Training:**
+- Double DQN (decouple action selection from value estimation)
+- Soft target update τ=0.001, Huber loss, Adam lr=1e-4
+- ε-greedy: 1.0 → 0.05 at rate 0.9994/episode
+- Replay buffer: 100k transitions, batch 64, update every 4 steps
 
-File: environment/hunter_gridworld.py
-Change: Step penalty from -0.1 to -0.01 per step
-Impact: Makes learning possible instead of impossible
+**Result:** 85% win rate vs A* Hunter at 6000 episodes. (`tag: phase1-complete`)
 
-File: main.py
-Change: Completely rewritten with better logging
-Impact: Can now see what's happening during training
+---
 
-New Files:
-- utils/logger.py - Logging infrastructure
-- utils/environment_wrapper.py - Metrics tracking
-- validate.py - Setup validation
-- QUICK_START.txt, TRAINING_IMPROVEMENTS.txt, PROJECT_STATUS.txt - Documentation
+## Phase 2 — Self-Play with Fictitious Self-Play (FSP)
 
+Both Krishna and Hunter are live DQNv2 agents learning simultaneously.
 
-THE LEARNING PROCESS:
-====================
+### What is FSP?
 
-What should happen as training progresses:
+Without FSP, two agents co-training will cycle: Krishna learns to beat the current Hunter, Hunter adapts, Krishna adapts back — policy cycling with no convergence. FSP breaks this by maintaining a historical snapshot pool.
 
-Episodes 1-100:
-- Very negative scores (agent exploring randomly)
-- Avg(100) very negative (hasn't learned anything yet)
-- 0 pellets collected
-- Gets caught frequently
-- Hits lots of walls
+Each episode is one of two modes:
 
-Episodes 100-500:
-- Scores improving (less negative)
-- Occasional pellet collection
-- Times caught decreasing
-- Starting to show strategy
+- **Joint** (70%): Both agents step, observe, and learn from the same episode. Policies improve against each other's current strategy.
+- **FSP** (30%): Krishna plays against a *frozen historical snapshot* of Hunter sampled from the pool. This forces Krishna to generalise across Hunter's full learning history, not just beat the current version.
 
-Episodes 500-1000:  
-- Scores near zero or positive possible
-- Regular pellet collection
-- Rarely caught early
-- Clear movement strategy
+Hunter snapshots are saved every 100 episodes (max 20, FIFO eviction → `pool/pool_index.json`).
 
-Episodes 1000+:
-- Positive scores possible
-- Winning episodes
-- Learned effective strategy
+### Reward design
 
-If you see these trends: TRAINING IS WORKING!
+**Krishna** needs both pellet skill and evasion — two competing pressures:
 
+| Signal | Value | Why |
+|---|---|---|
+| Collect pellet | +50 | Primary objective |
+| Win (4 pellets) | +100 | Terminal |
+| Caught | −10 | Avoid Hunter |
+| Lose (0 lives) | −50 | Terminal penalty |
+| Step | −0.001 | Efficiency pressure |
+| Proximity shaping | ±0.3 × Δd | Dense gradient toward nearest pellet |
 
-STOPPING CRITERIA:
-==================
+**Hunter** has a single objective — chase:
 
-Training stops when:
-1. Agent reaches average score of 200 over 100 episodes (SOLVED!)
-2. OR 2000 episodes completed (default limit)
+| Signal | Value | Why |
+|---|---|---|
+| Catch | +30 | Primary objective |
+| Win (3 catches) | +50 | Terminal |
+| Krishna wins | −50 | Terminal penalty |
+| Step | −0.001 | Efficiency pressure |
+| Chase shaping | +0.1 × Δd | Dense gradient toward Krishna |
 
-If you want to stop early: Ctrl+C (training is saved periodically)
+Wall hits carry **zero penalty** (`K_WALL=0`). A non-zero penalty (tried −5, then −1) created a pathological local attractor: the greedy policy learned to press into a corner wall for entire episodes, because the penalty was still lower than the expected cost of moving toward an aggressive Hunter. Zero penalty removes the attractor entirely while walls remain physically impassable.
 
+### Epsilon decay calibration
 
-WHERE TO FIND RESULTS:
-======================
+With 6000 episodes and `ε_min=0.05`:
 
-After training, check:
-training_runs/<timestamp>/
-├── checkpoints/
-│   ├── checkpoint_100.pth
-│   ├── checkpoint_200.pth
-│   ├── ...
-│   └── final_checkpoint.pth
-├── logs/
-│   ├── episodes.jsonl (detailed per-episode data)
-│   ├── stats.json (final statistics)
-│   └── training.log
-└── plots/
-    ├── training_progress_100.png
-    ├── training_progress_200.png
-    ├── ...
-    └── final_training_progress.png
+$$\text{decay} = \left(\frac{0.05}{1.0}\right)^{1/5000} \approx 0.9994$$
 
+The old default of 0.9999 would leave ε≈0.55 at episode 6000 — the agent never exits exploration. At 0.9994, ε reaches the floor at episode ~5000, leaving 1000 episodes of near-pure exploitation.
 
-HOW TO INTERPRET VISUALIZATIONS:
-=================================
+### What actually emerged (v3 run, 6k episodes)
 
-The training_progress_*.png files show:
-- Blue line: Individual episode scores (noisy)
-- Red line: 100-episode moving average (smooth trend)
+- **Both networks learned**: hunter_loss was nonzero from episode 10 onward (was flat 0.000 without approach shaping — Hunter had no dense gradient without it)
+- **Krishna's first win**: episode 279 (vs episode 1049 in the previous run without fixes)
+- **Hunter converged fast**: aggressive catch behaviour by ep ~500; catching in under 300 steps by ep 3000
+- **Red Queen dynamics**: Krishna win 4% overall, 11% in the final 28 episodes as both ε values reached floor — late-game improvement confirms genuine learning, not luck
+- **Remaining noise**: ~3.6% of episodes were catastrophic wall-hugging collapses (r_k ≤ −800); fixed in v4 with K_WALL=0
 
-What to look for:
-- Red line trending upward = Learning happening
-- Red line flat or downward = Not learning (would need to debug)
-- Red line reaching 200 = Environment solved!
+---
 
+## Repository Layout
 
-UNDERSTANDING THE CODE STRUCTURE:
-==================================
+```
+Q6/
+├── agent/
+│   ├── dqn_v2_agent.py       # DQNv2: CNN + Dueling + Double DQN
+│   ├── frozen_agent.py       # Read-only checkpoint opponent for FSP
+│   └── opponent_pool.py      # FSP snapshot pool (FIFO, max 20)
+├── environment/
+│   ├── hunter_gridworld.py   # Phase 1 env (scripted Hunter)
+│   └── selfplay_env.py       # Phase 2 env (Hunter externally controlled)
+├── model/
+│   └── cnn_q_network.py      # CNN Dueling Q-network
+├── utils/
+│   ├── state_encoder.py      # 6-channel binary encoder (shared Phase 1+2)
+│   ├── replay_recorder.py    # Per-step replay recording for dashboard
+│   └── environment_wrapper.py
+├── dashboard/
+│   ├── scan.py               # Rebuilds index.json from training_runs/
+│   ├── index.html            # Run list
+│   ├── run.html              # Per-run metrics
+│   └── replay.html           # Step-by-step replay viewer
+├── tests/                    # 147 tests (pytest)
+├── train_v2.py               # Phase 1 training
+├── train_phase2.py           # Phase 2 self-play training
+├── verify_phase2.py          # Checkpoint sanity checker
+└── config.py                 # All hyperparameters centralised
+```
 
-environment/
-├── hunter_gridworld.py - The game world
-├── entities/ - Individual entity types
-│   ├── base_entity.py - Common entity functionality
-│   ├── krishna.py - The player (what we're training)
-│   ├── hunter.py - The main enemy
-│   ├── greedy_bot.py - Pellet-seeking enemies
-│   └── patroller.py - Patrol route enemies
-└── __init__.py
+---
 
-agent/
-├── dq_agent.py - The DQN learning algorithm
-└── __init__.py
+## Key Hyperparameters (`config.py`)
 
-model/
-├── q_network.py - The neural network
-└── __init__.py
+| Parameter | Value | Note |
+|---|---|---|
+| `EPSILON_DECAY` | 0.9994 | Per-episode; reaches 0.05 floor ~ep 5000 |
+| `EPSILON_MIN` | 0.05 | 5% random at convergence |
+| `GAMMA` | 0.99 | Discount factor |
+| `TAU` | 0.001 | Soft target update |
+| `LEARNING_RATE` | 1e-4 | Adam |
+| `BATCH_SIZE` | 64 | Replay sample size |
+| `BUFFER_SIZE` | 100,000 | Per-agent replay capacity |
+| `UPDATE_EVERY` | 4 | Steps between gradient updates |
 
-utils/
-├── logger.py - Logging system (NEW)
-├── environment_wrapper.py - Metrics tracking (NEW)
-└── __init__.py
+---
 
-main.py - Training orchestrator (IMPROVED)
-validate.py - Setup checker (NEW)
+## Lessons Learned
 
-DOCUMENTATION:
-├── PROJECT_STATUS.txt - Overall status and roadmap
-├── QUICK_START.txt - How to run and understand output
-├── TRAINING_IMPROVEMENTS.txt - What changed and why
-└── README (this file)
+**1. Reward scale dominates early learning.**
+A wall penalty of −5 completely drowned the pellet signal (+50). The agent learned nothing useful for hundreds of episodes. Reducing to −1 helped; setting to 0 eliminated the problem entirely. When your agent is doing something bizarre, check whether one reward term is an order of magnitude larger than the others.
 
+**2. Dense shaping is not optional for sparse rewards.**
+Without `K_APPROACH=0.3`, Krishna had zero gradient toward pellets for the first 200 episodes — every episode timed out and every update was noise. The shaping reward turns a sparse "collect pellet" signal into a dense continuous gradient that works from episode 1.
 
-EDUCATIONAL VALUE:
-==================
+**3. Calibrate ε-decay to your episode budget.**
+`decay = (ε_min / ε_start)^(1 / target_episode)`. If you miss this, the agent never exits exploration. This is one of the most common silent failures in DQN experiments.
 
-As you watch training, you're learning:
+**4. FSP prevents Nash cycling.**
+Without the historical pool, two co-training agents cycle endlessly: A beats B, B adapts, A adapts, repeat. The pool makes each agent's policy robust to the full distribution of opponent strategies seen so far, not just the latest one.
 
-1. Exploration vs Exploitation
-   - ε starts high (explore) → decreases (exploit learned knowledge)
-   - Watch action distribution change from uniform to skewed
+**5. In asymmetric tasks, the simpler objective wins faster.**
+Hunter (single goal: reduce distance) converged to aggressive chasing by episode 500. Krishna (two competing goals: collect pellets AND evade) was still learning at episode 6000. This is expected and correct — it is the Red Queen dynamic working as designed.
 
-2. Reward Structure Impact
-   - Small change (-0.1 → -0.01) = huge difference in learning
-   - This is a key insight in RL!
+---
 
-3. Neural Network Learning
-   - From random responses → goal-directed behavior
-   - Emergence of strategy from numerical optimization
+## Running Tests
 
-4. Learning Dynamics
-   - Early: No progress (random exploration)
-   - Mid: Slow improvement (learning basic skills)
-   - Late: Fast improvement (refining strategy)
+```bash
+python -m pytest tests/ -q                      # all 147 tests
+python -m pytest tests/test_selfplay_env.py -v  # Phase 2 env
+```
 
-5. Metrics That Matter
-   - Individual scores are noisy
-   - Moving averages show real trends
-   - Intermediate metrics (pellets, collisions) show progress
+---
 
-Watch these unfold during training!
+## Monitoring a Training Run
+
+```bash
+# Live log tail
+tail -f training_runs/<run_dir>/logs/episode_stats.csv
+
+# Quick summary of a completed run
+python3 - <<'EOF'
+import csv, statistics
+rows = list(csv.DictReader(open("training_runs/<run_dir>/logs/episode_stats.csv")))
+last = rows[-500:]
+k = sum(1 for r in last if r["winner"]=="krishna")
+print(f"Last 500: Krishna {k}/500 ({100*k/500:.1f}%)  avg_pellets {statistics.mean(float(r['pellets']) for r in last):.2f}")
+EOF
+```
 
 
 TROUBLESHOOTING:
