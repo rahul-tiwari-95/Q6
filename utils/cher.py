@@ -119,6 +119,7 @@ class CounterfactualHER:
         collect_bonus: float = 30.0,
         grid_size: int = 25,
         max_cf_per_ep: int = 50,
+        weighted: bool = True,
     ) -> None:
         if hunter_safe_dist < 0:
             raise ValueError("hunter_safe_dist must be >= 0")
@@ -131,6 +132,7 @@ class CounterfactualHER:
         self.collect_bonus = float(collect_bonus)
         self.grid_size = int(grid_size)
         self.max_cf_per_ep = int(max_cf_per_ep)
+        self.weighted = bool(weighted)
 
     # ------------------------------------------------------------------
 
@@ -179,7 +181,12 @@ class CounterfactualHER:
                 continue
 
             # Build counterfactual transition
-            cf_reward = float(step["reward"]) + self.collect_bonus
+            # Weighted bonus: proportional to how far Hunter is (safer = stronger signal)
+            if self.weighted:
+                weight = min(2.0, hunter_dist / max(1, 2 * self.hunter_safe_dist))
+                cf_reward = float(step["reward"]) + self.collect_bonus * weight
+            else:
+                cf_reward = float(step["reward"]) + self.collect_bonus
             cf_exp = (
                 step["state"],
                 step["context"],

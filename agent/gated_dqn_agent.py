@@ -153,6 +153,7 @@ class GatedDQNAgent:
         buffer_size: int = BUFFER_SIZE,
         update_every: int = UPDATE_EVERY,
         device: str | None = None,
+        gate_reg_weight: float = 0.01,
     ) -> None:
         self.action_size = action_size
         self.grid_size = grid_size
@@ -160,6 +161,7 @@ class GatedDQNAgent:
         self.tau = tau
         self.batch_size = batch_size
         self.update_every = update_every
+        self.gate_reg_weight = float(gate_reg_weight)
 
         if device is None:
             if torch.cuda.is_available():
@@ -307,10 +309,15 @@ class GatedDQNAgent:
             next_q = self.qnetwork_target(s_next, c_next).gather(1, next_actions)
             y = r + self.gamma * next_q * (1.0 - d)
 
-        # Current Q for taken actions
-        q_out = self.qnetwork_local(s, c)
-        q     = q_out.gather(1, a)
-        loss  = F.smooth_l1_loss(q, y)
+        # Current Q for taken actions — use forward_options to also get gate for regularization
+        _, _, q_blend, gate_batch = self.qnetwork_local.forward_options(s, c)
+        q = q_blend.gather(1, a)
+
+        # Gate entropy regularization: maximise H(gate) = -g*log(g) - (1-g)*log(1-g)
+        # Penalises gate collapsing to either extreme (especially 1.0 = pure evasion)
+        gate_entropy = -(gate_batch * torch.log(gate_batch + 1e-8)
+                         + (1.0 - gate_batch) * torch.log(1.0 - gate_batch + 1e-8))
+        loss = F.smooth_l1_loss(q, y) - self.gate_reg_weight * gate_entropy.mean()
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -323,14 +330,10 @@ class GatedDQNAgent:
                               self.qnetwork_local.parameters()):
                 tp.mul_(1.0 - self.tau).add_(self.tau * lp)
 
-        # Diagnostics — compute mean gate for monitoring mode collapse
-        with torch.no_grad():
-            _, _, _, gate_batch = self.qnetwork_local.forward_options(s, c)
-
         self.learning_step += 1
-        self.last_loss     = float(loss.item())
-        self.last_mean_q   = float(q.mean().item())
-        self.last_mean_gate = float(gate_batch.mean().item())
+        self.last_loss      = float(loss.item())
+        self.last_mean_q    = float(q.mean().item())
+        self.last_mean_gate = float(gate_batch.mean().detach().item())
         return {
             "loss":      self.last_loss,
             "mean_q":    self.last_mean_q,

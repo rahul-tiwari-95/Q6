@@ -49,6 +49,8 @@ class SelfPlayGridworld(gym.Env):
     K_WALL = 0.0    # zero: blocked moves are already a no-op; penalty caused wall-hugging collapse
     K_STEP = -0.001
     K_APPROACH = 0.3  # shaping: reward per Manhattan-step closer to nearest pellet
+    K_APPROACH_SAFE_DIST = 8  # v7: proximity shaping only fires when hunter is this far away
+    K_TIMEOUT_ZERO_PELLETS = -20.0  # v7: penalty for timing out without collecting any pellets
     K_LOSE = -50.0
 
     H_CATCH = 30.0
@@ -136,6 +138,7 @@ class SelfPlayGridworld(gym.Env):
 
         # -- 1. Move Krishna --
         kx, ky = self.krishna_pos
+        hunter_dist_pre = int(abs(kx - self.hunter_pos[0]) + abs(ky - self.hunter_pos[1]))
         # Pellet proximity shaping: measure distance before move
         d_before = self._nearest_pellet_dist((kx, ky))
         nkx, nky = self._apply_action((kx, ky), actions["krishna"])
@@ -153,9 +156,10 @@ class SelfPlayGridworld(gym.Env):
                 self.pellets_collected += 1
                 self.pellet_positions.discard((nkx, nky))
             else:
-                # Proximity shaping: positive when moving toward nearest pellet
+                # Proximity shaping: only when Hunter is far enough (safe to collect)
                 d_after = self._nearest_pellet_dist((nkx, nky))
-                r_k += self.K_APPROACH * (d_before - d_after)
+                if hunter_dist_pre > self.K_APPROACH_SAFE_DIST:
+                    r_k += self.K_APPROACH * (d_before - d_after)
             self.grid[nkx, nky] = self.KRISHNA
 
         # -- 2. Move Hunter --
@@ -210,6 +214,8 @@ class SelfPlayGridworld(gym.Env):
         truncated = (not terminated) and (self.steps >= self.MAX_STEPS)
         if truncated:
             winner = "timeout"
+            if self.pellets_collected == 0:
+                r_k += self.K_TIMEOUT_ZERO_PELLETS
 
         info = self._get_info()
         info["winner"] = winner

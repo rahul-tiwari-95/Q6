@@ -187,8 +187,10 @@ class TestRelabelFilters:
 
 class TestCounterfactualContent:
     def setup_method(self):
+        # weighted=False: tests in this class validate transition structure,
+        # not the weighting formula (that is tested in test_phase3_regression.py)
         self.cher = CounterfactualHER(hunter_safe_dist=6, pellet_reach=4,
-                                     collect_bonus=30.0)
+                                     collect_bonus=30.0, weighted=False)
 
     def _get_cf_step(self):
         step = _make_step(

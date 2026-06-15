@@ -135,6 +135,7 @@ def run_training(
     epsilon_start: float,
     resume_dir: str | None = None,
     checkpoint_every: int = 100,
+    easy_warmup_eps: int = 1000,
 ) -> Path:
     # --- Run directory: new or resumed ---
     saved_state: dict | None = None
@@ -207,6 +208,7 @@ def run_training(
             "krishna_eps", "hunter_eps",
             "krishna_loss", "hunter_loss",
             "pool_size", "cf_injected",
+            "cher_opportunities", "cher_dep_idx",
             "mean_gate", "avg100",
         ])
 
@@ -260,7 +262,9 @@ def run_training(
         mode_counts[mode] += 1
 
         if mode == "fsp":
-            snap = pool.sample(rng, p_easy=0.25, p_latest=0.3)
+            # Two-phase easy curriculum: use easy opponents exclusively for warm-up
+            p_easy_cur = 1.0 if ep <= easy_warmup_eps else 0.25
+            snap = pool.sample(rng, p_easy=p_easy_cur, p_latest=0.3)
             hunter_actor = FrozenAgent.load(snap, device=krishna.device)
             hunter_learns = False
         else:
@@ -301,7 +305,7 @@ def run_training(
             )
             if hunter_learns:
                 hunter.step(
-                    state, a_k, rewards["hunter"], next_state, done or trunc
+                    state, a_h, rewards["hunter"], next_state, done or trunc
                 )
 
             # --- Accumulate trajectory for CHER ---
@@ -352,8 +356,10 @@ def run_training(
             )
 
         # --- CHER injection ---
-        cf_exps     = cher.relabel(trajectory)
-        cf_injected = len(cf_exps)
+        cf_exps          = cher.relabel(trajectory)
+        cf_injected      = len(cf_exps)
+        cher_opps        = cher.count_opportunities(trajectory)
+        cher_dep_idx     = cf_injected / max(1, cher_opps)
         if cf_exps:
             krishna.memory.add_batch(cf_exps)
 
@@ -396,6 +402,7 @@ def run_training(
             f"{krishna.last_loss or 0.0:.5f}",
             f"{hunter.last_loss or 0.0:.5f}",
             len(pool), cf_injected,
+            cher_opps, f"{cher_dep_idx:.3f}",
             f"{mean_gate:.4f}", f"{avg100:.2f}",
         ])
 
@@ -465,6 +472,8 @@ def run_training(
             "duration_seconds": duration,
             "git_branch":     _git("rev-parse", "--abbrev-ref", "HEAD"),
             "git_commit":     _git("rev-parse", "HEAD"),
+            "git_dirty":      bool(_git("status", "--porcelain")),
+            "easy_warmup_eps": easy_warmup_eps,
         },
         "results": {
             "wins":              wins,
@@ -527,6 +536,8 @@ def main() -> None:
                    help="Save resumable checkpoint every N episodes (0 = disable)")
     p.add_argument("--smoke",            action="store_true",
                    help="Smoke test: 10 episodes only")
+    p.add_argument("--easy-warmup-eps",  type=int,   default=1000,
+                   help="Episodes to use p_easy=1.0 before switching to normal sampling (default 1000)")
     args = p.parse_args()
 
     # Resolve total episode count
@@ -557,6 +568,7 @@ def main() -> None:
         epsilon_start     = args.epsilon_start,
         resume_dir        = args.resume,
         checkpoint_every  = args.checkpoint_every,
+        easy_warmup_eps   = args.easy_warmup_eps,
     )
 
 
