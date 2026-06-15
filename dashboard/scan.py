@@ -175,7 +175,18 @@ def main() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     idx = build_index()
     out = Path(args.out)
-    out.write_text(json.dumps(idx, indent=2))
+    # json.dumps with allow_nan=False would raise on -inf/inf; instead
+    # sanitize the structure first so JS JSON.parse never sees bare Infinity.
+    def _sanitize(obj):
+        if isinstance(obj, float):
+            import math
+            return None if (math.isinf(obj) or math.isnan(obj)) else obj
+        if isinstance(obj, dict):
+            return {k: _sanitize(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [_sanitize(v) for v in obj]
+        return obj
+    out.write_text(json.dumps(_sanitize(idx), indent=2))
     print(f"Wrote {out} with {len(idx['runs'])} runs")
 
 

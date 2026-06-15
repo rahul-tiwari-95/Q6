@@ -2,6 +2,8 @@
 
 A two-agent reinforcement learning project where **Kṛṣṇa** (a pellet-collecting agent) and **Hunter** (a chasing agent) both learn entirely through self-play. Built with PyTorch, Double DQN, Dueling networks, and Fictitious Self-Play (FSP).
 
+> **For researchers and collaborators:** See [`versions/`](versions/README.md) for the full research log — each version's thesis, results, failure mode, and rationale for the next iteration. The live dashboard at `http://localhost:8080/dashboard/versions.html` shows the same information interactively.
+
 ---
 
 ## Quick Start

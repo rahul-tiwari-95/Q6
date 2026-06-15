@@ -1,0 +1,79 @@
+@startuml Qsix_SelfPlay_Sequence
+title Q6 Phase 2/3 Self-Play Episode Sequence
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+
+actor "Training Driver" as Driver
+participant "SelfPlayGridworld" as Env
+participant "Krishna Agent" as Krishna
+participant "Hunter Agent" as Hunter
+participant "Opponent Pool" as Pool
+participant "FrozenAgent" as Frozen
+database "Replay Buffer(s)" as Replay
+folder "training_runs/<run_id>" as Runs
+
+Driver -> Pool : ensure initial Hunter snapshot exists
+
+loop each episode
+  Driver -> Driver : sample mode\njoint or FSP
+
+  alt joint episode
+    Driver -> Hunter : use live learning Hunter
+  else FSP episode
+    Driver -> Pool : sample historical Hunter checkpoint
+    Pool --> Driver : checkpoint path
+    Driver -> Frozen : load checkpoint as read-only Hunter
+  end
+
+  Driver -> Env : reset(seed)
+  Env --> Driver : state, info
+
+  loop until done or timeout
+    Driver -> Krishna : act(state, context)
+    Krishna --> Driver : a_k
+
+    alt joint
+      Driver -> Hunter : act(state)
+      Hunter --> Driver : a_h
+    else FSP
+      Driver -> Frozen : act(state)
+      Frozen --> Driver : a_h
+    end
+
+    Driver -> Env : step({krishna: a_k, hunter: a_h})
+    Env --> Driver : next_state, rewards, done, info
+
+    Driver -> Replay : store Krishna transition
+    alt Hunter learns only in joint mode
+      Driver -> Replay : store Hunter transition
+    end
+
+    Driver -> Krishna : learn every N steps
+    alt joint
+      Driver -> Hunter : learn every N steps
+    end
+  end
+
+  Driver -> Krishna : decay epsilon
+  alt joint episode
+    Driver -> Hunter : decay epsilon
+  end
+
+  alt snapshot interval
+    Driver -> Pool : save Hunter snapshot
+  end
+
+  Driver -> Runs : append CSV row, replay, checkpoint
+end
+
+note over Driver,Replay
+  Phase 3 extends this sequence by adding:
+  - gate context vectors
+  - CounterfactualHER after each episode
+  - hierarchical easy/hard opponent sampling
+end note
+
+@enduml
+

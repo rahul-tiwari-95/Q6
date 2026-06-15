@@ -1,0 +1,60 @@
+@startuml Qsix_Policy_Bias_Feedback_Loop
+title Q6 Policy Bias Feedback Loop - Why Evasion Dominates Collection
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam activity {
+  BackgroundColor White
+  BorderColor Black
+  ArrowColor Black
+}
+
+start
+
+:Hunter improves through self-play;
+:Opponent pool fills with stronger Hunters;
+:Pellet attempts become riskier;
+
+if (Expected value of collection > evasion?) then (yes)
+  :Krishna attempts collection;
+  :Replay buffer receives collect transitions;
+  :Collect behavior improves;
+else (no)
+  :Krishna chooses safer evasion;
+  :Episodes become long timeouts or low-pellet survival;
+  :Replay buffer fills with evasion-heavy transitions;
+  :Q-values reinforce survival and distance management;
+  :Collection attempts become rarer;
+endif
+
+:Single policy head receives conflicting gradients\nmove toward pellet vs move away from Hunter;
+:Evasion becomes the stable local optimum;
+
+if (Phase 3 enabled?) then (GOP + CHER)
+  :Gated network separates evade and collect heads;
+  :CHER injects safe-collect counterfactuals;
+  :Hierarchical pool preserves easy opponents;
+  if (Live reward still favors evasion?) then (yes)
+    :CHER dependency remains high;
+    :Pellet contact improves but wins stay rare;
+  else (no)
+    :Collection becomes internally rational;
+    :CHER injections decline over time;
+    :Krishna learns robust collect-while-evading policy;
+  endif
+else (Phase 2)
+  :Bimodal collapse persists;
+endif
+
+stop
+
+legend
+  Desired v6 signal:
+  - CHER dependency falls
+  - real pellet collection rises
+  - wins increase against frozen evaluation Hunters
+  - gate adapts to tactical context without collapse
+endlegend
+
+@enduml
+

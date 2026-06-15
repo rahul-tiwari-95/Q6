@@ -1,0 +1,81 @@
+@startuml Qsix_Phase3_GOP_CHER
+title Q6 Phase 3 - Gated Option Policy + Counterfactual HER
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam defaultFontName Helvetica
+
+package "Environment Step" {
+  component "SelfPlayGridworld" as Env
+  component "info dict\nhunter_dist, nearest_pellet,\nlives, pellets_remaining" as Info
+}
+
+package "Context Construction" {
+  component "info_to_context()\n[hunter_dist_norm,\npellets_norm,\nlives_norm]" as Context
+}
+
+package "Krishna Phase 3 Agent" {
+  component "GatedDQNAgent" as Agent
+  component "ContextReplayBuffer\nstate + context + action + reward" as Buffer
+  component "GatedOptionNetwork" as Network
+  component "Evade Head" as Evade
+  component "Collect Head" as Collect
+  component "Gate MLP\ncontext -> [0,1]" as Gate
+  component "Blended Q-values" as Blend
+}
+
+package "Counterfactual Teacher" {
+  component "CounterfactualHER" as CHER
+  component "Safe collect detector\nHunter far + pellet nearby" as Detector
+  component "Synthetic transition\noptimal collect action + bonus" as Synthetic
+}
+
+package "Opponent Population" {
+  component "HierarchicalOpponentPool" as HPool
+  folder "Easy tier\npermanent weak Hunters" as Easy
+  folder "Hard tier\nrecent strong Hunters" as Hard
+  component "FrozenAgent" as Frozen
+}
+
+Env --> Info
+Info --> Context
+Context --> Agent
+Agent --> Network
+Network --> Evade
+Network --> Collect
+Network --> Gate
+Evade --> Blend
+Collect --> Blend
+Gate --> Blend
+Blend --> Agent : action selection
+
+Agent --> Buffer : real transitions
+Info --> CHER : completed trajectory
+CHER --> Detector
+Detector --> Synthetic
+Synthetic --> Buffer : add_batch()
+Buffer --> Agent : sample minibatch
+Agent --> Network : Double DQN update
+
+HPool --> Easy
+HPool --> Hard
+HPool --> Frozen
+Frozen --> Env : historical Hunter actions
+
+note right of Gate
+  gate = 1.0 means evasion-biased.
+  gate = 0.0 means collection-biased.
+  Healthy policy should adapt gate
+  to tactical context.
+end note
+
+note bottom of CHER
+  Current risk:
+  CHER can improve collection,
+  but may become a teacher crutch
+  if live rewards still favor evasion.
+end note
+
+@enduml
+

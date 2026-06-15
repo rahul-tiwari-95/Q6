@@ -1,0 +1,98 @@
+@startuml Qsix_System_Architecture
+title Q6 System Architecture - Big Picture
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam defaultFontName Helvetica
+
+package "Environment" {
+  component "SelfPlayGridworld\n(environment/selfplay_env.py)" as SelfPlayEnv
+  component "HunterGridworld\n(environment/hunter_gridworld.py)" as Phase1Env
+  component "State Encoder\nutils/state_encoder.py\nflat grid -> 6x25x25" as Encoder
+}
+
+package "Agents" {
+  component "DQNv2Agent\nagent/dqn_v2_agent.py\nDouble DQN + Dueling CNN" as DQNv2
+  component "GatedDQNAgent\nagent/gated_dqn_agent.py\ncontext replay + gated policy" as GatedAgent
+  component "FrozenAgent\nagent/frozen_agent.py\nread-only checkpoint opponent" as Frozen
+}
+
+package "Models" {
+  component "CNNDuelingQNetwork\nmodel/cnn_q_network.py" as CNN
+  component "GatedOptionNetwork\nmodel/gated_option_network.py\nEvade head + Collect head + Gate" as GOP
+}
+
+package "Self-Play Memory" {
+  component "OpponentPool\nagent/opponent_pool.py\nFIFO historical Hunters" as Pool
+  component "HierarchicalOpponentPool\nutils/hierarchical_pool.py\nEasy tier + Hard tier" as HierPool
+}
+
+package "Training Drivers" {
+  component "train_v2.py\nPhase 1" as Train1
+  component "train_phase2.py\nPhase 2 self-play + FSP" as Train2
+  component "train_phase3.py\nPhase 3 GOP + CHER" as Train3
+}
+
+package "Experiment Outputs" {
+  folder "training_runs/<run_id>" as Runs
+  component "episode_stats.csv" as CSV
+  component "experiment.json" as Manifest
+  component "checkpoints/*.pth" as Checkpoints
+  component "replays/*.jsonl" as Replays
+}
+
+package "Dashboard" {
+  component "dashboard/scan.py" as Scan
+  database "dashboard/data/index.json" as Index
+  component "Static browser UI\nindex/run/replay/versions pages" as UI
+}
+
+Train1 --> Phase1Env
+Train2 --> SelfPlayEnv
+Train3 --> SelfPlayEnv
+
+SelfPlayEnv --> Encoder
+Phase1Env --> Encoder
+Encoder --> CNN
+Encoder --> GOP
+
+DQNv2 --> CNN
+GatedAgent --> GOP
+
+Train2 --> DQNv2 : Krishna + Hunter
+Train2 --> Pool : save Hunter snapshots
+Pool --> Frozen : sample frozen Hunter
+
+Train3 --> GatedAgent : Krishna
+Train3 --> DQNv2 : Hunter
+Train3 --> HierPool : save/sample Hunters
+HierPool --> Frozen
+
+Train1 --> Runs
+Train2 --> Runs
+Train3 --> Runs
+Runs --> CSV
+Runs --> Manifest
+Runs --> Checkpoints
+Runs --> Replays
+
+Scan --> Runs
+Scan --> Index
+Index --> UI
+
+note right of SelfPlayEnv
+  The central research environment:
+  simultaneous Krishna/Hunter moves,
+  sparse wins, dense shaping,
+  adversarial non-stationarity.
+end note
+
+note bottom of GOP
+  Phase 3 tries to separate
+  "evade" and "collect"
+  gradients with a learned gate.
+end note
+
+@enduml
+

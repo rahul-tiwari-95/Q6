@@ -1,0 +1,76 @@
+@startuml Qsix_Training_Phase_Timeline
+title Q6 Training Phase Timeline and Research Evolution
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam activity {
+  BackgroundColor White
+  BorderColor Black
+  ArrowColor Black
+}
+
+start
+
+:v1 / Phase 1\nSingle-agent Krishna vs scripted Hunter;
+note right
+  Question:
+  Can DQN learn the game at all?
+
+  Result:
+  Yes. Strong performance vs scripted
+  and progressive Hunters.
+end note
+
+:CNN + Double DQN + Dueling\n6-channel grid encoding;
+
+:v2/v3 / Phase 2\nSelf-play begins;
+note right
+  Hunter becomes a learned DQN agent.
+  Training alternates between:
+  - joint latest-vs-latest episodes
+  - FSP episodes vs frozen snapshots
+end note
+
+:Critical bug fixes\nEpsilon decay and collision handling;
+
+:v4 / Phase 2 hardened\nFull FIFO opponent pool;
+note right
+  Finding:
+  More training did not solve collection.
+
+  Failure:
+  Bimodal collapse:
+  Krishna either evades forever or dies.
+end note
+
+if (Why did collection collapse?) then (Reward incentives)
+  :Collection attempt becomes negative EV\nagainst hardened Hunters;
+else (Network capacity)
+  :Single head suffers gradient conflict\ncollect vs evade;
+endif
+
+:v5 / Phase 3\nGOP + CHER + hierarchical pool;
+note right
+  GOP:
+  Evade head + collect head + learned gate.
+
+  CHER:
+  Inject safe-collection counterfactuals.
+
+  Hierarchical pool:
+  Preserve easy opponents for practice.
+end note
+
+:Result\nMore pellet contact, still rare wins;
+note right
+  Current status:
+  Useful research prototype.
+  Architecture promising.
+  Incentive problem unresolved.
+end note
+
+:v6 planned\nReward reshaping + curriculum +\nCHER dependency reduction;
+
+stop
+@enduml
+

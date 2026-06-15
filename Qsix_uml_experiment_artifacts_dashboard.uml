@@ -1,0 +1,76 @@
+@startuml Qsix_Experiment_Artifacts_Dashboard
+title Q6 Experiment Logging and Browser Dashboard Pipeline
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam defaultFontName Helvetica
+
+component "Training Script\ntrain_v2.py\ntrain_phase2.py\ntrain_phase3.py" as Train
+
+folder "training_runs/<timestamp>_<name>" as RunDir {
+  folder "logs/" as Logs
+  folder "checkpoints/" as Ckpts
+  folder "replays/" as Replays
+  folder "pool/" as Pool
+  file "experiment.json" as Manifest
+}
+
+file "logs/episode_stats.csv" as CSV
+file "checkpoints/krishna_final.pth" as KFinal
+file "checkpoints/hunter_final.pth" as HFinal
+file "checkpoints/krishna_best.pth" as KBest
+file "replays/episode_*.jsonl" as ReplayFiles
+file "pool/*snapshot*.pth" as PoolFiles
+
+component "dashboard/scan.py" as Scan
+database "dashboard/data/index.json" as Index
+
+component "dashboard/index.html\nrun list" as IndexPage
+component "dashboard/run.html\nmetrics and curves" as RunPage
+component "dashboard/replay.html\nstep-by-step replay" as ReplayPage
+component "dashboard/versions.html\nresearch timeline" as VersionsPage
+component "dashboard/architecture.html\nsystem explanation" as ArchPage
+
+Train --> RunDir : create run directory
+Train --> CSV : append episode metrics
+Train --> KFinal : save final Krishna
+Train --> HFinal : save final Hunter
+Train --> KBest : save best Krishna
+Train --> ReplayFiles : record selected episodes
+Train --> PoolFiles : save Hunter snapshots
+Train --> Manifest : write metadata and results
+
+Logs --> CSV
+Ckpts --> KFinal
+Ckpts --> HFinal
+Ckpts --> KBest
+Replays --> ReplayFiles
+Pool --> PoolFiles
+
+Scan --> RunDir : scan all experiment manifests
+Scan --> CSV : downsample curves
+Scan --> ReplayFiles : summarize replay headers/footers
+Scan --> Index : write static JSON
+
+Index --> IndexPage
+Index --> RunPage
+Index --> ReplayPage
+Index --> VersionsPage
+Index --> ArchPage
+
+note right of Manifest
+  Important future improvement:
+  include dirty worktree status,
+  exact command, dependency versions,
+  and patch/hash for uncommitted code.
+end note
+
+note bottom of Index
+  Q6's dashboard is a major strength:
+  it turns training into a visual,
+  inspectable experiment log.
+end note
+
+@enduml
+

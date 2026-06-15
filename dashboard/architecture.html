@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture — GOP + CHER | Q6</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg:      #0b0c0f;
+    --surface: #13151a;
+    --border:  #1f2229;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
+    --accent:  #60a5fa;
+    --green:   #4ade80;
+    --yellow:  #fde68a;
+    --red:     #f87171;
+    --purple:  #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: ui-monospace, 'Cascadia Code', monospace; line-height: 1.6; }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex; align-items: center; gap: 20px;
+  }
+  header a { color: var(--muted); text-decoration: none; font-size: 13px; }
+  header a:hover { color: var(--accent); }
+  header h1 { font-size: 16px; font-weight: 600; color: var(--text); flex: 1; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+  h2 { font-size: 18px; font-weight: 600; color: var(--accent); margin: 40px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  h3 { font-size: 14px; font-weight: 600; color: var(--yellow); margin: 24px 0 8px; }
+  p  { font-size: 13px; color: #94a3b8; margin-bottom: 12px; }
+
+  .problem-box {
+    background: #1a0f0f;
+    border: 1px solid #3b1a1a;
+    border-left: 3px solid var(--red);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #fca5a5;
+  }
+
+  .solution-box {
+    background: #0f1a0f;
+    border: 1px solid #1a3b1a;
+    border-left: 3px solid var(--green);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #86efac;
+  }
+
+  .diagram-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .diagram-card .label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+  }
+
+  .mermaid { font-family: ui-monospace, monospace; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-bottom: 20px;
+  }
+  th { background: var(--border); color: var(--muted); text-align: left; padding: 8px 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { padding: 7px 12px; border-bottom: 1px solid var(--border); color: #cbd5e1; }
+  tr:last-child td { border-bottom: none; }
+  td code { color: var(--accent); font-size: 11px; }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  .tag-new    { background: #14532d; color: var(--green); }
+  .tag-mod    { background: #1e3a5f; color: var(--accent); }
+  .tag-shared { background: #2d1b69; color: var(--purple); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+  }
+  .stat-card .val { font-size: 24px; font-weight: 700; color: var(--accent); }
+  .stat-card .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .cmd {
+    background: #070809;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    font-size: 12px;
+    color: var(--green);
+    overflow-x: auto;
+    white-space: pre;
+    margin-bottom: 20px;
+  }
+
+  .gate-vis {
+    display: flex; align-items: center; gap: 0; margin: 16px 0;
+    border-radius: 6px; overflow: hidden; height: 36px;
+  }
+  .gate-collect { flex: 1; background: #fde68a33; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--yellow); font-weight: 600; }
+  .gate-evade   { flex: 1; background: #f8717133; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--red); font-weight: 600; }
+  .gate-needle  { width: 3px; background: white; height: 36px; position: relative; }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 16px 32px;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 60px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html">← Runs</a>
+  <h1>Architecture: Gated Option Policies + Counterfactual HER</h1>
+  <div style="display:flex;gap:16px;align-items:center">
+    <a href="versions.html">Versions</a>
+    <a href="replay.html">Replay</a>
+    <span style="font-size:11px;color:var(--muted)">Phase 3 — v5 Research</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Problem -->
+  <h2>Problem: Strategy Bimodality</h2>
+  <div class="problem-box">
+    After 6000 episodes of vanilla FSP training (v4), Krishna learned evasion but developed
+    <strong>collection paralysis</strong>. It never approached pellets even when the Hunter was far
+    away. The win condition (4 pellets) was reached only 6 times in 6000 episodes.
+    <br><br>
+    <strong>Root cause</strong>: The replay buffer contained only evasion-only transitions.
+    The FSP pool evicted all weak early-game Hunters after ep 2000, leaving no safe practice time.
+  </div>
+
+  <div class="grid2">
+    <div class="stat-card"><div class="val">0.1%</div><div class="lbl">Krishna win rate (v4, 6000 eps)</div></div>
+    <div class="stat-card"><div class="val">0.35</div><div class="lbl">Avg pellets per episode (v4 final)</div></div>
+    <div class="stat-card"><div class="val">+4.9</div><div class="lbl">Peak avg100 reward (ep 5300)</div></div>
+    <div class="stat-card"><div class="val">−23</div><div class="lbl">Final avg100 reward (ep 6000)</div></div>
+  </div>
+
+  <!-- Solution -->
+  <h2>Solution</h2>
+  <div class="solution-box">
+    Two complementary mechanisms:<br>
+    <strong>1. Gated Option Policies (GOP)</strong> — dual Q-heads (evade + collect) with a learned
+    3-input gate that blends them based on Hunter distance, pellets remaining, and lives.<br>
+    <strong>2. Counterfactual HER (CHER)</strong> — post-episode relabeling that scans trajectories
+    for "safe collect opportunities" Krishna missed and injects them with a +30 collection bonus.
+  </div>
+
+  <!-- System Overview -->
+  <h2>System Overview</h2>
+  <div class="diagram-card">
+    <div class="label">Full training pipeline</div>
+    <div class="mermaid">
+graph LR
+    ENV[SelfPlayGridworld] -->|state + info| LOOP[Training Loop]
+    LOOP -->|act with context| K[GatedDQNAgent<br/>Krishna]
+    LOOP -->|act| H[DQNv2Agent<br/>Hunter]
+    K -->|step| BUF[ContextReplayBuffer]
+    LOOP -->|end of episode| CHER[CounterfactualHER]
+    CHER -->|inject CF transitions| BUF
+    BUF -->|sample| LEARN[Double DQN<br/>+ Gate gradient]
+    LEARN -->|update| K
+    H -->|every 100 eps| POOL[HierarchicalPool]
+    POOL --- E[Easy tier<br/>5 slots permanent]
+    POOL --- HT[Hard tier<br/>15 slots FIFO]
+    POOL -->|sample| FSP[FSP Episode]
+    </div>
+  </div>
+
+  <!-- GOP Network -->
+  <h2>Gated Option Network</h2>
+  <div class="diagram-card">
+    <div class="label">GatedOptionNetwork forward pass</div>
+    <div class="mermaid">
+graph LR
+    S["State\n(B,6,25,25)"] --> CNN["CNN Backbone\nConv32 → Conv64\nFlatten → FC256"]
+    C["Context (B,3)\nhunter_dist_norm\npellets_norm\nlives_norm"] --> GATE["Gate MLP\nFC16 → σ\ngate ∈ [0,1]"]
+    CNN --> EH["Evade Head\nFC128 → 4\nA_evade"]
+    CNN --> CH["Collect Head\nFC128 → 4\nA_collect"]
+    CNN --> VH["Value Head\nFC128 → 1\nV(s)"]
+    GATE --> B["Blend\nA = gate·A_evade\n  + (1-gate)·A_collect"]
+    EH --> B
+    CH --> B
+    B --> Q["Q(s,a) = V(s) + A − mean(A)\nDueling combination"]
+    VH --> Q
+    </div>
+  </div>
+
+  <h3>Gate Semantics</h3>
+  <div class="gate-vis">
+    <div class="gate-collect">COLLECT (gate=0)</div>
+    <div class="gate-needle"></div>
+    <div class="gate-evade">EVADE (gate=1)</div>
+  </div>
+  <table>
+    <tr><th>Context Input</th><th>Normalization</th><th>Effect on Gate</th></tr>
+    <tr><td>Hunter Manhattan distance</td><td>÷ (2 × 25)</td><td>Higher → gate rises toward evasion</td></tr>
+    <tr><td>Pellets remaining</td><td>÷ 4</td><td>Higher → gate falls toward collection</td></tr>
+    <tr><td>Lives remaining</td><td>÷ 3</td><td>Lower → gate rises toward evasion</td></tr>
+  </table>
+
+  <!-- CHER -->
+  <h2>Counterfactual HER</h2>
+  <div class="diagram-card">
+    <div class="label">CHER relabeling pipeline</div>
+    <div class="mermaid">
+sequenceDiagram
+    participant L as Training Loop
+    participant E as Environment
+    participant B as Replay Buffer
+    participant C as CounterfactualHER
+
+    L->>E: reset()
+    loop Each step
+        L->>E: step(actions)
+        E-->>L: state, rewards, info
+        L->>B: add real transition
+        L->>L: append to trajectory
+    end
+    L->>C: relabel(trajectory)
+    note over C: For each step where<br/>hunter_dist > 6 AND<br/>pellet_dist ≤ 4 AND<br/>Krishna missed optimal action
+    C-->>C: cf_action = toward_pellet(krishna_pos, pellet_pos)
+    C-->>C: cf_reward = real_reward + 30.0
+    C-->>L: List of CF transitions
+    L->>B: add_batch(cf_transitions)
+    </div>
+  </div>
+
+  <h3>CHER Parameters</h3>
+  <table>
+    <tr><th>Parameter</th><th>Default</th><th>Meaning</th></tr>
+    <tr><td><code>hunter_safe_dist</code></td><td>6</td><td>Hunter must be more than this many cells away</td></tr>
+    <tr><td><code>pellet_reach</code></td><td>4</td><td>Nearest pellet within this many cells</td></tr>
+    <tr><td><code>collect_bonus</code></td><td>30.0</td><td>Reward added to counterfactual transition</td></tr>
+    <tr><td><code>max_cf_per_ep</code></td><td>50</td><td>Cap per episode to prevent buffer flooding</td></tr>
+  </table>
+
+  <!-- Hierarchical Pool -->
+  <h2>Hierarchical Opponent Pool</h2>
+  <div class="diagram-card">
+    <div class="label">Two-tier FSP pool prevents eviction of early-game opponents</div>
+    <div class="mermaid">
+graph TD
+    SNAP["Hunter Snapshot"] --> CHECK{Easy tier full?\n5 slots}
+    CHECK -->|No| EASY["Easy Tier\n5 slots — never evicted\nearly-episode opponents"]
+    CHECK -->|Yes| HARD["Hard Tier\n15 slots — FIFO eviction\nrecent strong opponents"]
+    SAMPLE["Sample Opponent"] --> COIN{"p_easy = 0.25"}
+    COIN -->|25%| EASY
+    COIN -->|75%| HARD
+    EASY --> FA["FrozenAgent.load(path)"]
+    HARD --> FA
+    </div>
+  </div>
+
+  <!-- File Map -->
+  <h2>File Map</h2>
+  <table>
+    <tr><th>File</th><th>Status</th><th>Description</th></tr>
+    <tr><td><code>model/gated_option_network.py</code></td><td><span class="tag tag-new">NEW</span></td><td>GatedOptionNetwork: dual heads + gate MLP + warm-start from CNNDueling</td></tr>
+    <tr><td><code>agent/gated_dqn_agent.py</code></td><td><span class="tag tag-new">NEW</span></td><td>GatedDQNAgent: ContextReplayBuffer, act/step/learn with context, q_values_options()</td></tr>
+    <tr><td><code>utils/cher.py</code></td><td><span class="tag tag-new">NEW</span></td><td>CounterfactualHER: trajectory relabeling, optimal action computation</td></tr>
+    <tr><td><code>utils/hierarchical_pool.py</code></td><td><span class="tag tag-new">NEW</span></td><td>HierarchicalOpponentPool: 2-tier easy/hard pool</td></tr>
+    <tr><td><code>train_phase3.py</code></td><td><span class="tag tag-new">NEW</span></td><td>Phase 3 training script: GOP + CHER + HierPool + best-ckpt saving</td></tr>
+    <tr><td><code>environment/selfplay_env.py</code></td><td><span class="tag tag-mod">MODIFIED</span></td><td>Added hunter_manhattan_dist, nearest_pellet_dist, nearest_pellet_pos to info dict</td></tr>
+    <tr><td><code>model/cnn_q_network.py</code></td><td><span class="tag tag-shared">SHARED</span></td><td>Phase 2 baseline (Hunter still uses this)</td></tr>
+    <tr><td><code>agent/dqn_v2_agent.py</code></td><td><span class="tag tag-shared">SHARED</span></td><td>Phase 2 Hunter agent (unchanged)</td></tr>
+    <tr><td><code>agent/opponent_pool.py</code></td><td><span class="tag tag-shared">SHARED</span></td><td>Single-tier FIFO pool (used inside HierarchicalPool)</td></tr>
+  </table>
+
+  <!-- Launch -->
+  <h2>Launch Command</h2>
+  <div class="cmd">python train_phase3.py \
+  --episodes 12000 \
+  --device mps \
+  --name phase3_v1_gop_cher \
+  --warm-start training_runs/20260606_175631_phase2_v4_nowall/checkpoints/krishna_best_ep5300.pth \
+  --epsilon-start 0.15</div>
+
+  <p>Progress is logged to <code>training_runs/&lt;id&gt;/logs/episode_stats.csv</code> with columns: <code>mean_gate</code>, <code>cf_injected</code>, <code>avg100</code>.</p>
+
+  <h3>Success Criteria (v5 targets)</h3>
+  <table>
+    <tr><th>Metric</th><th>v4 baseline</th><th>v5 target</th></tr>
+    <tr><td>Krishna win rate</td><td>0.1%</td><td>&gt;0.4%</td></tr>
+    <tr><td>avg pellets / joint ep</td><td>0.35</td><td>&gt;1.0</td></tr>
+    <tr><td>avg100 peak</td><td>+4.9 (ep 5300)</td><td>&gt;+15 by ep 6000</td></tr>
+    <tr><td>avg100 sustained (final)</td><td>−23</td><td>&gt;+5 sustained</td></tr>
+    <tr><td>Collection paralysis</td><td>Yes</td><td>Resolved by CHER</td></tr>
+  </table>
+
+</div>
+
+<footer>Q6 — Phase 3 Research Architecture — GOP + CHER</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      background:      '#13151a',
+      primaryColor:    '#1e2230',
+      primaryTextColor:'#e2e8f0',
+      lineColor:       '#4b5563',
+      secondaryColor:  '#1f2229',
+      tertiaryColor:   '#0b0c0f',
+      edgeLabelBackground: '#13151a',
+    },
+    flowchart: { curve: 'basis', useMaxWidth: true },
+    sequence: { useMaxWidth: true },
+  });
+</script>
+</body>
+</html>

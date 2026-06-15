@@ -1,0 +1,586 @@
+---
+title: Q6 Current Policy Biases and Architecture
+description: A research-oriented map of Q6, its training history, current policy biases, architecture, and next improvements.
+---
+
+# Q6 Current Policy Biases and Architecture
+
+Q6 is a compact research lab for a hard reinforcement learning problem: how to train an agent that must pursue a useful objective while surviving against a co-evolving adversary.
+
+The visible game is simple: Krishna collects pellets in a 25x25 gridworld while Hunter chases. The actual research problem is deeper:
+
+> Can a learned policy balance mission progress, survival, exploration, and adversarial adaptation when the opponent is also learning?
+
+This document is meant to be a high-level entry point for anyone trying to understand what Q6 is, why it matters, where the current failure modes are, and what should be improved next.
+
+## Companion UML diagrams
+
+These PlantUML files sit next to this document and are intended as visual onboarding aids:
+
+| Diagram | Purpose |
+|---|---|
+| [`Qsix_uml_system_architecture.uml`](./Qsix_uml_system_architecture.uml) | Big-picture modules and data flow |
+| [`Qsix_uml_training_phase_timeline.uml`](./Qsix_uml_training_phase_timeline.uml) | Evolution from Phase 1 to planned v6 |
+| [`Qsix_uml_selfplay_sequence.uml`](./Qsix_uml_selfplay_sequence.uml) | Episode-level self-play sequence |
+| [`Qsix_uml_phase3_gop_cher.uml`](./Qsix_uml_phase3_gop_cher.uml) | Phase 3 GOP + CHER + hierarchical pool architecture |
+| [`Qsix_uml_experiment_artifacts_dashboard.uml`](./Qsix_uml_experiment_artifacts_dashboard.uml) | Logs, checkpoints, replays, dashboard pipeline |
+| [`Qsix_uml_policy_bias_feedback_loop.uml`](./Qsix_uml_policy_bias_feedback_loop.uml) | Why evasion-only behavior emerges |
+| [`Qsix_uml_code_module_map.uml`](./Qsix_uml_code_module_map.uml) | Newcomer-oriented source module map |
+
+---
+
+## One-paragraph summary
+
+Q6 began as a DQN gridworld agent trained against scripted Hunters. That worked: Krishna learned to collect pellets and evade predictable enemies. The project became interesting when Hunter was made into a learned adversary through self-play. At that point, Krishna discovered a rational but unwanted strategy: avoid risk, survive, and stop collecting. The current Q6 research thread is about breaking that policy bias using Fictitious Self-Play, historical opponent pools, a gated evade/collect network, and counterfactual hindsight replay.
+
+## What Q6 is not
+
+Q6 is not just a Pac-Man clone. It is also not yet a globally novel RL algorithm in the academic sense.
+
+Its individual pieces are built from known RL ideas:
+
+| Component | Prior art |
+|---|---|
+| DQN | Mnih et al., "Human-level control through deep reinforcement learning" |
+| Double DQN | van Hasselt et al., "Deep Reinforcement Learning with Double Q-learning" |
+| Dueling heads | Wang et al., "Dueling Network Architectures for Deep Reinforcement Learning" |
+| Fictitious Self-Play | Heinrich and Silver, "Deep Reinforcement Learning from Self-Play in Imperfect-Information Games" |
+| HER | Andrychowicz et al., "Hindsight Experience Replay" |
+| Rainbow baseline | Hessel et al., "Rainbow: Combining Improvements in Deep Reinforcement Learning" |
+
+The value of Q6 is the combination, the instrumentation, and the way it exposes a real RL failure mode in a small environment.
+
+---
+
+## The research question
+
+Q6 asks:
+
+> What happens when the reward function says "collect pellets" but the adversarial training distribution says "collection is dangerous"?
+
+The current answer is:
+
+> The agent learns to survive instead of completing the task, because survival has better expected value under the learned opponent distribution.
+
+That is the core policy bias in Q6.
+
+## Policy bias definition
+
+In this project, a policy bias is an emergent preference produced by the combination of:
+
+1. Reward weights
+2. Opponent strength
+3. Replay-buffer composition
+4. Exploration schedule
+5. Curriculum timing
+6. Synthetic or counterfactual training data
+
+The bias is not necessarily a bug in the neural network. Often it is the mathematically correct behavior under the incentives the project created.
+
+---
+
+## Current empirical status
+
+The run artifacts show a clear story.
+
+| Stage | Episodes | Result |
+|---|---:|---|
+| Phase 1 full baseline | 18,000 | Strong success vs scripted/progressive Hunter |
+| Phase 2 v3 self-play | 6,000 | Self-play works, but Krishna/Hunter dynamics are unstable |
+| Phase 2 v4 no-wall | 6,000 | Bimodal collapse confirmed: evasion dominates collection |
+| Phase 3 GOP+CHER | 12,000 | Collection improves, but autonomous winning is not solved |
+
+Concrete metrics from recorded logs:
+
+| Run | Krishna wins | Hunter wins | Timeouts | Total pellets | Notes |
+|---|---:|---:|---:|---:|---|
+| Phase 1 full | 15,092 | 0 | 0 | 66,291 | Scripted/progressive opponent setting solved well |
+| Phase 2 v3 | 231 | 2,517 | 3,252 | 7,920 | Self-play functional, still volatile |
+| Phase 2 v4 | 6 | 3,147 | 2,847 | 3,010 | Hardened pool produces collection collapse |
+| Phase 3 v5 | 2 | 265 | 11,733 | 2,567 | CHER improves pellet contact but wins remain rare |
+
+Important Phase 3 details:
+
+| Metric | Value |
+|---|---:|
+| Episodes | 12,000 |
+| CHER injections | 237,511 |
+| Episodes with at least 1 pellet | 2,284 |
+| Episodes with at least 2 pellets | 265 |
+| Episodes with at least 3 pellets | 16 |
+| Krishna wins | 2 |
+| Timeout rate | 97.775% |
+| Gate range | 0.220 to 0.803 |
+| Final gate | 0.545 |
+
+Interpretation:
+
+> Phase 3 made Krishna touch pellets more often, but the agent is still not reliably converting collection into wins. The latest results suggest a CHER-assisted collection policy, not a fully internalized autonomous collection policy.
+
+---
+
+## The central policy bias: survival over objective
+
+Krishna is supposed to collect pellets. In self-play, Krishna often learns something else:
+
+> Do not collect. Stay alive. Timeout safely.
+
+This is not random failure. It is a reward-and-distribution failure.
+
+Against a strong Hunter, a pellet attempt can be negative expected value:
+
+```text
+E[collect] = P(survive attempt) * pellet_reward
+           + P(caught) * catch_and_loss_cost
+
+E[evade]   = P(survive timeout) * survival/shaping reward
+```
+
+If collection requires moving toward dangerous positions and evasion avoids large penalties, then evasion wins.
+
+This is the same pattern that appears in many real RL systems:
+
+| Toy behavior in Q6 | Real-world analogue |
+|---|---|
+| Avoid pellets because Hunter is dangerous | Robot avoids useful tasks because collision penalties dominate |
+| Timeout safely | Agent learns inactivity as the safest policy |
+| Overfit to scripted Hunter | Policy memorizes environment quirks instead of general strategy |
+| Strong Hunter pool kills collection | Curriculum advances too fast and removes safe practice |
+| CHER props up collection | Synthetic supervision helps but does not fix live incentives |
+
+---
+
+## Bias 1: scripted-opponent overfitting
+
+Phase 1 worked very well against scripted/progressive Hunters. The full run reached a high win rate and strong pellet collection.
+
+But a scripted opponent gives Krishna a predictable target distribution. Krishna can learn:
+
+```text
+Avoid the pattern of this Hunter.
+```
+
+That is different from learning:
+
+```text
+Collect while adapting to an intelligent opponent.
+```
+
+This is why Phase 1 success was necessary but not sufficient. The transition to self-play was the correct research move.
+
+## Bias 2: hardened-opponent pool bias
+
+Phase 2 introduced Fictitious Self-Play: Krishna sometimes plays against frozen historical Hunter snapshots.
+
+The intended benefit:
+
+```text
+Train against diverse Hunters, not only the current Hunter.
+```
+
+The observed problem:
+
+```text
+The FIFO pool eventually fills with strong late-game Hunters.
+Early weak Hunters are evicted.
+Safe collection practice disappears.
+```
+
+Once all opponents are hard, the policy receives mostly "collection is dangerous" evidence. The replay buffer becomes dominated by evasion and catch-avoidance transitions.
+
+That is why Phase 3 introduced a hierarchical opponent pool:
+
+| Tier | Purpose |
+|---|---|
+| Easy tier | Permanent weak-opponent practice |
+| Hard tier | Current strong-opponent robustness |
+
+This is a good design move because it preserves both practice and pressure.
+
+## Bias 3: replay-buffer evasion bias
+
+Replay buffers do not store "truth"; they store the distribution of what the agent actually did.
+
+If Krishna spends thousands of episodes evading, then the buffer says:
+
+```text
+Most states are evasion states.
+Most rewards come from survival.
+Most successful outcomes are non-collection timeouts.
+```
+
+The model then improves at the behavior it sees most.
+
+This creates a loop:
+
+```text
+Evasion policy -> evasion episodes -> evasion buffer -> evasion gradients -> stronger evasion policy
+```
+
+That loop is the heart of the collection paralysis problem.
+
+## Bias 4: single-head gradient conflict
+
+In Phase 2, one policy head must learn both:
+
+1. Move toward pellets.
+2. Move away from Hunter.
+
+Those are often opposite gradients.
+
+When Hunter is far away, "move toward pellet" is good.
+When Hunter is nearby, "move toward pellet" can be fatal.
+
+A single advantage head must blend these regimes implicitly. Under pressure, it tends to learn the safer dominant behavior: evasion.
+
+Phase 3's Gated Option Policy is a direct response:
+
+| Head | Meaning |
+|---|---|
+| Evade head | Learn survival/chase-avoidance behavior |
+| Collect head | Learn pellet-oriented behavior |
+| Gate | Blend heads using context: Hunter distance, pellets remaining, lives |
+
+This is not full options-based HRL yet, but it is a useful option-like decomposition.
+
+## Bias 5: CHER dependency
+
+Counterfactual HER tries to fix the missing collection signal.
+
+It scans completed episodes and asks:
+
+```text
+Was Hunter far?
+Was a pellet nearby?
+Did Krishna miss a safe collect opportunity?
+```
+
+If yes, it injects a synthetic transition that rewards the action toward the pellet.
+
+This helps, but it creates a new question:
+
+> Is Krishna collecting because it learned the live objective, or because CHER keeps injecting teacher signals?
+
+The latest Phase 3 run suggests CHER dependency remains high. CHER fired 237,511 times. The collection rate improved, but wins remained rare.
+
+The key future metric should be:
+
+```text
+CHER dependency index = rolling CHER injections / max possible injections
+```
+
+Success would mean this number declines over time while real collection rises.
+
+## Bias 6: off-dynamics counterfactuals
+
+The current CHER design changes the action and reward but keeps the same `next_state`.
+
+That is useful as a heuristic teacher signal, but it is not fully faithful to environment dynamics. In a real MDP:
+
+```text
+different action -> usually different next_state
+```
+
+This can teach the collect head useful preferences, but it can also introduce unrealistic Q-targets.
+
+Future CHER should either:
+
+1. Re-simulate the one-step counterfactual action in the environment, or
+2. Reframe the method as goal/reward relabeling instead of action relabeling.
+
+## Bias 7: reproducibility drift
+
+The latest Phase 3 run manifest records the committed Git SHA, but Phase 3 files are currently untracked or modified in the working tree.
+
+That means:
+
+```text
+experiment.json says "this run used commit X"
+but commit X does not fully contain the code that produced the run.
+```
+
+For a research project, this is a serious but fixable issue.
+
+Every training run should capture:
+
+1. Git commit
+2. Git branch
+3. Dirty worktree flag
+4. Diff patch or hash of uncommitted files
+5. Exact CLI command
+6. Seed
+7. Dependency versions
+
+The dashboard and logs are already strong. Reproducibility metadata should be brought up to the same standard.
+
+---
+
+## Architecture overview
+
+Q6 has three major implementation eras.
+
+### Phase 1: scripted-opponent foundation
+
+Purpose:
+
+```text
+Can DQN learn this game at all?
+```
+
+Key traits:
+
+| Area | Design |
+|---|---|
+| Environment | `HunterGridworld` |
+| Opponent | Scripted/progressive Hunter |
+| Agent | DQN / DQNv2 |
+| Network | CNN + Double DQN + Dueling |
+| Result | Strong performance against scripted opponent |
+
+Phase 1 proved the base environment, state encoding, training loop, and dashboard pipeline.
+
+### Phase 2: self-play and FSP
+
+Purpose:
+
+```text
+Can Krishna learn against a co-evolving Hunter?
+```
+
+Key traits:
+
+| Area | Design |
+|---|---|
+| Environment | `SelfPlayGridworld` |
+| Agents | Krishna DQNv2 + Hunter DQNv2 |
+| Training modes | Joint latest-vs-latest and FSP vs frozen Hunter |
+| Opponent memory | FIFO `OpponentPool` |
+| Result | Self-play works, but collection collapses |
+
+Phase 2 discovered the central policy bias.
+
+### Phase 3: GOP + CHER + hierarchical pool
+
+Purpose:
+
+```text
+Can architecture and counterfactual data break collection paralysis?
+```
+
+Key traits:
+
+| Area | Design |
+|---|---|
+| Krishna agent | `GatedDQNAgent` |
+| Network | `GatedOptionNetwork` |
+| Replay | `ContextReplayBuffer` |
+| Synthetic teacher | `CounterfactualHER` |
+| Opponent memory | `HierarchicalOpponentPool` |
+| Result | More collection, but wins still rare |
+
+Phase 3 is the most interesting research layer, but it still needs correctness fixes, ablation, and reward redesign.
+
+---
+
+## Important implementation caveat
+
+The current `train_phase3.py` appears to contain a Hunter learning bug:
+
+```python
+hunter.step(
+    state, a_k, rewards["hunter"], next_state, done or trunc
+)
+```
+
+The second argument should likely be `a_h`, not `a_k`.
+
+Phase 2 does this correctly:
+
+```python
+hunter.step(state, a_h, rewards["hunter"], next_state, done or trunc)
+```
+
+This matters because Hunter may be learning from Krishna's action labels during Phase 3. Any Phase 3 conclusion should be treated as provisional until this is fixed and re-run.
+
+---
+
+## Why Q6 is worth working on
+
+Q6 is valuable because it makes several hard RL issues visible:
+
+| Hard RL problem | How Q6 exposes it |
+|---|---|
+| Reward misspecification | Survival beats collection under current incentives |
+| Non-stationarity | Hunter changes while Krishna learns |
+| Curriculum fragility | Too-hard opponents destroy collection practice |
+| Sparse success | Full 4-pellet wins become rare |
+| Replay distribution bias | Evasion fills the buffer |
+| Synthetic data risk | CHER helps but may become a crutch |
+| Interpretability | Gate values, replays, logs, and dashboard expose behavior |
+
+The project is worth thinking about because it is small enough to understand and large enough to show real RL pathologies.
+
+---
+
+## What would make Q6 stronger
+
+### P0: Correctness and reproducibility
+
+1. Fix the Phase 3 Hunter action bug.
+2. Commit Phase 3 code, diagrams, docs, and dashboard updates.
+3. Add dirty-worktree metadata to every experiment manifest.
+4. Add a smoke test for Phase 3 training artifacts.
+5. Add a regression test that Hunter learns from `a_h`, not `a_k`.
+
+### P1: Scientific ablations
+
+Run controlled comparisons:
+
+| Variant | Purpose |
+|---|---|
+| Phase 2 baseline | Establish original collapse |
+| GOP only | Does gating help without CHER? |
+| CHER only | Does synthetic collection help without dual heads? |
+| Hierarchical pool only | Does preserving easy opponents help? |
+| GOP + CHER | Is the pair enough? |
+| GOP + CHER + hierarchical pool | Full Phase 3 |
+
+Each should run multiple seeds.
+
+### P2: Reward redesign
+
+The v6 docs point in the right direction: fix the incentive structure, not only the architecture.
+
+Promising changes:
+
+1. Penalize zero-pellet timeouts.
+2. Reward safe collection windows used.
+3. Add pellet proximity shaping only when Hunter distance is safe.
+4. Make collection expected value positive against medium-strength Hunters.
+5. Track risk-adjusted collection, not just raw reward.
+
+The goal:
+
+```text
+Krishna should collect because live rewards make collection rational,
+not because CHER repeatedly tells it to collect.
+```
+
+### P3: Stronger DQN baselines
+
+Q6 already has Double DQN and dueling heads. The missing Rainbow-style components are:
+
+1. Prioritized Experience Replay
+2. n-step returns
+3. NoisyNets
+4. Distributional Q-learning / C51
+
+These are valuable because rare pellet transitions and rare wins should be sampled more intelligently.
+
+### P4: Better opponent populations
+
+Replace or augment simple pool sampling with:
+
+1. Reservoir sampling across all historical Hunters
+2. Elo-style Hunter difficulty estimates
+3. Cross-play matrix: Krishna checkpoint N vs Hunter checkpoint M
+4. PSRO-style policy mixtures
+5. Fixed evaluation suite of frozen Hunters
+
+### P5: Standard API wrappers
+
+Add PettingZoo-style multi-agent wrappers around `SelfPlayGridworld`.
+
+Benefits:
+
+1. Easier comparison with CleanRL and RL libraries
+2. PPO/MAPPO baselines become easier
+3. Standard evaluation tooling
+4. More credible external reproducibility
+
+---
+
+## Real-world application analogues
+
+Q6 maps to many real systems where a useful task competes with safety pressure.
+
+| Q6 scenario | Real system |
+|---|---|
+| Collect pellets while avoiding Hunter | Robot completes tasks while avoiding humans/obstacles |
+| Learned Hunter adapts | Dynamic adversary in cyber defense or pursuit/evasion |
+| Safe timeout strategy | Autonomous system learns inactivity as safest behavior |
+| Easy/hard opponent pool | Curriculum for autonomous vehicles or drones |
+| CHER safe-window relabeling | Learning from near-misses in driving/robotics logs |
+| Gated evade/collect policy | Safety mode vs task mode in embodied agents |
+
+The broader lesson:
+
+> Intelligent systems often learn the safest proxy behavior unless the reward design makes the intended mission rational.
+
+---
+
+## What would make Q6 paper-worthy
+
+Q6 could become a credible research artifact if it demonstrates:
+
+1. A clearly defined policy-bias failure mode.
+2. A reproducible environment and benchmark suite.
+3. Strong baselines: DQN, Rainbow-style DQN, PPO/MAPPO if possible.
+4. Ablations showing which Phase 3 component matters.
+5. Multi-seed statistical results.
+6. Visual diagnostics: replay examples, gate dynamics, CHER dependency.
+7. Generalization tests on unseen layouts and opponent populations.
+8. A corrected and dynamics-consistent counterfactual replay method.
+
+The paper angle would not be "we invented DQN for Pac-Man."
+
+The stronger angle would be:
+
+> Diagnosing and correcting survival-dominant policy bias in adversarial sparse-reward self-play.
+
+---
+
+## How a newcomer should read the repo
+
+Suggested path:
+
+1. Read `README.md` for the project story.
+2. Read `versions/README.md` for the research timeline.
+3. Read `environment/selfplay_env.py` to understand the game mechanics.
+4. Read `utils/state_encoder.py` to understand the state representation.
+5. Read `agent/dqn_v2_agent.py` for the Phase 2 learner.
+6. Read `train_phase2.py` for self-play and FSP.
+7. Read `model/gated_option_network.py`, `agent/gated_dqn_agent.py`, and `utils/cher.py` for Phase 3.
+8. Inspect `training_runs/*/experiment.json` and `logs/episode_stats.csv` for empirical status.
+9. Open the dashboard to see the project as a living experiment log.
+
+Useful commands:
+
+```bash
+python -m pytest tests/ -q
+python3 train_phase2.py --smoke
+python3 train_phase3.py --smoke
+python3 dashboard/scan.py
+python3 -m http.server 8080
+```
+
+---
+
+## Final north star
+
+The most important next question is not:
+
+```text
+Can Krishna win more often?
+```
+
+The better question is:
+
+```text
+Can Q6 produce a policy that collects because the live incentive structure
+makes collection rational, while still preserving robust evasion against
+a learned adversary?
+```
+
+If Q6 answers that cleanly, it becomes more than a gridworld project. It becomes a small but serious study of policy bias, reward design, and adversarial self-play.
+

@@ -301,6 +301,26 @@ class SelfPlayGridworld(gym.Env):
         return self.grid.flatten().astype(np.int32)
 
     def _get_info(self) -> Dict[str, Any]:
+        # Compute derived distances for gate context and CHER relabeling.
+        hunter_dist = 0
+        if self.krishna_pos is not None and self.hunter_pos is not None:
+            hunter_dist = int(
+                abs(self.krishna_pos[0] - self.hunter_pos[0])
+                + abs(self.krishna_pos[1] - self.hunter_pos[1])
+            )
+
+        nearest_pellet_pos: Tuple[int, int] | None = None
+        nearest_pellet_dist = 0.0
+        if self.pellet_positions and self.krishna_pos is not None:
+            nearest_pellet_pos = min(
+                self.pellet_positions,
+                key=lambda p: abs(p[0] - self.krishna_pos[0]) + abs(p[1] - self.krishna_pos[1]),
+            )
+            nearest_pellet_dist = float(
+                abs(nearest_pellet_pos[0] - self.krishna_pos[0])
+                + abs(nearest_pellet_pos[1] - self.krishna_pos[1])
+            )
+
         return {
             "steps": self.steps,
             "pellets_collected": self.pellets_collected,
@@ -310,4 +330,8 @@ class SelfPlayGridworld(gym.Env):
             "krishna_position": self.krishna_pos,
             "hunter_position": self.hunter_pos,
             "walls_hit": self.walls_hit,
+            # ---- extended fields for GOP gate and CHER ----
+            "hunter_manhattan_dist": hunter_dist,
+            "nearest_pellet_dist": nearest_pellet_dist,
+            "nearest_pellet_pos": nearest_pellet_pos,
         }

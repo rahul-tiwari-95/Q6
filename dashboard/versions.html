@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Q6 Lab — Version History</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.version-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.version-card:hover { border-color: var(--accent); }
+.version-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.version-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.badge-done    { background: #14532d; color: #4ade80; }
+.badge-current { background: #1e3a5f; color: #60a5fa; }
+.badge-planned { background: #3b1f6e; color: #a78bfa; }
+.version-title { font-size: 18px; font-weight: 600; }
+.version-meta  { font-size: 12px; color: var(--muted); }
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 16px 0 6px;
+}
+.metrics-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 8px 0;
+}
+.metric {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+}
+.metric span { color: var(--accent); font-weight: 600; }
+.tag-good   { color: #4ade80; }
+.tag-bad    { color: #f87171; }
+.tag-info   { color: #60a5fa; }
+.run-link {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 8px;
+  text-decoration: none;
+  margin-right: 6px;
+  margin-top: 4px;
+}
+.run-link:hover { color: var(--accent); border-color: var(--accent); }
+p { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 4px 0; }
+ul { color: var(--muted); font-size: 14px; line-height: 1.7; padding-left: 20px; }
+li { margin: 2px 0; }
+.verdict {
+  border-left: 3px solid var(--accent);
+  padding: 10px 16px;
+  background: rgba(96,165,250,0.05);
+  border-radius: 0 4px 4px 0;
+  font-size: 13px;
+  margin-top: 12px;
+}
+</style>
+</head>
+<body>
+<nav class="topbar">
+  <div class="brand"><a href="index.html" style="color:inherit">Q6 / Lab</a></div>
+  <div class="spacer"></div>
+  <a href="index.html" style="color:var(--muted);font-size:12px;text-decoration:none;margin-right:16px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">Runs</a>
+  <a href="replay.html" style="color:var(--muted);font-size:12px;text-decoration:none;margin-right:16px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">Replay</a>
+  <a href="architecture.html" style="color:var(--muted);font-size:12px;text-decoration:none;margin-right:16px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">Architecture</a>
+  <button id="mode-toggle" class="mode-toggle">lab mode</button>
+</nav>
+<main>
+  <h1>Version History</h1>
+  <p style="color:var(--muted);margin-bottom:32px">
+    Each version represents a distinct research hypothesis. Read these as a lab
+    notebook: what was assumed, what was tested, what failed, what we learned,
+    and why the next iteration was chosen.
+  </p>
+
+  <!-- ── v1 ── -->
+  <div class="version-card">
+    <div class="version-header">
+      <span class="version-badge badge-done">v1</span>
+      <span class="version-title">Phase 1 — Single-Agent Baseline</span>
+      <span class="version-meta">Dec 2025 · 6,000 eps</span>
+    </div>
+    <div class="section-label">Thesis</div>
+    <p>A vanilla Double DQN with dueling heads and CNN state encoding can learn
+    a viable evasion + collection policy against a scripted (non-learning) Hunter
+    in a 25×25 grid world.</p>
+    <div class="section-label">Architecture</div>
+    <ul>
+      <li>CNNDuelingQNetwork: conv (32→64) → FC 256 → advantage + value heads</li>
+      <li>6-channel binary state: Krishna pos, Hunter pos, pellets, walls, lives, steps</li>
+      <li>Single agent. Hunter is scripted greedy (deterministic pathfinding).</li>
+      <li>ε-greedy exploration: 1.0 → 0.05 over 6000 eps</li>
+    </ul>
+    <div class="section-label">Key Results</div>
+    <div class="metrics-row">
+      <div class="metric">pellets/ep <span>~0.8</span></div>
+      <div class="metric">win rate <span>~12%</span></div>
+      <div class="metric">avg100 <span>~+15</span></div>
+    </div>
+    <div class="section-label">Failure Mode</div>
+    <p class="tag-bad">Against a scripted Hunter, Krishna over-fits to the deterministic
+    pathfinding pattern. Performance collapses when Hunter is replaced with any
+    learned policy. Not a general policy.</p>
+    <div class="verdict">→ Need a <strong>co-evolving opponent</strong>. Next: self-play with
+    Fictitious Self-Play (FSP) pool so Hunter is never predictable.</div>
+  </div>
+
+  <!-- ── v2/v3 ── -->
+  <div class="version-card">
+    <div class="version-header">
+      <span class="version-badge badge-done">v2 / v3</span>
+      <span class="version-title">Phase 2 Early — Self-Play Init + Bug Fixes</span>
+      <span class="version-meta">May–Jun 2026 · ~3,000 eps each</span>
+    </div>
+    <div class="section-label">Thesis</div>
+    <p>Introduce FSP (Fictitious Self-Play): maintain a pool of historical Hunter
+    snapshots and train both agents simultaneously. Hypothesis: Krishna will
+    generalize because it faces diverse Hunters, not just the current one.</p>
+    <div class="section-label">Architecture Changes</div>
+    <ul>
+      <li>SelfPlayEnv wrapping the gridworld — both agents step simultaneously</li>
+      <li>FSP pool: FIFO queue of 20 Hunter snapshots, snapshot every 100 eps</li>
+      <li>70% joint training (latest Hunter) / 30% FSP (pool sample)</li>
+      <li>v3: fixed critical bugs — epsilon not decaying, position update race condition</li>
+    </ul>
+    <div class="section-label">Key Results</div>
+    <div class="metrics-row">
+      <div class="metric">avg100 <span>~+4</span></div>
+      <div class="metric">pellets/ep <span>~0.2</span></div>
+      <div class="metric">self-play stable <span class="tag-good">✓</span></div>
+    </div>
+    <div class="section-label">Failure Mode</div>
+    <p class="tag-bad">Pool fills with strong Hunters too fast — the easy early Hunters
+    get evicted before Krishna has learned to collect. Once pool=20 with all hard
+    Hunters, Krishna's optimal strategy is pure evasion (survival &gt; collection).</p>
+    <div class="verdict">→ The pool architecture needs a <strong>permanent easy tier</strong>.
+    Also: a single policy head can't learn both "evade" and "collect" simultaneously
+    under adversarial pressure. Need dual heads.</div>
+  </div>
+
+  <!-- ── v4 ── -->
+  <div class="version-card">
+    <div class="version-header">
+      <span class="version-badge badge-done">v4</span>
+      <span class="version-title">Phase 2 v4 — Self-Play Hardened (Bimodal Collapse)</span>
+      <span class="version-meta">Jun 2026 · 6,000 eps · 21.3h</span>
+    </div>
+    <div class="section-label">Thesis</div>
+    <p>With bug-fixed self-play and a full FSP pool, Krishna should converge
+    to a balanced evasion+collection policy. Hypothesis: more training time against
+    diverse opponents resolves the collection paralysis.</p>
+    <div class="section-label">Architecture</div>
+    <ul>
+      <li>Same as v2/v3 — CNNDuelingQNetwork, single policy head</li>
+      <li>Full 20-slot FSP pool, snapshot every 100 eps</li>
+      <li>6,000 episodes total</li>
+    </ul>
+    <div class="section-label">Key Results</div>
+    <div class="metrics-row">
+      <div class="metric">best avg100 <span>+4.9</span></div>
+      <div class="metric">best ep <span>5300</span></div>
+      <div class="metric">pellets total <span>~30</span></div>
+      <div class="metric">wins <span>6</span></div>
+    </div>
+    <a href="run.html?id=20260606_175631_phase2_v4_nowall" class="run-link">📊 Run details</a>
+    <a href="replay.html?run=20260606_175631_phase2_v4_nowall" class="run-link">▶ Replay</a>
+    <div class="section-label">Failure Mode — Bimodal Strategy Collapse</div>
+    <p class="tag-bad">Krishna learned evasion perfectly but collected almost zero pellets.
+    Root cause: the FSP pool evicted all weak early Hunters before Krishna ever
+    practiced collection. Once pool=20 hardened Hunters, risk of collecting
+    (hunter nearby = death penalty ~−80) always outweighed pellet reward (+50).
+    Single policy head cannot separate "evade" from "collect" — they interfere.</p>
+    <div class="verdict">→ Need <strong>dual policy heads</strong> (evade head + collect head)
+    with a learned gate. Need <strong>counterfactual experience injection</strong>
+    to teach collection without real-world risk. Need <strong>permanent easy tier</strong>
+    so Krishna always has safe practice time.</div>
+  </div>
+
+  <!-- ── v5 ── -->
+  <div class="version-card">
+    <div class="version-header">
+      <span class="version-badge badge-done">v5</span>
+      <span class="version-title">Phase 3 — Gated Option Policies + Counterfactual HER</span>
+      <span class="version-meta">Jun 2026 · 12,000 eps · 53.5h</span>
+    </div>
+    <div class="section-label">Thesis</div>
+    <p>A dual-head gated architecture (evade head + collect head, context-conditioned
+    gate) combined with counterfactual hindsight experience replay (CHER) will
+    break the bimodal collapse. CHER injects "what if you had collected that pellet"
+    transitions to teach collection without requiring the agent to risk it in practice.
+    A hierarchical opponent pool with a permanent easy tier ensures collection
+    is always practiced.</p>
+    <div class="section-label">Architecture Changes</div>
+    <ul>
+      <li><strong>GatedOptionNetwork</strong>: CNN(6→32→64) → FC(256) → evade head + collect head + value head + gate MLP(context[3]→16→1→σ)</li>
+      <li><strong>CounterfactualHER</strong>: post-episode scan; if hunter_dist &gt; 6 and pellet_dist ≤ 4, inject +30 collect transition</li>
+      <li><strong>HierarchicalOpponentPool</strong>: 5 permanent easy slots + 15 FIFO hard slots; p_easy=0.25</li>
+      <li><strong>ContextReplayBuffer</strong>: stores (state, context, action, reward, next_state, next_context, done)</li>
+      <li>Context vector: [hunter_dist_norm, pellets_norm, lives_norm]</li>
+      <li>Warm-started from v4 best checkpoint (ep 5300)</li>
+    </ul>
+    <div class="section-label">Key Results</div>
+    <div class="metrics-row">
+      <div class="metric">total pellets <span>2,567</span></div>
+      <div class="metric">2-pellet eps <span>265</span></div>
+      <div class="metric">3-pellet eps <span>16</span></div>
+      <div class="metric">late avg100 <span>8.58</span></div>
+      <div class="metric">gate range <span>0.22–0.80</span></div>
+      <div class="metric">gate final <span>0.545</span></div>
+      <div class="metric">CHER injected <span>237,511</span></div>
+      <div class="metric">krishna wins <span>2</span></div>
+    </div>
+    <a href="run.html?id=20260612_184130_phase3_v2_resume_enabled" class="run-link">📊 Run details</a>
+    <a href="replay.html?run=20260612_184130_phase3_v2_resume_enabled" class="run-link">▶ Replay</a>
+    <a href="architecture.html" class="run-link">🔬 Architecture</a>
+    <div class="section-label">What Worked</div>
+    <ul>
+      <li class="tag-good">Gate never collapsed to pure evasion (v4 failure mode eliminated)</li>
+      <li class="tag-good">First 2-pellet episode (ep 10170, r_k=101.70) — dual-head proven</li>
+      <li class="tag-good">Late-phase avg100=8.46 mean / 15.69 max (vs v4's ~4–6)</li>
+      <li class="tag-good">3× more pellet collection rate vs v4</li>
+      <li class="tag-good">Resume support + signal handler — training survived Mac sleep</li>
+    </ul>
+    <div class="section-label">Failure Mode — CHER Dependency / Reward Asymmetry</div>
+    <ul>
+      <li class="tag-bad">Against hardened pool=20 Hunter, collection still drops to ~3–5% per episode</li>
+      <li class="tag-bad">CHER still firing 237k injections — agent never internalized autonomous collection</li>
+      <li class="tag-bad">Gate oscillated 0.55→0.22→0.55 between ep 4000–5000 (instability)</li>
+      <li class="tag-bad">Reward asymmetry unresolved: die penalty −80 &gt;&gt; pellet reward +50</li>
+    </ul>
+    <div class="verdict">→ The dual-head proof works but needs stronger gradient.
+    The reward function itself is the bottleneck: dying costs too much relative
+    to collecting. Need <strong>survival shaping</strong> (+0.1/step),
+    <strong>proximity reward</strong> (continuous pellet gradient),
+    <strong>gate regularization</strong> (prevent oscillation),
+    and a <strong>2-phase curriculum</strong> (collect-first, then harden).</div>
+  </div>
+
+  <!-- ── v6 ── -->
+  <div class="version-card">
+    <div class="version-header">
+      <span class="version-badge badge-planned">v6</span>
+      <span class="version-title">Phase 3 v2 — Reward Reshaping + Curriculum</span>
+      <span class="version-meta">Planned · ~12,000 eps</span>
+    </div>
+    <div class="section-label">Thesis</div>
+    <p>The v5 architecture is correct but the reward signal is broken. If we fix
+    the reward asymmetry (dying is disproportionately expensive), add a continuous
+    proximity gradient toward pellets, and run a 2-phase curriculum (collect first,
+    then introduce strong Hunters), Krishna will learn collection as a primary
+    behavior rather than an opportunistic side-effect.</p>
+    <div class="section-label">Planned Changes</div>
+    <ul>
+      <li><strong>Survival bonus</strong>: +0.1 per step (max +100 at 1000 steps) — makes staying alive AND collecting both positive</li>
+      <li><strong>Proximity reward</strong>: +0.05 × (1 − nearest_pellet_dist / grid_size) per step — continuous gradient toward pellets</li>
+      <li><strong>Phase A curriculum</strong>: first 1000 eps against easy tier only (p_easy=1.0) — build collection habit before hardening</li>
+      <li><strong>Gate regularization</strong>: L2 penalty on gate deviation from 0.5 during ep 0–2000 — prevents wild oscillation</li>
+      <li><strong>CHER weighted injection</strong>: reward ∝ hunter_dist / safe_dist — teaches calibrated risk rather than only "safe" opportunities</li>
+      <li><strong>ε floor raised to 0.08</strong> — more exploration against strong Hunter</li>
+    </ul>
+    <div class="section-label">Success Criteria</div>
+    <div class="metrics-row">
+      <div class="metric">target avg100 <span>&gt;15</span></div>
+      <div class="metric">pellet rate <span>&gt;10%</span></div>
+      <div class="metric">2-pellet eps <span>&gt;500</span></div>
+      <div class="metric">CHER dependency <span>declining</span></div>
+    </div>
+  </div>
+
+</main>
+
+<script type="module">
+import { applyMode, bindModeToggle } from "./app.js";
+applyMode(); bindModeToggle();
+</script>
+</body>
+</html>

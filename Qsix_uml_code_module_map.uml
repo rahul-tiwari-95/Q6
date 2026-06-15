@@ -1,0 +1,106 @@
+@startuml Qsix_Code_Module_Map
+title Q6 Code Module Map for Newcomers
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam defaultFontName Helvetica
+
+package "Root Training Entrypoints" {
+  component "main.py\nlegacy/curriculum training" as Main
+  component "train_v2.py\nPhase 1 baseline" as TrainV2
+  component "train_phase2.py\nself-play + FSP" as TrainP2
+  component "train_phase3.py\nGOP + CHER" as TrainP3
+  component "verify_phase2.py\ncheckpoint sanity checks" as Verify
+}
+
+package "environment/" {
+  component "hunter_gridworld.py\nscripted/progressive Hunter env" as HunterEnv
+  component "selfplay_env.py\nclean 1v1 learned Hunter env" as SelfEnv
+  folder "entities/\nKrishna, Hunter,\nGreedy, Patroller,\nProgressive Hunters" as Entities
+}
+
+package "agent/" {
+  component "dq_agent.py\nolder DQN agent" as DQ
+  component "dqn_v2_agent.py\nDouble DQN + Dueling CNN" as DQNV2
+  component "gated_dqn_agent.py\nPhase 3 context-aware Krishna" as Gated
+  component "frozen_agent.py\nread-only checkpoint policy" as Frozen
+  component "opponent_pool.py\nFIFO FSP pool" as OpponentPool
+}
+
+package "model/" {
+  component "q_network.py\nolder Q network" as QNet
+  component "cnn_q_network.py\nCNNDuelingQNetwork" as CNN
+  component "gated_option_network.py\nGatedOptionNetwork" as GOP
+}
+
+package "utils/" {
+  component "state_encoder.py\nflat grid -> channels" as Encoder
+  component "replay_recorder.py\nJSONL replay writer" as Recorder
+  component "cher.py\nCounterfactualHER" as CHER
+  component "hierarchical_pool.py\neasy/hard opponent pool" as HPool
+  component "logger.py\ntraining logs" as Logger
+  component "success_scoring.py\nlegacy composite metrics" as Scoring
+}
+
+package "dashboard/" {
+  component "scan.py\nbuild dashboard/data/index.json" as Scan
+  component "index.html\nrun list" as IndexPage
+  component "run.html\nrun metrics" as RunPage
+  component "replay.html\nreplay viewer" as ReplayPage
+  component "versions.html\nversion timeline" as VersionsPage
+  component "architecture.html\nbrowser architecture explainer" as ArchitecturePage
+}
+
+package "tests/" {
+  component "environment tests" as EnvTests
+  component "agent/model tests" as AgentTests
+  component "dashboard tests" as DashTests
+  component "CHER/GOP tests" as Phase3Tests
+}
+
+TrainV2 --> HunterEnv
+TrainP2 --> SelfEnv
+TrainP3 --> SelfEnv
+Main --> HunterEnv
+
+HunterEnv --> Entities
+SelfEnv --> Encoder
+HunterEnv --> Encoder
+
+DQNV2 --> CNN
+Gated --> GOP
+Gated --> CHER
+TrainP2 --> OpponentPool
+TrainP3 --> HPool
+OpponentPool --> Frozen
+HPool --> Frozen
+
+TrainV2 --> Recorder
+TrainP2 --> Recorder
+TrainP3 --> Recorder
+TrainV2 --> Logger
+
+Scan --> IndexPage
+Scan --> RunPage
+Scan --> ReplayPage
+Scan --> VersionsPage
+Scan --> ArchitecturePage
+
+EnvTests --> HunterEnv
+EnvTests --> SelfEnv
+AgentTests --> DQNV2
+AgentTests --> CNN
+Phase3Tests --> Gated
+Phase3Tests --> CHER
+DashTests --> Scan
+
+note bottom
+  Recommended reading order:
+  README -> versions/README -> selfplay_env.py -> state_encoder.py
+  -> dqn_v2_agent.py -> train_phase2.py
+  -> gated_option_network.py -> gated_dqn_agent.py -> cher.py
+end note
+
+@enduml
+

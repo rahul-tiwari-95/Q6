@@ -2,28 +2,189 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Q6 Lab — Replay</title>
+<title>Q6 — Replay Viewer</title>
 <link rel="stylesheet" href="styles.css">
+<style>
+/* ── Tab bar ── */
+.tab-bar{display:flex;gap:3px;align-items:center;padding:0 8px;}
+.tab-bar .tab{font-family:var(--mono);font-size:11px;padding:5px 13px;border:1px solid transparent;border-radius:4px;cursor:pointer;background:transparent;color:var(--muted);transition:color .12s,border-color .12s;}
+.tab-bar .tab:hover{color:var(--text);border-color:var(--border);}
+.tab-bar .tab.active{color:var(--accent);border-color:var(--accent);background:rgba(124,209,255,.06);}
+.tab-content{display:none;}.tab-content.active{display:block;}
+
+/* ── Shared headings ── */
+.tab-heading{font-family:"Iowan Old Style","Charter","Georgia",serif;font-weight:400;font-size:26px;letter-spacing:-.01em;margin:0 0 6px;}
+.tab-subtitle{font-size:12px;color:var(--muted);margin:0 0 22px;max-width:620px;line-height:1.65;}
+
+/* ── Game canvas ── */
+.game-wrap{position:relative;display:inline-block;}
+canvas.gcv{display:block;background:#000;border:1px solid var(--border);border-radius:4px;image-rendering:pixelated;}
+
+/* ── Event banners ── */
+.ev-banner{position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);pointer-events:none;
+  font-family:"Iowan Old Style","Charter","Georgia",serif;font-size:22px;font-weight:600;
+  padding:10px 22px;border-radius:8px;text-align:center;
+  opacity:0;transition:opacity .1s;white-space:nowrap;backdrop-filter:blur(6px);}
+.ev-banner.show{opacity:1;}
+.ev-banner.caught{background:rgba(248,113,113,.88);color:#fff;}
+.ev-banner.pellet{background:rgba(253,230,138,.88);color:#1a1200;}
+.ev-banner.kwin{background:rgba(110,231,183,.88);color:#001a0d;}
+.ev-banner.hwin{background:rgba(248,113,113,.88);color:#fff;}
+
+/* ── Controls ── */
+.gctrl{display:flex;align-items:center;gap:7px;margin-top:10px;font-family:var(--mono);font-size:12px;}
+.gctrl button{background:var(--panel-2);color:var(--text);border:1px solid var(--border);
+  padding:5px 10px;cursor:pointer;font-family:var(--mono);border-radius:3px;}
+.gctrl button:hover{border-color:var(--accent);color:var(--accent);}
+.gctrl input[type=range]{flex:1;}
+.gctrl select{background:var(--panel-2);color:var(--text);border:1px solid var(--border);
+  padding:4px 7px;font-family:var(--mono);font-size:12px;border-radius:3px;}
+
+/* ── Brain toggle ── */
+.brain-btn{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:12px;
+  color:var(--muted);cursor:pointer;border:1px solid var(--border);padding:5px 12px;
+  border-radius:3px;background:var(--panel-2);margin-bottom:12px;}
+.brain-btn.on{color:#a78bfa;border-color:#a78bfa;}
+
+/* ── Evolution ── */
+.evo-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
+.evo-label{font-family:var(--serif);font-weight:400;font-size:17px;margin:0 0 8px;}
+.evo-card{display:flex;gap:10px;align-items:center;margin-bottom:10px;
+  font-family:var(--mono);font-size:11px;color:var(--muted);}
+.evo-card select{background:var(--panel-2);color:var(--text);border:1px solid var(--border);
+  padding:4px 7px;font-family:var(--mono);font-size:11px;border-radius:3px;flex:1;}
+
+/* ── Research mode ── */
+.research-grid{display:grid;grid-template-columns:500px 1fr;gap:24px;}
+</style>
 </head>
 <body>
 <nav class="topbar">
   <div class="brand"><a href="index.html" style="color:inherit">Q6 / Lab</a></div>
+  <div class="tab-bar">
+    <button class="tab active" data-tab="game">🎮 Game</button>
+    <button class="tab" data-tab="brain">🧠 Brain</button>
+    <button class="tab" data-tab="evolution">⚡ Evolution</button>
+    <button class="tab" data-tab="research">🔬 Research</button>
+  </div>
   <div class="spacer"></div>
+  <a href="index.html" style="color:var(--muted);font-size:12px;text-decoration:none;margin-right:16px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">Runs</a>
+  <a href="versions.html" style="color:var(--muted);font-size:12px;text-decoration:none;margin-right:16px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">Versions</a>
+  <a href="architecture.html" style="color:var(--muted);font-size:12px;text-decoration:none;margin-right:16px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">Architecture</a>
   <button id="mode-toggle" class="mode-toggle">lab mode</button>
 </nav>
+
 <main>
-  <h1 id="title">Replay</h1>
-  <div id="meta" style="color:var(--muted); font-family:var(--mono); font-size:12px; margin-bottom:16px;"></div>
-  <div class="grid-2" style="grid-template-columns: 560px 1fr;">
+<div id="ep-info" style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:20px;padding:10px 0;border-bottom:1px solid var(--border)"></div>
+
+<!-- ══ TAB 1: GAME ══ -->
+<section id="tab-game" class="tab-content active">
+  <h1 class="tab-heading">Game Replay</h1>
+  <p class="tab-subtitle">Watch the trained agent navigate in real time. 🔵 Kṛṣṇa collects ★ pellets — collect 4 to win. 🔴 Hunter closes in to catch Kṛṣṇa 3 times. Use ▶ Play and the speed selector to control playback, or drag the scrubber to any frame.</p>
+  <div class="game-wrap">
+    <canvas id="g-cv" class="gcv" width="500" height="500"></canvas>
+    <div class="ev-banner" id="g-bn"></div>
+  </div>
+  <div class="gctrl">
+    <button id="g-rst">⏮</button>
+    <button id="g-pl">▶ Play</button>
+    <button id="g-bk">‹</button>
+    <button id="g-fw">›</button>
+    <input id="g-sc" type="range" min="0" max="0" value="0">
+    <span id="g-lb" style="min-width:58px;color:var(--muted)">0 / 0</span>
+    <select id="g-sp">
+      <option value="300">0.5×</option>
+      <option value="150" selected>1×</option>
+      <option value="75">2×</option>
+      <option value="30">5×</option>
+      <option value="12">10×</option>
+    </select>
+  </div>
+</section>
+
+<!-- ══ TAB 2: BRAIN ══ -->
+<section id="tab-brain" class="tab-content">
+  <h1 class="tab-heading">Brain View</h1>
+  <p class="tab-subtitle">The coloured arrows show Kṛṣṇa's Q-values at each step — the agent's internal estimate of how much future reward each direction will bring. Longer and greener means more confident. Watch the arrows shift as the Hunter closes in, and notice how they stabilise in late-training episodes.</p>
+  <button class="brain-btn on" id="bb-tog">🧠 Brain overlay ON</button>
+  <div class="game-wrap">
+    <canvas id="b-cv" class="gcv" width="500" height="500"></canvas>
+    <div class="ev-banner" id="b-bn"></div>
+  </div>
+  <div class="gctrl">
+    <button id="b-rst">⏮</button>
+    <button id="b-pl">▶ Play</button>
+    <button id="b-bk">‹</button>
+    <button id="b-fw">›</button>
+    <input id="b-sc" type="range" min="0" max="0" value="0">
+    <span id="b-lb" style="min-width:58px;color:var(--muted)">0 / 0</span>
+    <select id="b-sp">
+      <option value="600">slow</option>
+      <option value="300" selected>0.5×</option>
+      <option value="150">1×</option>
+      <option value="75">2×</option>
+    </select>
+  </div>
+</section>
+
+<!-- ══ TAB 3: EVOLUTION ══ -->
+<section id="tab-evolution" class="tab-content">
+  <h1 class="tab-heading">How Did It Learn?</h1>
+  <p class="tab-subtitle">Pick any two episodes from the run and watch them play side by side at the same time. Left panel = early training (mostly random). Right panel = later training (learned behaviour). One shared ▶ Play button keeps both in sync — the contrast is where the learning becomes visible.</p>
+  <div class="evo-grid">
     <div>
-      <canvas id="replay-canvas" width="500" height="500"></canvas>
+      <p class="evo-label">Early episode</p>
+      <div class="evo-card">
+        <select id="ea-sel"></select>
+        <span id="ea-inf"></span>
+      </div>
+      <div class="game-wrap">
+        <canvas id="ea-cv" class="gcv" width="420" height="420"></canvas>
+        <div class="ev-banner" id="ea-bn"></div>
+      </div>
+    </div>
+    <div>
+      <p class="evo-label">Late episode</p>
+      <div class="evo-card">
+        <select id="eb-sel"></select>
+        <span id="eb-inf"></span>
+      </div>
+      <div class="game-wrap">
+        <canvas id="eb-cv" class="gcv" width="420" height="420"></canvas>
+        <div class="ev-banner" id="eb-bn"></div>
+      </div>
+    </div>
+  </div>
+  <div class="gctrl" style="margin-top:16px">
+    <button id="e-rst">⏮</button>
+    <button id="e-pl">▶ Play Both</button>
+    <button id="e-bk">‹</button>
+    <button id="e-fw">›</button>
+    <input id="e-sc" type="range" min="0" max="0" value="0">
+    <span id="e-lb" style="min-width:58px;color:var(--muted)">0 / 0</span>
+    <select id="e-sp">
+      <option value="300">0.5×</option>
+      <option value="150" selected>1×</option>
+      <option value="75">2×</option>
+      <option value="30">5×</option>
+    </select>
+  </div>
+</section>
+
+<!-- ══ TAB 4: RESEARCH ══ -->
+<section id="tab-research" class="tab-content">
+  <h1 class="tab-heading">Research Mode</h1>
+  <p class="tab-subtitle">Raw per-step data: Q-values for every action, exact rewards, lives, pellets collected. Step through frame by frame for detailed analysis or debugging. This is the original replay viewer.</p>
+  <div class="research-grid">
+    <div>
+      <canvas id="r-cv" width="500" height="500"></canvas>
       <div class="replay-controls">
-        <button id="btn-play">play</button>
-        <button id="btn-step-back">‹</button>
-        <button id="btn-step-fwd">›</button>
-        <input id="scrubber" type="range" min="0" max="0" value="0">
-        <span id="step-label">0 / 0</span>
-        <select id="speed">
+        <button id="r-pl">play</button>
+        <button id="r-bk">‹</button>
+        <button id="r-fw">›</button>
+        <input id="r-sc" type="range" min="0" max="0" value="0">
+        <span id="r-lb">0 / 0</span>
+        <select id="r-sp">
           <option value="100">10×</option>
           <option value="33">30×</option>
           <option value="16" selected>60×</option>
@@ -33,81 +194,343 @@
     </div>
     <div class="panel">
       <h2>Step Detail</h2>
-      <dl id="step-detail" class="kv"></dl>
+      <dl id="r-det" class="kv"></dl>
     </div>
   </div>
+</section>
 </main>
 
 <script type="module">
 import { applyMode, bindModeToggle, fetchJSON, fetchJSONL, qs, renderGrid, fmtNumber } from "./app.js";
 applyMode(); bindModeToggle();
 
-const runId = qs("run");
-const epId  = parseInt(qs("ep"), 10);
+// ── Tab switching ──
+document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  location.hash = btn.dataset.tab;
+}));
+const initTab = location.hash.replace('#','') || 'game';
+document.querySelector(`.tab[data-tab="${initTab}"]`)?.click();
 
+// ── Load data ──
 const idx = await fetchJSON("data/index.json");
-const run = idx.runs.find(r => r.id === runId);
-const rep = run?.replays?.find(r => r.episode_id === epId);
-
-document.getElementById("title").textContent = `Replay — ${runId} / episode ${epId}`;
-document.getElementById("meta").textContent =
-  rep ? `phase=${rep.phase}  diff=${rep.difficulty}  seed=${rep.seed}  outcome=${rep.outcome}` : "not found";
-
-if (rep) {
-  // dashboard pages live under /dashboard/; replay paths are repo-relative.
-  const records = await fetchJSONL("../" + rep.path);
-  const header = records.find(r => r.type === "header");
-  const steps  = records.filter(r => r.type === "step");
-  const footer = records.find(r => r.type === "footer");
-
-  const canvas = document.getElementById("replay-canvas");
-  const scrubber = document.getElementById("scrubber");
-  const label = document.getElementById("step-label");
-  const detail = document.getElementById("step-detail");
-  scrubber.max = String(steps.length - 1);
-
-  let curr = 0;
-  let playing = false;
-  let speed = 16;
-
-  function show(i) {
-    curr = Math.max(0, Math.min(steps.length - 1, i));
-    scrubber.value = String(curr);
-    label.textContent = `${curr + 1} / ${steps.length}`;
-    const s = steps[curr];
-    renderGrid(canvas, s.grid);
-    const actNames = ["↑ up", "↓ down", "← left", "→ right"];
-    const qrows = (s.q_values?.krishna || []).map((q, i) =>
-      `<dt>Q[${actNames[i]}]</dt><dd style="font-family:var(--mono)">${fmtNumber(q, 3)}</dd>`).join("");
-    detail.innerHTML = `
-      <dt>t</dt><dd>${s.t}</dd>
-      <dt>action</dt><dd>${actNames[s.actions?.krishna] || s.actions?.krishna}</dd>
-      <dt>reward</dt><dd>${fmtNumber(s.rewards?.krishna, 3)}</dd>
-      <dt>pellets</dt><dd>${s.pellets ?? "—"}</dd>
-      <dt>lives</dt><dd>${s.lives ?? "—"}</dd>
-      ${qrows}
-    `;
+let runId = qs("run"), epId = parseInt(qs("ep")||"0",10);
+// Auto-redirect to latest run when no ?run= param
+if (!runId && idx.runs?.length) {
+  const latest = idx.runs.slice().sort((a, b) => b.id.localeCompare(a.id))[0];
+  const firstEp = latest.replays?.[0]?.episode_id;
+  if (firstEp !== undefined) {
+    location.replace(`replay.html?run=${encodeURIComponent(latest.id)}&ep=${firstEp}${location.hash||'#game'}`);
   }
-
-  scrubber.addEventListener("input", e => show(parseInt(e.target.value, 10)));
-  document.getElementById("btn-step-back").onclick = () => show(curr - 1);
-  document.getElementById("btn-step-fwd").onclick  = () => show(curr + 1);
-  document.getElementById("speed").onchange = e => { speed = parseInt(e.target.value, 10); };
-
-  function tick() {
-    if (!playing) return;
-    if (curr >= steps.length - 1) { playing = false; document.getElementById("btn-play").textContent = "play"; return; }
-    show(curr + 1);
-    setTimeout(tick, speed);
-  }
-  document.getElementById("btn-play").onclick = () => {
-    playing = !playing;
-    document.getElementById("btn-play").textContent = playing ? "pause" : "play";
-    if (playing) tick();
-  };
-
-  show(0);
 }
+const run   = idx.runs.find(r => r.id === runId);
+// If ep=0 or episode not found, redirect to the first available replay
+if (run?.replays?.length && !run.replays.find(r => r.episode_id === epId)) {
+  const first = run.replays[0].episode_id;
+  const hash  = location.hash || '#game';
+  location.replace(`replay.html?run=${encodeURIComponent(runId)}&ep=${first}${hash}`);
+}
+const rep   = run?.replays?.find(r => r.episode_id === epId);
+
+const epInfo = document.getElementById("ep-info");
+epInfo.textContent = run
+  ? `${runId}  ·  episode ${epId}  ·  ${rep ? `${rep.outcome ?? '?'} in ${rep.total_steps ?? '?'} steps  ·  ${rep.pellets_collected ?? 0} pellets` : 'replay not found'}`
+  : `run not found: ${runId}`;
+
+if (!rep) { epInfo.style.color='var(--bad)'; }
+else {
+
+const records = await fetchJSONL("../" + rep.path);
+const steps   = records.filter(r => r.type === "step");
+const NG      = 25; // grid size
+
+// ════════════════════════════════
+// RENDERER
+// ════════════════════════════════
+function findPos(grid) {
+  let k=null, h=null, pellets=[];
+  for (let r=0;r<NG;r++) for (let c=0;c<NG;c++) {
+    const v=grid[r][c];
+    if (v===2) k=[r,c];
+    else if (v===3) h=[r,c];
+    else if (v===1) pellets.push([r,c]);
+  }
+  return {k,h,pellets};
+}
+
+function softmax(arr) {
+  const mx=Math.max(...arr), exps=arr.map(v=>Math.exp(v-mx)), s=exps.reduce((a,b)=>a+b,0);
+  return exps.map(v=>v/s);
+}
+
+function drawFrame(canvas, stepA, stepB, opts={}) {
+  if (!stepA) return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height, px=W/NG;
+
+  // Background
+  for (let r=0;r<NG;r++) for (let c=0;c<NG;c++) {
+    ctx.fillStyle = stepA.grid[r][c]===0 ? '#1a1d24' : '#0c0e12';
+    ctx.fillRect(c*px,r*px,px,px);
+  }
+  // Grid lines
+  ctx.strokeStyle='rgba(255,255,255,.022)'; ctx.lineWidth=.5;
+  for (let i=0;i<=NG;i++) {
+    ctx.beginPath(); ctx.moveTo(i*px,0); ctx.lineTo(i*px,H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,i*px); ctx.lineTo(W,i*px); ctx.stroke();
+  }
+
+  // Pellets (pulsing)
+  const aT=Date.now()/1000;
+  const {pellets}=findPos(stepA.grid);
+  for (const [r,c] of pellets) {
+    const pulse=.82+.18*Math.sin(aT*2.8+r*3+c);
+    const cx=(c+.5)*px, cy=(r+.5)*px, rad=px*.17*pulse;
+    const grd=ctx.createRadialGradient(cx,cy,0,cx,cy,rad*3);
+    grd.addColorStop(0,'rgba(253,230,138,.38)'); grd.addColorStop(1,'rgba(253,230,138,0)');
+    ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(cx,cy,rad*3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fde68a'; ctx.beginPath(); ctx.arc(cx,cy,rad,0,Math.PI*2); ctx.fill();
+  }
+
+  // Agents with lerp between frames
+  const pA=findPos(stepA.grid), pB=stepB?findPos(stepB.grid):pA;
+  const t=opts.lerpT??1;
+  function lp(a,b){ return a&&b?[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]:a; }
+
+  function drawAgent(pos,color,shine) {
+    if (!pos) return;
+    const cx=(pos[1]+.5)*px, cy=(pos[0]+.5)*px, r=px*.32;
+    const grd=ctx.createRadialGradient(cx,cy,0,cx,cy,r*2.4);
+    grd.addColorStop(0,color+'50'); grd.addColorStop(1,color+'00');
+    ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(cx,cy,r*2.4,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=color; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=shine; ctx.beginPath(); ctx.arc(cx-r*.28,cy-r*.28,r*.28,0,Math.PI*2); ctx.fill();
+  }
+
+  drawAgent(lp(pA.h,pB.h),'#f87171','rgba(255,200,200,.5)');
+  drawAgent(lp(pA.k,pB.k),'#60a5fa','rgba(200,230,255,.55)');
+
+  // Brain overlay
+  if (opts.brain && stepA.q_values?.krishna && pA.k) {
+    const kp=lp(pA.k,pB.k)||pA.k;
+    const sm=softmax(stepA.q_values.krishna);
+    const dirs=[[-1,0],[1,0],[0,-1],[0,1]];
+    const cx=(kp[1]+.5)*px, cy=(kp[0]+.5)*px;
+    for (let i=0;i<4;i++) {
+      const [dr,dc]=dirs[i], s=sm[i], len=px*2.2*s;
+      const x2=cx+dc*len, y2=cy+dr*len;
+      const g=Math.floor(80+160*s), red=Math.floor(120*(1-s));
+      const alpha=.35+.65*s;
+      ctx.strokeStyle=`rgba(${red},${g},90,${alpha})`;
+      ctx.lineWidth=1.2+3.5*s;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x2,y2); ctx.stroke();
+      if (len>6) {
+        const ang=Math.atan2(dr,dc), hs=4+5*s;
+        ctx.beginPath();
+        ctx.moveTo(x2,y2);
+        ctx.lineTo(x2-hs*Math.cos(ang-.45),y2-hs*Math.sin(ang-.45));
+        ctx.lineTo(x2-hs*Math.cos(ang+.45),y2-hs*Math.sin(ang+.45));
+        ctx.closePath();
+        ctx.fillStyle=`rgba(${red},${g},90,${alpha})`;
+        ctx.fill();
+      }
+    }
+    // Legend
+    ctx.font='9px ui-monospace,monospace'; ctx.textAlign='right';
+    ctx.fillStyle='rgba(167,139,250,.6)';
+    ctx.fillText('Q-value arrows',W-6,H-6);
+    ctx.textAlign='left';
+  }
+
+  // HUD
+  const lives=stepA.lives??3;
+  for (let i=0;i<3;i++) {
+    ctx.fillStyle=i<lives?'#60a5fa':'rgba(96,165,250,.18)';
+    ctx.beginPath(); ctx.arc(12+i*17,12,5.5,0,Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle='#fde68a'; ctx.font=`${Math.max(9,px*.42)}px ui-monospace,monospace`;
+  ctx.textAlign='right'; ctx.fillText(`★ ${stepA.pellets??0} / 4`,W-6,17); ctx.textAlign='left';
+  ctx.fillStyle='rgba(255,255,255,.2)'; ctx.font='9px ui-monospace,monospace';
+  ctx.fillText(`t=${stepA.t}`,5,H-5);
+}
+
+// ════════════════════════════════
+// PLAYER FACTORY
+// ════════════════════════════════
+function makePlayer(ids, stepsArr, bannerEl, brainRef) {
+  const cv=document.getElementById(ids.cv);
+  const sc=document.getElementById(ids.sc);
+  const lb=document.getElementById(ids.lb);
+  if (!cv||!stepsArr.length) return null;
+  sc.max=String(stepsArr.length-1);
+  let curr=0, playing=false, timer=null;
+
+  function spd(){ return parseInt(document.getElementById(ids.sp).value,10); }
+  function step(i){ return stepsArr[Math.max(0,Math.min(i,stepsArr.length-1))]; }
+
+  function flash(s) {
+    if (!s||!bannerEl) return;
+    const rk=s.rewards?.krishna??0;
+    if (s.done) {
+      if (rk>50) banner(bannerEl,'kwin','🏆 Kṛṣṇa Wins!');
+      else banner(bannerEl,'hwin','💀 Hunter Wins');
+    } else if (rk<=-9&&rk>=-11) banner(bannerEl,'caught','💀 Caught  −1 life',900);
+    else if (rk>=49&&rk<=51) banner(bannerEl,'pellet','⭐ Pellet  +50',700);
+  }
+
+  function show(i,fromTick=false){
+    curr=Math.max(0,Math.min(stepsArr.length-1,i));
+    sc.value=String(curr); lb.textContent=`${curr+1} / ${stepsArr.length}`;
+    if(fromTick) flash(step(curr));
+  }
+
+  // Continuous pulse loop
+  (function loop(){
+    drawFrame(cv,step(curr),step(curr+1),{lerpT:1,brain:brainRef?.value});
+    requestAnimationFrame(loop);
+  })();
+
+  sc.addEventListener('input',e=>show(parseInt(e.target.value,10)));
+  document.getElementById(ids.bk).onclick=()=>show(curr-1);
+  document.getElementById(ids.fw).onclick=()=>show(curr+1);
+  document.getElementById(ids.rst).onclick=()=>{
+    playing=false; document.getElementById(ids.pl).textContent='▶ Play';
+    clearTimeout(timer); show(0);
+  };
+  function tick(){
+    if (!playing) return;
+    if (curr>=stepsArr.length-1){ playing=false; document.getElementById(ids.pl).textContent='▶ Play'; return; }
+    show(curr+1,true); timer=setTimeout(tick,spd());
+  }
+  document.getElementById(ids.pl).onclick=()=>{
+    playing=!playing;
+    document.getElementById(ids.pl).textContent=playing?'⏸ Pause':'▶ Play';
+    if (playing) tick(); else clearTimeout(timer);
+  };
+  show(0);
+  return { get curr(){ return curr; }, show };
+}
+
+function banner(el,cls,msg,dur=1400){
+  el.className='ev-banner '+cls+' show'; el.textContent=msg;
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+// ════════════════════════════════
+// TAB 1 — Game
+// ════════════════════════════════
+makePlayer(
+  {cv:'g-cv',pl:'g-pl',bk:'g-bk',fw:'g-fw',rst:'g-rst',sc:'g-sc',lb:'g-lb',sp:'g-sp'},
+  steps, document.getElementById('g-bn'), null
+);
+
+// ════════════════════════════════
+// TAB 2 — Brain
+// ════════════════════════════════
+const brainOn={value:true};
+makePlayer(
+  {cv:'b-cv',pl:'b-pl',bk:'b-bk',fw:'b-fw',rst:'b-rst',sc:'b-sc',lb:'b-lb',sp:'b-sp'},
+  steps, document.getElementById('b-bn'), brainOn
+);
+document.getElementById('bb-tog').addEventListener('click',function(){
+  brainOn.value=!brainOn.value;
+  this.textContent=brainOn.value?'🧠 Brain overlay ON':'🧠 Brain overlay OFF';
+  this.classList.toggle('on',brainOn.value);
+});
+
+// ════════════════════════════════
+// TAB 3 — Evolution
+// ════════════════════════════════
+const allReps=run?.replays||[];
+const eaSel=document.getElementById('ea-sel'), ebSel=document.getElementById('eb-sel');
+const eaInf=document.getElementById('ea-inf'), ebInf=document.getElementById('eb-inf');
+const eaCv=document.getElementById('ea-cv'), ebCv=document.getElementById('eb-cv');
+const eaBn=document.getElementById('ea-bn'), ebBn=document.getElementById('eb-bn');
+const ePlBtn=document.getElementById('e-pl'), eSc=document.getElementById('e-sc'), eLb=document.getElementById('e-lb');
+
+allReps.forEach((r,i)=>{
+  const lbl=`ep ${r.episode_id} · ${r.outcome??'?'} · ${r.pellets_collected??0}★`;
+  eaSel.add(new Option(lbl,i)); ebSel.add(new Option(lbl,i));
+});
+eaSel.value='0'; ebSel.value=String(Math.max(0,allReps.length-1));
+
+let eStA=[],eStB=[],eCurr=0,ePlaying=false,eTimer=null;
+
+async function loadEvo(sel,infEl){
+  const i=parseInt(sel.value,10), r=allReps[i];
+  if (!r) return [];
+  infEl.textContent=`${r.outcome??'?'} · ${r.total_steps??'?'} steps · ${r.pellets_collected??0}★`;
+  const recs=await fetchJSONL('../'+r.path);
+  return recs.filter(x=>x.type==='step');
+}
+
+async function reloadEvo(){
+  [eStA,eStB]=await Promise.all([loadEvo(eaSel,eaInf),loadEvo(ebSel,ebInf)]);
+  eCurr=0;
+  eSc.max=String(Math.max(eStA.length,eStB.length)-1);
+  showEvo(0);
+}
+
+function getEvoStep(arr,i){ return arr[Math.max(0,Math.min(i,arr.length-1))]; }
+
+// Pulse loops for evolution canvases
+(function loopA(){ drawFrame(eaCv,getEvoStep(eStA,eCurr),getEvoStep(eStA,eCurr+1),{lerpT:1}); requestAnimationFrame(loopA); })();
+(function loopB(){ drawFrame(ebCv,getEvoStep(eStB,eCurr),getEvoStep(eStB,eCurr+1),{lerpT:1}); requestAnimationFrame(loopB); })();
+
+function showEvo(i){
+  eCurr=Math.max(0,Math.min(Math.max(eStA.length,eStB.length)-1,i));
+  eSc.value=String(eCurr); eLb.textContent=`${eCurr+1} / ${Math.max(eStA.length,eStB.length)}`;
+  const sA=getEvoStep(eStA,eCurr), sB=getEvoStep(eStB,eCurr);
+  if (sA?.done) banner(eaBn,sA.rewards?.krishna>50?'kwin':'hwin',sA.rewards?.krishna>50?'🏆 Kṛṣṇa Wins!':'💀 Hunter Wins');
+  if (sB?.done) banner(ebBn,sB.rewards?.krishna>50?'kwin':'hwin',sB.rewards?.krishna>50?'🏆 Kṛṣṇa Wins!':'💀 Hunter Wins');
+}
+
+eSc.addEventListener('input',e=>showEvo(parseInt(e.target.value,10)));
+document.getElementById('e-bk').onclick=()=>showEvo(eCurr-1);
+document.getElementById('e-fw').onclick=()=>showEvo(eCurr+1);
+document.getElementById('e-rst').onclick=()=>{ ePlaying=false; ePlBtn.textContent='▶ Play Both'; clearTimeout(eTimer); showEvo(0); };
+eaSel.onchange=ebSel.onchange=reloadEvo;
+
+function eT(){
+  if (!ePlaying) return;
+  if (eCurr>=Math.max(eStA.length,eStB.length)-1){ ePlaying=false; ePlBtn.textContent='▶ Play Both'; return; }
+  showEvo(eCurr+1);
+  eTimer=setTimeout(eT,parseInt(document.getElementById('e-sp').value,10));
+}
+ePlBtn.onclick=()=>{
+  ePlaying=!ePlaying; ePlBtn.textContent=ePlaying?'⏸ Pause Both':'▶ Play Both';
+  if (ePlaying) eT(); else clearTimeout(eTimer);
+};
+
+reloadEvo();
+
+// ════════════════════════════════
+// TAB 4 — Research (original)
+// ════════════════════════════════
+const rCv=document.getElementById('r-cv');
+const rSc=document.getElementById('r-sc'), rLb=document.getElementById('r-lb'), rDet=document.getElementById('r-det');
+rSc.max=String(steps.length-1);
+let rCurr=0, rPlaying=false, rTimer=null;
+function rShow(i){
+  rCurr=Math.max(0,Math.min(steps.length-1,i));
+  rSc.value=String(rCurr); rLb.textContent=`${rCurr+1} / ${steps.length}`;
+  const s=steps[rCurr];
+  renderGrid(rCv,s.grid);
+  const an=["↑ up","↓ down","← left","→ right"];
+  const qr=(s.q_values?.krishna||[]).map((q,i)=>`<dt>Q[${an[i]}]</dt><dd>${fmtNumber(q,3)}</dd>`).join("");
+  rDet.innerHTML=`<dt>t</dt><dd>${s.t}</dd><dt>action</dt><dd>${an[s.actions?.krishna]??s.actions?.krishna}</dd><dt>reward k</dt><dd>${fmtNumber(s.rewards?.krishna,3)}</dd><dt>reward h</dt><dd>${fmtNumber(s.rewards?.hunter,3)}</dd><dt>pellets</dt><dd>${s.pellets??'—'}</dd><dt>lives</dt><dd>${s.lives??'—'}</dd>${qr}`;
+}
+rSc.addEventListener('input',e=>rShow(parseInt(e.target.value,10)));
+document.getElementById('r-bk').onclick=()=>rShow(rCurr-1);
+document.getElementById('r-fw').onclick=()=>rShow(rCurr+1);
+function rTick(){ if (!rPlaying) return; if (rCurr>=steps.length-1){ rPlaying=false; document.getElementById('r-pl').textContent='play'; return; } rShow(rCurr+1); rTimer=setTimeout(rTick,parseInt(document.getElementById('r-sp').value,10)); }
+document.getElementById('r-pl').onclick=()=>{ rPlaying=!rPlaying; document.getElementById('r-pl').textContent=rPlaying?'pause':'play'; if (rPlaying) rTick(); else clearTimeout(rTimer); };
+rShow(0);
+
+} // end if(rep)
 </script>
 </body>
 </html>
