@@ -44,6 +44,10 @@ def _read_log_summary(log_path: Path) -> dict[str, Any]:
     wins: list[int] = []
     epsilons: list[float] = []
     losses: list[float] = []
+    gates: list[float] = []
+    avg100s: list[float] = []
+    cher_deps: list[float] = []
+    import math
     with open(log_path) as fh:
         for row in csv.DictReader(fh):
             episodes.append(int(row["episode"]))
@@ -60,15 +64,32 @@ def _read_log_summary(log_path: Path) -> dict[str, Any]:
             # Phase 1 CSV: "loss"; Phase 2 CSV: "krishna_loss"
             loss_val = row.get("loss") or row.get("krishna_loss") or ""
             losses.append(float(loss_val) if loss_val not in (None, "", "None") else float("nan"))
-    return {
+            # Phase 3 columns (absent in Phase 1/2 — default nan gracefully)
+            gate_val = row.get("mean_gate") or ""
+            gates.append(float(gate_val) if gate_val not in (None, "", "None") else float("nan"))
+            avg100_val = row.get("avg100") or ""
+            avg100s.append(float(avg100_val) if avg100_val not in (None, "", "None") else float("nan"))
+            dep_val = row.get("cher_dep_idx") or ""
+            cher_deps.append(float(dep_val) if dep_val not in (None, "", "None") else float("nan"))
+    has_gate     = any(not math.isnan(v) for v in gates)
+    has_cher_dep = any(not math.isnan(v) for v in cher_deps)
+    has_avg100   = any(not math.isnan(v) for v in avg100s)
+    out = {
         "n_episodes": len(episodes),
-        "episodes": _downsample(episodes),
-        "rewards": _downsample(rewards),
-        "pellets": _downsample(pellets),
-        "wins": _downsample(wins),
-        "epsilons": _downsample(epsilons),
-        "losses": _downsample(losses),
+        "episodes":   _downsample(episodes),
+        "rewards":    _downsample(rewards),
+        "pellets":    _downsample(pellets),
+        "wins":       _downsample(wins),
+        "epsilons":   _downsample(epsilons),
+        "losses":     _downsample(losses),
     }
+    if has_avg100:
+        out["avg100s"]   = _downsample(avg100s)
+    if has_gate:
+        out["gates"]     = _downsample(gates)
+    if has_cher_dep:
+        out["cher_deps"] = _downsample(cher_deps)
+    return out
 
 
 def _safe_rel(p: Path, base: Path) -> str:

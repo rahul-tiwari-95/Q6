@@ -127,6 +127,21 @@ if (!run) {
           <div class="chart-hint">rising then stabilising = healthy convergence · near-zero early = no gradient (check reward scale) · sustained spikes = instability</div>
           <canvas id="ch-loss" class="chart"></canvas>
         </div>
+        <div class="chart-block">
+          <div class="chart-label">Rolling avg-100 reward</div>
+          <div class="chart-hint">smoothed 100-episode mean · more readable than raw reward · positive = Krishna winning value vs Hunter</div>
+          <canvas id="ch-avg100" class="chart"></canvas>
+        </div>
+        <div class="chart-block" id="block-gate" style="display:none">
+          <div class="chart-label">Gate (evade ↔ collect blend)</div>
+          <div class="chart-hint">0.5 = balanced · →1.0 = pure evasion collapse · →0.0 = pure collection · watch for drift above 0.7</div>
+          <canvas id="ch-gate" class="chart"></canvas>
+        </div>
+        <div class="chart-block" id="block-cherdep" style="display:none">
+          <div class="chart-label">CHER dependency index</div>
+          <div class="chart-hint">CF injected / opportunities · declining = Krishna collecting autonomously · flat near 1.0 = still CHER-dependent</div>
+          <canvas id="ch-cherdep" class="chart"></canvas>
+        </div>
       </div>
     </div>
 
@@ -153,6 +168,15 @@ if (!run) {
     drawLineChart(document.getElementById("ch-pellets"), s.pellets,  { color: "#6ee7b7" });
     drawLineChart(document.getElementById("ch-eps"),     s.epsilons, { color: "#fcd34d" });
     drawLineChart(document.getElementById("ch-loss"),    s.losses,   { color: "#fb923c" });
+    if (s.avg100s) drawLineChart(document.getElementById("ch-avg100"), s.avg100s, { color: "#a78bfa", zeroLine: true });
+    if (s.gates) {
+      document.getElementById("block-gate").style.display = "";
+      drawLineChart(document.getElementById("ch-gate"), s.gates, { color: "#f472b6" });
+    }
+    if (s.cher_deps) {
+      document.getElementById("block-cherdep").style.display = "";
+      drawLineChart(document.getElementById("ch-cherdep"), s.cher_deps, { color: "#34d399" });
+    }
   }
   document.getElementById("replay-jump")?.addEventListener("change", e => {
     if (e.target.value) location.href = e.target.value;
