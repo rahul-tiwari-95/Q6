@@ -104,6 +104,24 @@ class TestGAE:
         advantages_ignored_value, _ = agent._compute_gae(next_value=-99.0, next_done=True)
         np.testing.assert_allclose(advantages, advantages_ignored_value, atol=1e-5)
 
+    def test_varying_values_with_boundary(self):
+        # Regression guard flagged in the v8 PPO review: the other cases here
+        # all use a CONSTANT values array, so a `values[t]` vs `values[t+1]`
+        # indexing swap in _compute_gae's t<n-1 branch would silently pass
+        # them (values[t] == values[t+1] everywhere). This case uses a
+        # varying values array combined with a mid-rollout done boundary,
+        # so that specific bug class produces a different, failing result.
+        agent = self._agent()
+        _fill_buffer(agent, rewards=[1.0, 2.0, 3.0], values=[0.2, 0.5, 0.9],
+                     dones=[False, True, False])
+
+        advantages, returns = agent._compute_gae(next_value=1.0, next_done=False)
+
+        expected_adv = np.array([0.8, 2.6, 2.6], dtype=np.float32)
+        expected_ret = np.array([1.0, 3.1, 3.5], dtype=np.float32)
+        np.testing.assert_allclose(advantages, expected_adv, atol=1e-5)
+        np.testing.assert_allclose(returns, expected_ret, atol=1e-5)
+
 
 # ----------------------------- act / update integration -----------------------------
 

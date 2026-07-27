@@ -86,6 +86,12 @@ def run_training(
     run_dir = _new_run_dir(name)
     rng = np.random.default_rng(seed)
     torch.manual_seed(seed)
+    # PPOAgent.update() shuffles minibatches via the legacy global numpy RNG
+    # (np.random.shuffle), which the local `rng` Generator above does not
+    # cover — seed it too so --seed is fully reproducible, not just episode
+    # ordering. (Flagged in the v8 PPO review; see Q6.md section 4 for why
+    # reproducibility gaps get taken seriously in this repo.)
+    np.random.seed(seed)
 
     env = SelfPlayGridworld(grid_size=GRID_SIZE)
 
