@@ -136,6 +136,11 @@ def run_training(
     resume_dir: str | None = None,
     checkpoint_every: int = 100,
     easy_warmup_eps: int = 1000,
+    pool_rectified: bool = True,
+    pool_ema_alpha: float = 0.1,
+    anchor_checkpoint: str | None = None,
+    anchor_weight: float = 0.0,
+    anchor_decay_eps: int = 3000,
 ) -> Path:
     # --- Run directory: new or resumed ---
     saved_state: dict | None = None
@@ -162,7 +167,14 @@ def run_training(
     env = SelfPlayGridworld(grid_size=GRID_SIZE)
 
     # --- Agents ---
-    krishna = GatedDQNAgent(device=device)
+    # anchor_decay_eps is applied by this training loop (below) via
+    # krishna.set_anchor_weight() each episode — the agent itself only
+    # needs the initial weight + checkpoint path.
+    krishna = GatedDQNAgent(
+        device=device,
+        anchor_weight=anchor_weight,
+        anchor_checkpoint_path=anchor_checkpoint,
+    )
     hunter  = DQNv2Agent(device=device)
 
     if resume_dir and saved_state:
@@ -180,8 +192,13 @@ def run_training(
 
     # --- Opponent pool (hierarchical) ---
     # Pool snapshots are persisted on disk — on resume they reload automatically.
+    # rectified=True (default, ablation 1): hard-tier sampling is weighted
+    # toward snapshots Krishna is currently beating/tying (PSRO-style
+    # rectified response) instead of pure recency. rectified=False restores
+    # the original v7 p_latest-only behaviour for A/B comparison.
     pool = HierarchicalOpponentPool(
-        run_dir / "pool", easy_max=5, hard_max=15
+        run_dir / "pool", easy_max=5, hard_max=15,
+        rectified=pool_rectified, ema_alpha=pool_ema_alpha,
     )
     if not resume_dir:
         pool.add_snapshot(hunter, metadata={"episode": 0, "kind": "init"})
@@ -210,6 +227,7 @@ def run_training(
             "pool_size", "cf_injected",
             "cher_opportunities", "cher_dep_idx",
             "mean_gate", "avg100",
+            "mean_hard_tier_score", "anchor_weight",
         ])
 
     now_ts     = datetime.now(timezone.utc).isoformat()
@@ -261,6 +279,14 @@ def run_training(
         mode = "joint" if rng.random() < p_latest else "fsp"
         mode_counts[mode] += 1
 
+        # --- Ablation 2: linear decay of the frozen-anchor loss weight ---
+        # anchor_weight (CLI) is the *initial* weight; it decays linearly to
+        # 0 over anchor_decay_eps episodes so the anchor pull is strongest
+        # early (when forgetting risk is highest) and fades out entirely.
+        if anchor_weight > 0.0:
+            decay_progress = min(1.0, ep / max(1, anchor_decay_eps))
+            krishna.set_anchor_weight(anchor_weight * (1.0 - decay_progress))
+
         if mode == "fsp":
             # Two-phase easy curriculum: use easy opponents exclusively for warm-up
             p_easy_cur = 1.0 if ep <= easy_warmup_eps else 0.25
@@ -268,6 +294,7 @@ def run_training(
             hunter_actor = FrozenAgent.load(snap, device=krishna.device)
             hunter_learns = False
         else:
+            snap = None
             hunter_actor = hunter
             hunter_learns = True
 
@@ -348,6 +375,18 @@ def run_training(
         winner = info.get("winner") or "timeout"
         wins[winner] = wins.get(winner, 0) + 1
 
+        # --- Ablation 1: rectified opponent sampling — record Krishna's
+        # outcome against the specific hard/easy snapshot sampled this FSP
+        # episode. Score: win = 1.0, otherwise partial credit for pellets
+        # collected (0.0 if caught with nothing collected). This feeds the
+        # per-snapshot EMA used to rectify hard-tier sampling weights.
+        if mode == "fsp" and snap is not None:
+            krishna_score = (
+                1.0 if winner == "krishna"
+                else min(1.0, info["pellets_collected"] / max(1, env.TARGET_PELLETS))
+            )
+            pool.record_outcome(snap, krishna_score)
+
         if record_this:
             recorder.end_episode(
                 outcome=winner,
@@ -393,6 +432,7 @@ def run_training(
             krishna.save(str(run_dir / "checkpoints" / "krishna_best.pth"))
 
         mean_gate = krishna.last_mean_gate or 0.0
+        mean_hard_tier_score = pool.mean_hard_tier_score()
 
         log.writerow([
             ep, mode, steps,
@@ -404,6 +444,7 @@ def run_training(
             len(pool), cf_injected,
             cher_opps, f"{cher_dep_idx:.3f}",
             f"{mean_gate:.4f}", f"{avg100:.2f}",
+            f"{mean_hard_tier_score:.4f}", f"{krishna.anchor_weight:.5f}",
         ])
 
         if ep % 10 == 0 or ep == episodes:
@@ -449,6 +490,15 @@ def run_training(
                 "snapshot_every":  snapshot_every,
                 "easy_tier_slots": 5,
                 "hard_tier_slots": 15,
+            },
+            "ablation1_rectified_sampling": {
+                "enabled":       pool_rectified,
+                "ema_alpha":     pool_ema_alpha,
+            },
+            "ablation2_frozen_anchor": {
+                "checkpoint":    anchor_checkpoint or "none",
+                "anchor_weight_initial": anchor_weight,
+                "anchor_decay_eps":      anchor_decay_eps,
             },
         },
         "hyperparams": {
@@ -538,6 +588,23 @@ def main() -> None:
                    help="Smoke test: 10 episodes only")
     p.add_argument("--easy-warmup-eps",  type=int,   default=1000,
                    help="Episodes to use p_easy=1.0 before switching to normal sampling (default 1000)")
+
+    # --- Ablation 1: rectified opponent sampling ---
+    p.add_argument("--no-pool-rectified", dest="pool_rectified", action="store_false",
+                   help="Disable fitness-rectified hard-tier sampling; fall back to "
+                        "pure p_latest recency sampling (v7 behaviour) for A/B comparison")
+    p.set_defaults(pool_rectified=True)
+    p.add_argument("--pool-ema-alpha",   type=float, default=0.1,
+                   help="EMA decay for per-snapshot Krishna outcome score (default 0.1)")
+
+    # --- Ablation 2: frozen-policy anchor for the collect head ---
+    p.add_argument("--anchor-checkpoint", type=str,   default=None,
+                   help="Path to a frozen GatedOptionNetwork/DQNv2 checkpoint used as the "
+                        "anchor reference for the collect-head regularization loss")
+    p.add_argument("--anchor-weight",    type=float, default=0.0,
+                   help="Initial weight of the anchor loss term (default 0.0 = off)")
+    p.add_argument("--anchor-decay-eps", type=int,   default=3000,
+                   help="Episodes over which anchor_weight linearly decays to 0 (default 3000)")
     args = p.parse_args()
 
     # Resolve total episode count
@@ -569,6 +636,11 @@ def main() -> None:
         resume_dir        = args.resume,
         checkpoint_every  = args.checkpoint_every,
         easy_warmup_eps   = args.easy_warmup_eps,
+        pool_rectified    = args.pool_rectified,
+        pool_ema_alpha    = args.pool_ema_alpha,
+        anchor_checkpoint = args.anchor_checkpoint,
+        anchor_weight     = args.anchor_weight,
+        anchor_decay_eps  = args.anchor_decay_eps,
     )
 
 
