@@ -70,6 +70,15 @@ class OpponentPool:
     def latest(self) -> Optional[str]:
         return self.entries[-1]["path"] if self.entries else None
 
+    def paths(self) -> List[str]:
+        """Return the snapshot paths currently stored in this tier, in insertion order.
+
+        Used by callers (e.g. HierarchicalOpponentPool) that need to key
+        auxiliary per-snapshot state (such as a fitness EMA) by path/id
+        without reaching into `.entries` directly.
+        """
+        return [e["path"] for e in self.entries]
+
     def __len__(self) -> int:
         return len(self.entries)
 
