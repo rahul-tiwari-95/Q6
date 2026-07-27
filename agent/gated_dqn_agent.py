@@ -13,6 +13,13 @@ Differences from DQNv2Agent
    dashboard Brain tab.
 6. `load_warm_start()` maps a DQNv2Agent checkpoint onto the gated network
    (shared trunk copied, both advantage heads initialized from old adv head).
+7. Ablation 2 — optional frozen-policy anchor: when `anchor_weight > 0` and
+   `anchor_checkpoint_path` is given, `learn()` adds an auxiliary loss that
+   pulls the collect head toward a frozen reference network's collect head,
+   restricted to states where it's currently "safe to collect" (hunter far
+   away). Tests whether collection ability is being actively forgotten under
+   adversarial pressure vs. never learned in the first place. Off by default
+   (`anchor_weight=0.0`). See `set_anchor_weight()`.
 
 Context vector (3,)
 -------------------
@@ -154,6 +161,8 @@ class GatedDQNAgent:
         update_every: int = UPDATE_EVERY,
         device: str | None = None,
         gate_reg_weight: float = 0.01,
+        anchor_weight: float = 0.0,
+        anchor_checkpoint_path: str | None = None,
     ) -> None:
         self.action_size = action_size
         self.grid_size = grid_size
@@ -162,6 +171,12 @@ class GatedDQNAgent:
         self.batch_size = batch_size
         self.update_every = update_every
         self.gate_reg_weight = float(gate_reg_weight)
+
+        # Ablation 2: frozen-policy anchor for the collect head (off by
+        # default). `anchor_weight` is mutable at runtime via
+        # `set_anchor_weight()` so the training script can linearly decay it.
+        self.anchor_weight = float(anchor_weight)
+        self.qnetwork_anchor: Optional[GatedOptionNetwork] = None
 
         if device is None:
             if torch.cuda.is_available():
@@ -181,6 +196,9 @@ class GatedDQNAgent:
         self.qnetwork_target.load_state_dict(self.qnetwork_local.state_dict())
         self.qnetwork_target.eval()
 
+        if anchor_checkpoint_path:
+            self._load_anchor(anchor_checkpoint_path)
+
         self.optimizer = torch.optim.Adam(
             self.qnetwork_local.parameters(), lr=learning_rate
         )
@@ -197,6 +215,63 @@ class GatedDQNAgent:
         self.last_loss: Optional[float] = None
         self.last_mean_q: Optional[float] = None
         self.last_mean_gate: Optional[float] = None
+        self.last_anchor_loss: Optional[float] = None
+
+    # ------------------------------------------------------------------
+    # Ablation 2: frozen-policy anchor
+    # ------------------------------------------------------------------
+
+    # Hunter-distance threshold above which a state is "safe to collect",
+    # matching the K_APPROACH_SAFE_DIST=8 convention used for proximity
+    # shaping in environment/selfplay_env.py. Expressed here in normalized
+    # context units: hunter_dist_norm = hunter_dist / (2 * grid_size), per
+    # info_to_context() above.
+    ANCHOR_SAFE_DIST: int = 8
+
+    def _load_anchor(self, path: str) -> None:
+        """
+        Load a frozen reference GatedOptionNetwork used by the anchor loss.
+
+        Accepts two checkpoint shapes:
+          - A GatedOptionNetwork state dict (raw, or wrapped under
+            "qnetwork_local" as GatedDQNAgent.save() does) — loaded directly.
+          - A DQNv2Agent / CNNDuelingQNetwork checkpoint (wrapped under
+            "qnetwork_local", e.g. from train_v2.py) — routed through the
+            same trunk + advantage-head mapping load_warm_start() uses
+            (`GatedOptionNetwork.load_from_cnn_dueling`).
+
+        The resulting network is set to eval() with gradients disabled and
+        is never updated during training.
+        """
+        net = GatedOptionNetwork(
+            in_channels=NUM_CHANNELS, grid_size=self.grid_size, n_actions=self.action_size
+        ).to(self.device)
+
+        raw = torch.load(path, map_location=self.device, weights_only=True)
+        state = raw.get("qnetwork_local", raw) if isinstance(raw, dict) else raw
+
+        if "evade_out.weight" in state:
+            # Already GatedOptionNetwork-shaped — load directly.
+            net.load_state_dict(state)
+        elif "adv_out.weight" in state:
+            # CNNDuelingQNetwork-shaped (e.g. a train_v2.py Phase-1 checkpoint)
+            # — reuse the warm-start trunk/advantage-head mapping.
+            net.load_from_cnn_dueling(path, map_location=self.device)
+        else:
+            raise ValueError(
+                f"Anchor checkpoint at {path!r} doesn't match either a "
+                "GatedOptionNetwork or CNNDuelingQNetwork state dict "
+                f"(found keys: {list(state.keys())[:5]}...)"
+            )
+
+        net.eval()
+        for p in net.parameters():
+            p.requires_grad_(False)
+        self.qnetwork_anchor = net
+
+    def set_anchor_weight(self, weight: float) -> None:
+        """Update the anchor loss weight at runtime (training script decay hook)."""
+        self.anchor_weight = float(weight)
 
     # ------------------------------------------------------------------
     # Action selection
@@ -309,8 +384,9 @@ class GatedDQNAgent:
             next_q = self.qnetwork_target(s_next, c_next).gather(1, next_actions)
             y = r + self.gamma * next_q * (1.0 - d)
 
-        # Current Q for taken actions — use forward_options to also get gate for regularization
-        _, _, q_blend, gate_batch = self.qnetwork_local.forward_options(s, c)
+        # Current Q for taken actions — use forward_options to also get gate
+        # for regularization, and the raw collect head for the anchor loss.
+        _, q_collect_local, q_blend, gate_batch = self.qnetwork_local.forward_options(s, c)
         q = q_blend.gather(1, a)
 
         # Gate entropy regularization: maximise H(gate) = -g*log(g) - (1-g)*log(1-g)
@@ -318,6 +394,28 @@ class GatedDQNAgent:
         gate_entropy = -(gate_batch * torch.log(gate_batch + 1e-8)
                          + (1.0 - gate_batch) * torch.log(1.0 - gate_batch + 1e-8))
         loss = F.smooth_l1_loss(q, y) - self.gate_reg_weight * gate_entropy.mean()
+
+        # --- Ablation 2: frozen-policy anchor for the collect head ---
+        # Regularizes the collect head toward a frozen reference network in
+        # states that are currently "safe to collect" (hunter far away),
+        # testing whether collection ability is being actively forgotten
+        # under adversarial pressure rather than never learned.
+        anchor_loss_val = 0.0
+        if self.anchor_weight > 0.0 and self.qnetwork_anchor is not None:
+            with torch.no_grad():
+                _, q_collect_ref, _, _ = self.qnetwork_anchor.forward_options(s, c)
+
+            safe_thresh = self.ANCHOR_SAFE_DIST / (2.0 * self.grid_size)
+            safe_mask = (c[:, 0] > safe_thresh).float().unsqueeze(1)  # (B, 1)
+            n_safe = safe_mask.sum()
+
+            if n_safe.item() > 0:
+                elementwise = F.smooth_l1_loss(
+                    q_collect_local, q_collect_ref, reduction="none"
+                )  # (B, n_actions)
+                masked_loss = (elementwise * safe_mask).sum() / (n_safe * elementwise.size(1))
+                loss = loss + self.anchor_weight * masked_loss
+                anchor_loss_val = float(masked_loss.item())
 
         self.optimizer.zero_grad()
         loss.backward()
@@ -331,13 +429,15 @@ class GatedDQNAgent:
                 tp.mul_(1.0 - self.tau).add_(self.tau * lp)
 
         self.learning_step += 1
-        self.last_loss      = float(loss.item())
-        self.last_mean_q    = float(q.mean().item())
-        self.last_mean_gate = float(gate_batch.mean().detach().item())
+        self.last_loss        = float(loss.item())
+        self.last_mean_q      = float(q.mean().item())
+        self.last_mean_gate   = float(gate_batch.mean().detach().item())
+        self.last_anchor_loss = anchor_loss_val
         return {
-            "loss":      self.last_loss,
-            "mean_q":    self.last_mean_q,
-            "mean_gate": self.last_mean_gate,
+            "loss":        self.last_loss,
+            "mean_q":      self.last_mean_q,
+            "mean_gate":   self.last_mean_gate,
+            "anchor_loss": self.last_anchor_loss,
         }
 
     # ------------------------------------------------------------------
