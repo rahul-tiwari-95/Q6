@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import signal
 import subprocess
 import sys
 import time
@@ -71,6 +72,51 @@ def _new_run_dir(name: str) -> Path:
     return d
 
 
+def _save_checkpoint_state(
+    run_dir: Path,
+    episode: int,
+    krishna: PPOAgent,
+    hunter: PPOAgent,
+    best_avg100: float,
+    best_ckpt_ep: int,
+    wins: dict,
+    mode_counts: dict,
+    rolling: list,
+    total_episodes: int,
+    name: str,
+    started_at: str,
+) -> None:
+    """
+    Persist enough state to resume training from this episode. Mirrors
+    train_phase3.py's `_save_checkpoint_state` convention exactly (same
+    file names/shape) so a generic orchestrator can treat any Q6 training
+    script uniformly — it only needs to know "look for
+    checkpoints/last_state.json, pass --resume <run_dir>".
+
+    Deliberately does NOT try to persist the in-flight PPO rollout buffer:
+    it's fully consumed and reset after every update(), so losing a
+    partial buffer on interruption just means redoing a partial rollout
+    collection after resume — not a correctness issue, and simpler than
+    DQN's replay buffer (which isn't persisted either).
+    """
+    krishna.save(str(run_dir / "checkpoints" / "krishna_latest.pth"))
+    hunter.save(str(run_dir / "checkpoints" / "hunter_latest.pth"))
+    payload = {
+        "episode": episode,
+        "total_episodes": total_episodes,
+        "name": name,
+        "krishna_updates": krishna.update_step,
+        "hunter_updates": hunter.update_step,
+        "best_avg100": best_avg100,
+        "best_avg100_ep": best_ckpt_ep,
+        "wins": wins,
+        "mode_counts": mode_counts,
+        "rolling_rewards": list(rolling),
+        "started_at": started_at,
+    }
+    (run_dir / "checkpoints" / "last_state.json").write_text(json.dumps(payload, indent=2))
+
+
 # ----------------------------- training -----------------------------
 
 def run_training(
@@ -82,54 +128,116 @@ def run_training(
     p_latest: float,
     replay_every: int,
     rollout_len: int,
+    resume_dir: str | None = None,
+    checkpoint_every: int = 100,
 ) -> Path:
-    run_dir = _new_run_dir(name)
-    rng = np.random.default_rng(seed)
-    torch.manual_seed(seed)
+    # --- Run directory: new or resumed (mirrors train_phase3.py exactly) ---
+    saved_state: dict | None = None
+    if resume_dir:
+        run_dir = Path(resume_dir)
+        if not run_dir.exists():
+            raise FileNotFoundError(f"Resume directory not found: {resume_dir}")
+        state_path = run_dir / "checkpoints" / "last_state.json"
+        if not state_path.exists():
+            raise FileNotFoundError(
+                f"No checkpoint state in {resume_dir}.\n"
+                "Training must have been started with --checkpoint-every (default is 100)."
+            )
+        saved_state = json.loads(state_path.read_text())
+        ep_start = saved_state["episode"] + 1
+        print(f"[resume] Resuming from ep {ep_start}/{episodes}  run_dir={run_dir}")
+    else:
+        run_dir = _new_run_dir(name)
+        ep_start = 1
+
+    rng = np.random.default_rng(seed + (ep_start - 1))
+    torch.manual_seed(seed + (ep_start - 1))
     # PPOAgent.update() shuffles minibatches via the legacy global numpy RNG
     # (np.random.shuffle), which the local `rng` Generator above does not
     # cover — seed it too so --seed is fully reproducible, not just episode
     # ordering. (Flagged in the v8 PPO review; see Q6.md section 4 for why
     # reproducibility gaps get taken seriously in this repo.)
-    np.random.seed(seed)
+    np.random.seed(seed + (ep_start - 1))
 
     env = SelfPlayGridworld(grid_size=GRID_SIZE)
 
     krishna = PPOAgent(device=device, rollout_len=rollout_len)
     hunter = PPOAgent(device=device, rollout_len=rollout_len)
 
+    if resume_dir and saved_state:
+        print("[resume] Loading Krishna from checkpoints/krishna_latest.pth")
+        krishna.load(str(run_dir / "checkpoints" / "krishna_latest.pth"))
+        print("[resume] Loading Hunter  from checkpoints/hunter_latest.pth")
+        hunter.load(str(run_dir / "checkpoints" / "hunter_latest.pth"))
+
+    # Pool snapshots are persisted on disk — on resume they reload automatically.
     pool = OpponentPool(run_dir / "pool", max_size=20)
-    # Seed the pool with Hunter's initial random network so FSP episodes can
-    # run from episode 1 (matches train_phase2.py).
-    pool.add_snapshot(hunter, metadata={"episode": 0, "kind": "init"})
+    if not resume_dir:
+        # Seed the pool with Hunter's initial random network so FSP episodes
+        # can run from episode 1 (matches train_phase2.py).
+        pool.add_snapshot(hunter, metadata={"episode": 0, "kind": "init"})
 
     recorder = ReplayRecorder(str(run_dir), enabled=True)
 
+    # --- CSV log (append on resume, fresh otherwise) ---
     log_path = run_dir / "logs" / "episode_stats.csv"
-    log_file = log_path.open("w", newline="")
+    log_file = log_path.open("a" if resume_dir else "w", newline="")
     log = csv.writer(log_file)
-    log.writerow([
-        "episode", "mode", "steps", "krishna_reward", "hunter_reward",
-        "pellets", "caught", "winner",
-        "krishna_updates", "hunter_updates",
-        "krishna_loss", "hunter_loss",
-        "krishna_entropy", "hunter_entropy",
-        "krishna_approx_kl", "hunter_approx_kl",
-        "krishna_clipfrac", "hunter_clipfrac",
-        "pool_size", "avg100",
-    ])
+    if not resume_dir:
+        log.writerow([
+            "episode", "mode", "steps", "krishna_reward", "hunter_reward",
+            "pellets", "caught", "winner",
+            "krishna_updates", "hunter_updates",
+            "krishna_loss", "hunter_loss",
+            "krishna_entropy", "hunter_entropy",
+            "krishna_approx_kl", "hunter_approx_kl",
+            "krishna_clipfrac", "hunter_clipfrac",
+            "pool_size", "avg100",
+        ])
 
-    started_at = datetime.now(timezone.utc).isoformat()
+    now_ts = datetime.now(timezone.utc).isoformat()
+    started_at = saved_state["started_at"] if saved_state else now_ts
     t0 = time.time()
     last_print_t = t0
 
-    wins = {"krishna": 0, "hunter": 0, "timeout": 0}
-    mode_counts = {"joint": 0, "fsp": 0}
-    rolling: list[float] = []
+    # --- Restore or initialise rolling stats ---
+    if saved_state:
+        wins = saved_state["wins"]
+        mode_counts = saved_state["mode_counts"]
+        rolling = list(saved_state["rolling_rewards"])
+        best_avg100 = saved_state["best_avg100"]
+        best_ckpt_ep = saved_state["best_avg100_ep"]
+    else:
+        wins = {"krishna": 0, "hunter": 0, "timeout": 0}
+        mode_counts = {"joint": 0, "fsp": 0}
+        rolling: list[float] = []
+        best_avg100 = float("-inf")
+        best_ckpt_ep = 0
 
     print(f"[start] {episodes} episodes  device={krishna.device}  algo=IPPO  "
           f"p_latest={p_latest}  snapshot_every={snapshot_every}  "
           f"rollout_len={rollout_len}  run_dir={run_dir}", flush=True)
+
+    ep = ep_start - 1  # bound before the handler is registered so its closure sees live updates
+
+    # --- Graceful shutdown: save checkpoint on SIGTERM / SIGINT (laptop
+    # sleep interruption, Ctrl-C, or an orchestrator stopping this job) ---
+    def _on_shutdown(signum, frame):
+        print(f"\n[checkpoint] signal {signum} — saving at ep {ep}...", flush=True)
+        try:
+            _save_checkpoint_state(
+                run_dir, ep, krishna, hunter,
+                best_avg100, best_ckpt_ep,
+                wins, mode_counts, rolling,
+                episodes, name, started_at,
+            )
+            print("[checkpoint] saved  →  checkpoints/last_state.json", flush=True)
+        except Exception as exc:
+            print(f"[checkpoint] save failed: {exc}", flush=True)
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, _on_shutdown)
+    signal.signal(signal.SIGINT, _on_shutdown)
 
     # ---- episode/mode setup (shared by the initial episode and every
     # subsequent one picked at an episode boundary below) ----
@@ -146,7 +254,6 @@ def run_training(
     ep_seed = int(rng.integers(0, 2**31 - 1))
     state, info = env.reset(seed=ep_seed)
 
-    ep = 0
     ep_r_k = 0.0
     ep_r_h = 0.0
     ep_steps = 0
@@ -157,10 +264,10 @@ def run_training(
     k_prev_done = True
     h_prev_done = True
 
-    record_this = True  # always record episode 1
+    record_this = (ep_start % max(1, replay_every) == 0) or (ep_start == episodes)
     if record_this:
         recorder.start_episode(
-            episode_id=1, phase=0 if mode == "joint" else 1, difficulty=0,
+            episode_id=ep_start, phase=0 if mode == "joint" else 1, difficulty=0,
             seed=ep_seed, grid_size=env.grid_size, agents=["krishna", "hunter"],
         )
 
@@ -231,10 +338,24 @@ def run_training(
             if ep % snapshot_every == 0:
                 pool.add_snapshot(hunter, metadata={"episode": ep})
 
+            # --- Periodic resume checkpoint ---
+            if checkpoint_every > 0 and ep % checkpoint_every == 0:
+                _save_checkpoint_state(
+                    run_dir, ep, krishna, hunter,
+                    best_avg100, best_ckpt_ep,
+                    wins, mode_counts, rolling,
+                    episodes, name, started_at,
+                )
+
             rolling.append(ep_r_k)
             if len(rolling) > 100:
                 rolling.pop(0)
             avg100 = float(np.mean(rolling))
+
+            if avg100 > best_avg100 and ep >= 100:
+                best_avg100 = avg100
+                best_ckpt_ep = ep
+                krishna.save(str(run_dir / "checkpoints" / "krishna_best.pth"))
 
             log.writerow([
                 ep, mode, ep_steps,
@@ -329,6 +450,8 @@ def run_training(
             "final_krishna_updates": krishna.update_step,
             "final_hunter_updates": hunter.update_step,
             "final_pool_size": len(pool),
+            "best_avg100": best_avg100,
+            "best_avg100_ep": best_ckpt_ep,
         },
         "artifacts": {
             "log_csv": "logs/episode_stats.csv",
@@ -352,7 +475,8 @@ def run_training(
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--episodes", type=int, default=6000)
+    p.add_argument("--episodes", type=int, default=None,
+                   help="Total episodes (default 6000; on --resume uses saved value)")
     p.add_argument("--smoke", action="store_true",
                    help="Run a handful of episodes with a small rollout length "
                         "for pipeline validation (exercises the update path).")
@@ -365,14 +489,28 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--replay-every", type=int, default=25)
     p.add_argument("--rollout-len", type=int, default=2048,
                    help="On-policy rollout length (steps) per PPO update.")
+    p.add_argument("--resume", type=str, default=None,
+                   help="Path to existing run_dir to resume (e.g. training_runs/20260727_…)")
+    p.add_argument("--checkpoint-every", type=int, default=100,
+                   help="Save resumable checkpoint every N episodes (0 = disable)")
     return p.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    episodes = 20 if args.smoke else args.episodes
-    rollout_len = 128 if args.smoke else args.rollout_len
+
+    # Resolve total episode count (matches train_phase3.py's --resume convention)
+    if args.resume and args.episodes is None:
+        state_path = Path(args.resume) / "checkpoints" / "last_state.json"
+        saved = json.loads(state_path.read_text())
+        episodes = saved["total_episodes"]
+    else:
+        episodes = args.episodes if args.episodes is not None else 6000
+
+    rollout_len = args.rollout_len
     if args.smoke:
+        episodes = 20
+        rollout_len = 128
         args.snapshot_every = 5
         args.replay_every = 5
     run_training(
@@ -384,6 +522,8 @@ def main() -> int:
         p_latest=args.p_latest,
         replay_every=args.replay_every,
         rollout_len=rollout_len,
+        resume_dir=args.resume,
+        checkpoint_every=args.checkpoint_every,
     )
     return 0
 
