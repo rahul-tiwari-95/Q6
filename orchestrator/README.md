@@ -1,0 +1,118 @@
+# Local training-run orchestrator
+
+A small, dependency-free (stdlib only) Python daemon for running several
+long-lived processes on one machine, with crash detection, checkpoint-aware
+auto-resume, and a live status view — built for running Q6's `v8` and
+`v7-ablations` experiments in parallel on a laptop without babysitting two
+terminal tabs for days, but nothing about it is Q6-specific. A job is just
+`{id, cwd, command}`.
+
+## Why
+
+Three ordinary things need to be true for an unattended multi-day run to be
+safe to walk away from:
+
+1. If a job dies, something notices and restarts it **from its last
+   checkpoint**, not from scratch.
+2. Resuming correctly means replaying the job's **full original command
+   line** plus `--resume <run_dir>` — not just `--resume` on its own.
+   Hyperparameters (rollout length, snapshot cadence, etc.) are not restored
+   from the checkpoint file; this was found the hard way while testing
+   resume for this project (see `Q6.md` section 4 for the broader pattern —
+   this project takes "verify before you trust it" seriously).
+3. Running N jobs on one machine shouldn't require N terminal tabs.
+
+## Usage
+
+```bash
+python3 orchestrator/orchestrator.py --config orchestrator/q6_jobs.json
+```
+
+Runs in the foreground. Ctrl-C sends `SIGTERM` to every running child (which,
+for both Q6 training scripts, triggers their own graceful
+checkpoint-and-exit handler) and waits up to 60s for clean exits before the
+orchestrator itself exits.
+
+Per-job output streams to `orchestrator_logs/<job_id>.log`. A live
+`orchestrator_status.json` is rewritten every poll cycle with each job's
+status, restart count, run directory, and last-seen episode progress line —
+useful if you want to build a dashboard tile on top of it later, or just
+`cat` it from another terminal.
+
+## Job config format
+
+```json
+{
+  "poll_interval_seconds": 15,
+  "status_print_interval_seconds": 60,
+  "max_concurrent_jobs": null,
+  "max_load_average": null,
+  "jobs": [
+    {
+      "id": "some_job",
+      "cwd": "/path/to/run/it/from",
+      "command": ["python3", "script.py", "--flag", "value"],
+      "max_restarts": 20,
+      "restart_backoff_seconds": 15.0
+    }
+  ]
+}
+```
+
+- `max_concurrent_jobs`: cap on how many jobs run at once; `null` = no cap
+  (start everything immediately). Extra jobs queue and start as slots free
+  up.
+- `max_load_average`: if set, new (queued or restarting) jobs won't be
+  started while `os.getloadavg()`'s 1-minute figure exceeds this. `null` =
+  no throttle.
+- `max_restarts` / `restart_backoff_seconds`: after a job crashes this many
+  times, it's marked `failed` and left alone rather than restart-looping
+  forever on something that isn't going to self-heal (e.g. a real bug).
+
+Auto-resume is automatic and requires no config: if a job's stdout contains
+a line matching `run_dir=<path>` (both `train_v8.py` and `train_phase3.py`
+already print this on startup), the orchestrator remembers it and appends
+`--resume <that path>` when relaunching after a crash. A job that doesn't
+print such a line still gets supervised/logged/restarted — just always from
+scratch, not resumed.
+
+**The orchestrator itself is resumable too.** If `orchestrator_status.json`
+exists from a previous session when you start it again, each job's
+last-known `run_dir` is recovered from it — so if the whole machine went
+down (not just one job), starting the orchestrator again picks every
+still-in-progress job back up from its checkpoint, not from zero.
+
+## macOS note on "load balancing"
+
+There is no supported way to pin a subprocess to specific CPU cores on
+macOS — `psutil.Process.cpu_affinity()` raises `NotImplementedError` there;
+it's a Linux/Windows-only API, and this tool doesn't attempt to work around
+that. What it does instead is honest about what's actually available:
+a concurrency cap (`max_concurrent_jobs`) and an optional load-average
+throttle (`max_load_average`, via `os.getloadavg()`, which **is** available
+on macOS). If you need real CPU isolation, that's an OS-level (or
+containers/cgroups-on-Linux) problem this tool doesn't solve.
+
+## Enabling the frozen-anchor ablation for `v7_ablations`
+
+The shipped `q6_jobs.json` runs `v7_ablations` with ablation 1 (rectified
+opponent sampling) on by default and ablation 2 (frozen-collect-head anchor)
+off, because ablation 2 needs a Phase-1 checkpoint path that isn't stable
+across machines/regenerations. To enable it, add to that job's `command`:
+
+```json
+"--anchor-checkpoint", "/path/to/training_runs/<run>/checkpoints/agent_final.pth",
+"--anchor-weight", "0.5",
+"--anchor-decay-eps", "3000"
+```
+
+See `Q6.md` section 6.1 for what this checkpoint needs to represent and why
+a properly-converged one (not a quick smoke-scale one) matters for a real
+result.
+
+## Extending beyond Q6
+
+Nothing in `orchestrator.py` imports anything from this repo. Point
+`cwd`/`command` at any long-running script that (a) exits 0 on success,
+nonzero on failure, and (b) optionally prints `run_dir=<path>` and accepts
+`--resume <path>`, and it's supervised the same way.

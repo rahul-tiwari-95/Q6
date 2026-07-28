@@ -1,0 +1,34 @@
+{
+  "poll_interval_seconds": 15,
+  "status_print_interval_seconds": 60,
+  "max_concurrent_jobs": null,
+  "max_load_average": null,
+  "jobs": [
+    {
+      "id": "v8_ippo",
+      "cwd": "/Users/rahul/Q6",
+      "command": [
+        "python3", "train_v8.py",
+        "--episodes", "6000",
+        "--device", "cpu",
+        "--name", "v8_ippo_selfplay",
+        "--checkpoint-every", "50"
+      ],
+      "max_restarts": 20,
+      "restart_backoff_seconds": 15.0
+    },
+    {
+      "id": "v7_ablations",
+      "cwd": "/Users/rahul/Q6-v7-ablations",
+      "command": [
+        "python3", "train_phase3.py",
+        "--episodes", "12000",
+        "--device", "cpu",
+        "--name", "v7_ablations_run",
+        "--checkpoint-every", "50"
+      ],
+      "max_restarts": 20,
+      "restart_backoff_seconds": 15.0
+    }
+  ]
+}
