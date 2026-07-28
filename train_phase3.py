@@ -257,12 +257,24 @@ def run_training(
         flush=True,
     )
 
+    # `ep` (the for-loop variable below) reflects the episode CURRENTLY being
+    # processed, not the last one whose bookkeeping (wins, rolling, CSV row)
+    # actually got committed — mode_counts[mode] is incremented at the very
+    # top of the loop body, before that episode has even been simulated. A
+    # signal arriving mid-episode would otherwise get checkpointed against an
+    # `ep` whose data was never written, and --resume would silently SKIP
+    # that episode entirely (verified experimentally: killed mid-episode-2,
+    # resumed, episode 2 never appears in the CSV). last_completed_ep is only
+    # advanced once every piece of that episode's bookkeeping — including the
+    # CSV row — has actually been committed; see its assignment below.
+    last_completed_ep = ep_start - 1
+
     # --- Graceful shutdown: save checkpoint on SIGTERM / SIGINT ---
     def _on_shutdown(signum, frame):
-        print(f"\n[checkpoint] signal {signum} — saving at ep {ep}...", flush=True)
+        print(f"\n[checkpoint] signal {signum} — saving at ep {last_completed_ep}...", flush=True)
         try:
             _save_checkpoint_state(
-                run_dir, ep, krishna, hunter,
+                run_dir, last_completed_ep, krishna, hunter,
                 best_avg100, best_ckpt_ep,
                 wins, mode_counts, rolling,
                 episodes, name, started_at,
@@ -411,15 +423,6 @@ def run_training(
         if ep % snapshot_every == 0:
             pool.add_snapshot(hunter, metadata={"episode": ep})
 
-        # --- Periodic resume checkpoint ---
-        if checkpoint_every > 0 and ep % checkpoint_every == 0:
-            _save_checkpoint_state(
-                run_dir, ep, krishna, hunter,
-                best_avg100, best_ckpt_ep,
-                wins, mode_counts, rolling,
-                episodes, name, started_at,
-            )
-
         # --- Rolling average and best checkpoint ---
         rolling.append(ep_r_k)
         if len(rolling) > 100:
@@ -446,6 +449,21 @@ def run_training(
             f"{mean_gate:.4f}", f"{avg100:.2f}",
             f"{mean_hard_tier_score:.4f}", f"{krishna.anchor_weight:.5f}",
         ])
+
+        # This episode's wins/rolling/CSV bookkeeping is now fully committed
+        # — safe to let a checkpoint (periodic or signal-triggered) claim it.
+        last_completed_ep = ep
+
+        # --- Periodic resume checkpoint (moved to AFTER the CSV row above —
+        # see the comment on last_completed_ep near the SIGTERM handler for
+        # why the old position, before log.writerow, was a real bug) ---
+        if checkpoint_every > 0 and ep % checkpoint_every == 0:
+            _save_checkpoint_state(
+                run_dir, last_completed_ep, krishna, hunter,
+                best_avg100, best_ckpt_ep,
+                wins, mode_counts, rolling,
+                episodes, name, started_at,
+            )
 
         if ep % 10 == 0 or ep == episodes:
             log_file.flush()
