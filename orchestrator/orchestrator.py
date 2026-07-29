@@ -196,6 +196,7 @@ class Orchestrator:
             return
         job.status = "running"
         job.started_at = time.time()
+        print(f"[orchestrator] {job.spec.id} pid={job.proc.pid}")
 
     def _extract_run_dir(self, job: JobState) -> None:
         if job.run_dir or not job.log_path or not job.log_path.exists():
@@ -365,9 +366,11 @@ class Orchestrator:
         signal.signal(signal.SIGINT, self._handle_shutdown)
         signal.signal(signal.SIGTERM, self._handle_shutdown)
 
-        print(f"[orchestrator] managing {len(self.jobs)} job(s): "
+        print(f"[orchestrator] pid={os.getpid()}  managing {len(self.jobs)} job(s): "
               f"{', '.join(j.spec.id for j in self.jobs)}")
         print(f"[orchestrator] logs: {self.log_dir}   status: {self.status_path}")
+        print("[orchestrator] each job's own pid is also printed as it starts, and "
+              "always readable from the status file above (jobs[].pid) while running.")
 
         last_status_print = 0.0
         while not self._stopping and not self._all_terminal():
