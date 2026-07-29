@@ -103,3 +103,110 @@ def test_index_json_serializable(tmp_path):
     run_dir = _write_fake_run(tmp_path, "ser_test")
     entry = scan.scan_one(run_dir)
     json.dumps(entry)  # raises if not serializable
+
+
+# ---------------------------------------------------------------------------
+# Merge behavior — regression coverage for a near-miss found while adding
+# v8/v7-ablations dashboard support: training_runs/ is gitignored, so no
+# local checkout has every run that was ever indexed. A naive rebuild would
+# silently delete the historical record for any run not present locally.
+# ---------------------------------------------------------------------------
+
+def test_build_index_preserves_historical_entry_not_present_locally(tmp_path, monkeypatch):
+    sys.path.insert(0, str(REPO_ROOT))
+    from dashboard import scan
+    monkeypatch.setattr(scan, "RUNS_DIR", tmp_path / "training_runs_empty")
+    # No local run dirs at all -- simulates a fresh checkout.
+    existing = tmp_path / "index.json"
+    existing.write_text(json.dumps({
+        "generated_at": "then", "repo_root": "x",
+        "runs": [{"id": "historical_only_run", "phase_label": "phase1_foundation"}],
+    }))
+
+    idx = scan.build_index(existing_path=existing)
+
+    ids = [r["id"] for r in idx["runs"]]
+    assert "historical_only_run" in ids, "regenerating the index must not delete runs missing locally"
+
+
+def test_build_index_local_run_wins_over_stale_indexed_copy(tmp_path, monkeypatch):
+    sys.path.insert(0, str(REPO_ROOT))
+    from dashboard import scan
+    runs_dir = tmp_path / "training_runs"
+    runs_dir.mkdir()
+    monkeypatch.setattr(scan, "RUNS_DIR", runs_dir)
+    _write_fake_run(runs_dir, "same_id_run", n_replays=1)
+
+    existing = tmp_path / "index.json"
+    existing.write_text(json.dumps({
+        "generated_at": "then", "repo_root": "x",
+        "runs": [{"id": "same_id_run", "phase_label": "STALE_SHOULD_BE_REPLACED"}],
+    }))
+
+    idx = scan.build_index(existing_path=existing)
+
+    entries = [r for r in idx["runs"] if r["id"] == "same_id_run"]
+    assert len(entries) == 1, "must not duplicate an id present both locally and in the existing index"
+    assert entries[0]["phase_label"] != "STALE_SHOULD_BE_REPLACED"
+
+
+def test_build_index_no_merge_flag_ignores_existing(tmp_path, monkeypatch):
+    sys.path.insert(0, str(REPO_ROOT))
+    from dashboard import scan
+    monkeypatch.setattr(scan, "RUNS_DIR", tmp_path / "training_runs_empty")
+    existing = tmp_path / "index.json"
+    existing.write_text(json.dumps({
+        "generated_at": "then", "repo_root": "x",
+        "runs": [{"id": "historical_only_run", "phase_label": "phase1_foundation"}],
+    }))
+
+    idx = scan.build_index(existing_path=None)  # what --no-merge passes
+
+    assert idx["runs"] == []
+
+
+# ---------------------------------------------------------------------------
+# Optional per-algorithm series — a PPO-only column must not leak into a DQN
+# run's summary (or vice versa); see dashboard/scan.py's _OPTIONAL_SERIES.
+# ---------------------------------------------------------------------------
+
+def _write_csv(run_dir: Path, header: str, rows: list[str]) -> None:
+    (run_dir / "logs").mkdir(parents=True, exist_ok=True)
+    log = run_dir / "logs" / "episode_stats.csv"
+    with open(log, "w") as fh:
+        fh.write(header + "\n")
+        for r in rows:
+            fh.write(r + "\n")
+
+
+def test_ppo_columns_absent_for_dqn_style_csv(tmp_path):
+    sys.path.insert(0, str(REPO_ROOT))
+    from dashboard import scan
+    run_dir = tmp_path / "dqn_run"
+    _write_csv(
+        run_dir,
+        "episode,reward,pellets,won,epsilon,loss",
+        [f"{i},{i*1.5},2,True,{1.0 - i*0.05},0.1" for i in range(1, 6)],
+    )
+    summary = scan._read_log_summary(run_dir / "logs" / "episode_stats.csv")
+    assert "epsilons" in summary
+    assert "entropies" not in summary
+    assert "approx_kls" not in summary
+    assert "clipfracs" not in summary
+
+
+def test_dqn_columns_absent_for_ppo_style_csv(tmp_path):
+    sys.path.insert(0, str(REPO_ROOT))
+    from dashboard import scan
+    run_dir = tmp_path / "ppo_run"
+    _write_csv(
+        run_dir,
+        "episode,krishna_reward,pellets,winner,krishna_loss,krishna_entropy,krishna_approx_kl,krishna_clipfrac,avg100",
+        [f"{i},{i*1.5},2,timeout,0.1,1.3,0.01,0.05,10.0" for i in range(1, 6)],
+    )
+    summary = scan._read_log_summary(run_dir / "logs" / "episode_stats.csv")
+    assert "entropies" in summary
+    assert "approx_kls" in summary
+    assert "clipfracs" in summary
+    assert "epsilons" not in summary
+    assert "gates" not in summary

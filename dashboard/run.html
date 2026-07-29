@@ -38,6 +38,9 @@ if (!run) {
   const h = run.hyperparams || {}, t = run.training || {}, res = run.results || {};
   const per = res.per_phase || [];
   const algo = run.algo || {};
+  // PPO (v8) hyperparams share no keys with DQN's — branch the whole panel
+  // rather than showing a wall of "undefined" for whichever doesn't apply.
+  const isPPO = h.clip_coef !== undefined;
 
   const perPhaseRows = per.map(p => `
     <tr>
@@ -72,6 +75,18 @@ if (!run) {
       </div>
       <div class="panel">
         <h2>Hyperparams</h2>
+        ${isPPO ? `
+        <dl class="kv">
+          <dt>lr</dt><dd>${h.learning_rate}</dd>
+          <dt>γ</dt><dd>${h.gamma}</dd>
+          <dt>gae λ</dt><dd>${h.gae_lambda}</dd>
+          <dt>clip ε</dt><dd>${h.clip_coef}</dd>
+          <dt>ent coef</dt><dd>${h.ent_coef}</dd>
+          <dt>vf coef</dt><dd>${h.vf_coef}</dd>
+          <dt>epochs</dt><dd>${h.update_epochs}</dd>
+          <dt>minibatches</dt><dd>${h.num_minibatches}</dd>
+          <dt>rollout len</dt><dd>${h.rollout_len}</dd>
+        </dl>` : `
         <dl class="kv">
           <dt>lr</dt><dd>${h.learning_rate}</dd>
           <dt>γ</dt><dd>${h.gamma}</dd>
@@ -80,7 +95,7 @@ if (!run) {
           <dt>buffer</dt><dd>${h.buffer_size}</dd>
           <dt>upd_every</dt><dd>${h.update_every}</dd>
           <dt>ε decay</dt><dd>${h.epsilon_decay}</dd>
-        </dl>
+        </dl>`}
       </div>
       <div class="panel">
         <h2>Training</h2>
@@ -117,15 +132,55 @@ if (!run) {
           <div class="chart-hint">4 = win condition · rises independently of reward · confirms pellet-collection learning separate from evasion</div>
           <canvas id="ch-pellets" class="chart"></canvas>
         </div>
-        <div class="chart-block">
+        <div class="chart-block" id="block-eps" style="display:none">
           <div class="chart-label">Epsilon (ε — exploration rate)</div>
           <div class="chart-hint">↓ decays 1.0 → 0.05 · step-shaped drops = curriculum phase resets · flat tail = decay too slow for episode budget</div>
           <canvas id="ch-eps" class="chart"></canvas>
         </div>
-        <div class="chart-block">
-          <div class="chart-label">TD loss</div>
+        <div class="chart-block" id="block-loss" style="display:none">
+          <div class="chart-label">Loss</div>
           <div class="chart-hint">rising then stabilising = healthy convergence · near-zero early = no gradient (check reward scale) · sustained spikes = instability</div>
           <canvas id="ch-loss" class="chart"></canvas>
+        </div>
+        <div class="chart-block" id="block-avg100" style="display:none">
+          <div class="chart-label">Rolling avg-100 reward</div>
+          <div class="chart-hint">smoothed 100-episode mean · more readable than raw reward · positive = Krishna winning value vs Hunter</div>
+          <canvas id="ch-avg100" class="chart"></canvas>
+        </div>
+        <div class="chart-block" id="block-gate" style="display:none">
+          <div class="chart-label">Gate (evade ↔ collect blend)</div>
+          <div class="chart-hint">0.5 = balanced · →1.0 = pure evasion collapse · →0.0 = pure collection · watch for drift above 0.7</div>
+          <canvas id="ch-gate" class="chart"></canvas>
+        </div>
+        <div class="chart-block" id="block-cherdep" style="display:none">
+          <div class="chart-label">CHER dependency index</div>
+          <div class="chart-hint">CF injected / opportunities · declining = Krishna collecting autonomously · flat near 1.0 = still CHER-dependent</div>
+          <canvas id="ch-cherdep" class="chart"></canvas>
+        </div>
+        <div class="chart-block" id="block-hardtier" style="display:none">
+          <div class="chart-label">Mean hard-tier opponent score</div>
+          <div class="chart-hint">rectified FSP sampling (ablation 1) · Krishna's EMA outcome vs hard-tier snapshots · rising = training mass shifting toward winnable matchups</div>
+          <canvas id="ch-hardtier" class="chart"></canvas>
+        </div>
+        <div class="chart-block" id="block-anchor" style="display:none">
+          <div class="chart-label">Anchor weight</div>
+          <div class="chart-hint">frozen-policy anchor (ablation 2) · linearly decayed by design · strongest early when forgetting risk is highest</div>
+          <canvas id="ch-anchor" class="chart"></canvas>
+        </div>
+        <div class="chart-block" id="block-entropy" style="display:none">
+          <div class="chart-label">Policy entropy</div>
+          <div class="chart-hint">log(4) ≈ 1.386 = uniform/max exploration · declining = policy sharpening · collapsing to ~0 too early = premature convergence</div>
+          <canvas id="ch-entropy" class="chart"></canvas>
+        </div>
+        <div class="chart-block" id="block-approxkl" style="display:none">
+          <div class="chart-label">Approx. KL divergence</div>
+          <div class="chart-hint">how far each PPO update moves the policy · sustained large spikes = updates too aggressive (consider lowering lr or clip ε)</div>
+          <canvas id="ch-approxkl" class="chart"></canvas>
+        </div>
+        <div class="chart-block" id="block-clipfrac" style="display:none">
+          <div class="chart-label">Clip fraction</div>
+          <div class="chart-hint">share of samples where the PPO clip actually activated · near 0 = clip rarely binding · near 1 = policy changing very fast every update</div>
+          <canvas id="ch-clipfrac" class="chart"></canvas>
         </div>
       </div>
     </div>
@@ -148,11 +203,31 @@ if (!run) {
   `;
 
   const s = run.summary || {};
+  // Each optional series only exists in `s` if scan.py found the matching
+  // CSV column for THIS run's algorithm (see dashboard/scan.py's
+  // _OPTIONAL_SERIES) — showing/hiding chart blocks by presence, rather than
+  // by phase_label, means a run type nobody has anticipated yet still shows
+  // exactly the charts its own CSV columns support, nothing more or less.
+  const optionalCharts = [
+    ["epsilons",              "block-eps",      "ch-eps",      "#fcd34d", {}],
+    ["losses",                "block-loss",     "ch-loss",     "#fb923c", {}],
+    ["avg100s",               "block-avg100",   "ch-avg100",   "#a78bfa", { zeroLine: true }],
+    ["gates",                 "block-gate",     "ch-gate",     "#f472b6", {}],
+    ["cher_deps",             "block-cherdep",  "ch-cherdep",  "#34d399", {}],
+    ["mean_hard_tier_scores", "block-hardtier", "ch-hardtier", "#38bdf8", {}],
+    ["anchor_weights",        "block-anchor",   "ch-anchor",   "#c084fc", {}],
+    ["entropies",             "block-entropy",  "ch-entropy",  "#60a5fa", {}],
+    ["approx_kls",            "block-approxkl", "ch-approxkl", "#fb7185", {}],
+    ["clipfracs",             "block-clipfrac", "ch-clipfrac", "#facc15", {}],
+  ];
   if (s.rewards) {
     drawLineChart(document.getElementById("ch-reward"),  s.rewards,  { color: "#7cd1ff", zeroLine: true });
     drawLineChart(document.getElementById("ch-pellets"), s.pellets,  { color: "#6ee7b7" });
-    drawLineChart(document.getElementById("ch-eps"),     s.epsilons, { color: "#fcd34d" });
-    drawLineChart(document.getElementById("ch-loss"),    s.losses,   { color: "#fb923c" });
+    for (const [key, blockId, canvasId, color, opts] of optionalCharts) {
+      if (!s[key]) continue;
+      document.getElementById(blockId).style.display = "";
+      drawLineChart(document.getElementById(canvasId), s[key], { color, ...opts });
+    }
   }
   document.getElementById("replay-jump")?.addEventListener("change", e => {
     if (e.target.value) location.href = e.target.value;

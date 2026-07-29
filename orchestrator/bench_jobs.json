@@ -1,0 +1,36 @@
+{
+  "poll_interval_seconds": 15,
+  "status_print_interval_seconds": 60,
+  "max_concurrent_jobs": null,
+  "max_load_average": null,
+  "jobs": [
+    {
+      "id": "v8_bench_cpu",
+      "cwd": "/Users/rahul/Q6-v8",
+      "command": ["python3", "train_v8.py", "--episodes", "200", "--device", "cpu", "--name", "bench_v8_cpu", "--checkpoint-every", "50", "--snapshot-every", "50", "--replay-every", "25"],
+      "max_restarts": 3,
+      "restart_backoff_seconds": 15.0
+    },
+    {
+      "id": "v8_bench_mps",
+      "cwd": "/Users/rahul/Q6-v8",
+      "command": ["python3", "train_v8.py", "--episodes", "200", "--device", "mps", "--name", "bench_v8_mps", "--checkpoint-every", "50", "--snapshot-every", "50", "--replay-every", "25"],
+      "max_restarts": 3,
+      "restart_backoff_seconds": 15.0
+    },
+    {
+      "id": "v7ab_bench_cpu",
+      "cwd": "/Users/rahul/Q6-v7-ablations",
+      "command": ["python3", "train_phase3.py", "--episodes", "200", "--device", "cpu", "--name", "bench_v7ab_cpu", "--checkpoint-every", "50", "--snapshot-every", "50", "--replay-every", "25"],
+      "max_restarts": 3,
+      "restart_backoff_seconds": 15.0
+    },
+    {
+      "id": "v7ab_bench_mps",
+      "cwd": "/Users/rahul/Q6-v7-ablations",
+      "command": ["python3", "train_phase3.py", "--episodes", "200", "--device", "mps", "--name", "bench_v7ab_mps", "--checkpoint-every", "50", "--snapshot-every", "50", "--replay-every", "25"],
+      "max_restarts": 3,
+      "restart_backoff_seconds": 15.0
+    }
+  ]
+}

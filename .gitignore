@@ -43,6 +43,12 @@ training_runs/
 # Plots
 plots/
 
+# Orchestrator runtime output (per-job logs and live status files) --
+# ephemeral, regenerated on every run, analogous to training_runs/.
+orchestrator/*_logs/
+orchestrator/*_status.json
+orchestrator/*_status.tmp
+
 # Node.js
 node_modules/
 
