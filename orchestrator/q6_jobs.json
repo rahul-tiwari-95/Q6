@@ -6,7 +6,7 @@
   "jobs": [
     {
       "id": "v8_ippo",
-      "cwd": "/Users/rahul/Q6",
+      "cwd": "/Users/rahul/Q6-v8",
       "command": [
         "python3", "train_v8.py",
         "--episodes", "6000",
