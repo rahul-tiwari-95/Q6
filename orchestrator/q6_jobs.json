@@ -22,7 +22,7 @@
       "cwd": "/Users/rahul/Q6-v7-ablations",
       "command": [
         "python3", "train_phase3.py",
-        "--episodes", "12000",
+        "--episodes", "6000",
         "--device", "mps",
         "--name", "v7_ablations_run",
         "--checkpoint-every", "50"
