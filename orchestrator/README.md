@@ -82,6 +82,36 @@ last-known `run_dir` is recovered from it — so if the whole machine went
 down (not just one job), starting the orchestrator again picks every
 still-in-progress job back up from its checkpoint, not from zero.
 
+## Config hot-reload on restart
+
+The config file is only fully parsed once, at startup — but a job's own
+entry (`cwd`, `command`, `max_restarts`, `restart_backoff_seconds`) is
+**re-read from disk right before each restart attempt** for that job (not on
+every poll cycle, and not for a job's very first launch — see
+`Orchestrator._reload_job_spec` in `orchestrator.py`). If it changed, the
+job switches to the fresh values for that restart and prints something like:
+
+```
+[orchestrator] v8_ippo: config changed on reload -- cwd was '/Users/rahul/Q6', now '/Users/rahul/Q6-v8'
+```
+
+This exists because of a real incident: `v8_ippo`'s `cwd` in `q6_jobs.json`
+was wrong (pointed at the main repo instead of its dedicated worktree). By
+the time it was fixed on disk, the orchestrator process was already running
+with the broken spec loaded into memory — every restart kept replaying the
+same broken cwd, burned through all `max_restarts` in about 5 minutes, and
+then sat silently `failed` for the rest of a ~45 hour run, while a second
+job in the same process ran fine to completion. Nobody was watching closely
+enough at minute 5 to catch it, and short of killing and restarting the
+whole orchestrator (interrupting every other job's live progress too),
+there was previously no way to get a config fix into an already-running
+process.
+
+If the config file is missing, malformed, or no longer has an entry for a
+given job's id at restart time, the orchestrator falls back to that job's
+in-memory spec rather than crashing or dropping the job — and says so
+explicitly in its output, so a broken config never fails silently either.
+
 ## macOS note on "load balancing"
 
 There is no supported way to pin a subprocess to specific CPU cores on

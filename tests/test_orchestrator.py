@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from orchestrator.orchestrator import JobSpec, JobState, Orchestrator
+from orchestrator.orchestrator import JobSpec, JobState, Orchestrator, build_orchestrator, load_config
 
 
 # ---------------------------------------------------------------------------
@@ -263,3 +263,123 @@ class TestIntegrationRealSubprocess:
 
         assert job.status == "stopped"
         assert job.status != "running"
+
+
+# ---------------------------------------------------------------------------
+# Config hot-reload on restart -- regression test for the v8_ippo incident
+# ---------------------------------------------------------------------------
+
+_FAKE_HOT_RELOAD_SCRIPT = """
+import sys
+print("[start] hot-reload fake job  run_dir={}".format(sys.argv[1]), flush=True)
+print("  ep 1/1  reloaded config was used", flush=True)
+sys.exit(0)
+"""
+
+
+class TestConfigHotReloadOnRestart:
+    def test_restart_picks_up_fixed_cwd_from_edited_config_file(self, tmp_path, capsys):
+        # Regression test for exactly tonight's incident: v8_ippo's `cwd` in
+        # orchestrator/q6_jobs.json was wrong (pointed at a branch worktree
+        # instead of the main repo). The orchestrator process was already
+        # running, with the broken JobSpec loaded into memory, by the time
+        # the config file was fixed on disk -- so every restart kept
+        # replaying the same broken cwd. It burned through all max_restarts
+        # in ~5 minutes and then sat silently "failed" for the rest of the
+        # ~45 hour run, unnoticed, while a second job in the same process
+        # ran fine to completion.
+        #
+        # Here: cwd starts broken (the fake script doesn't exist there), so
+        # the first launch crashes almost immediately -- same failure mode
+        # as python3 exiting nonzero because it can't find the script file.
+        # We then edit the job's entry in the config file on disk, exactly
+        # like fixing q6_jobs.json while the orchestrator keeps running, and
+        # assert the NEXT restart actually launches with the corrected cwd
+        # instead of replaying the stale one from construction time.
+        bad_dir = tmp_path / "wrong_worktree"
+        good_dir = tmp_path / "correct_repo"
+        bad_dir.mkdir()
+        good_dir.mkdir()
+        # The script only exists in the correct directory -- mirrors
+        # train_v8.py existing in the main repo but not the stale worktree.
+        (good_dir / "fake_job.py").write_text(_FAKE_HOT_RELOAD_SCRIPT)
+
+        run_dir_arg = str(tmp_path / "training_runs" / "hot_reload_run")
+        config_path = tmp_path / "jobs.json"
+        config = {
+            "poll_interval_seconds": 10,
+            "status_print_interval_seconds": 30,
+            "max_concurrent_jobs": None,
+            "max_load_average": None,
+            "jobs": [
+                {
+                    "id": "hot_reload_job",
+                    "cwd": str(bad_dir),
+                    "command": [sys.executable, "fake_job.py", run_dir_arg],
+                    "max_restarts": 3,
+                    "restart_backoff_seconds": 0.1,
+                }
+            ],
+        }
+        config_path.write_text(json.dumps(config))
+
+        orch = build_orchestrator(
+            load_config(config_path),
+            log_dir=tmp_path / "logs",
+            status_path=tmp_path / "status.json",
+            config_path=config_path,
+        )
+        job = orch.jobs[0]
+
+        # First launch uses the broken cwd captured in the spec at
+        # construction time -- python3 can't find fake_job.py there, so the
+        # process exits nonzero almost immediately.
+        _poll_until(orch, job, lambda j: j.status == "pending" and j.restart_count == 1)
+        assert job.spec.cwd == str(bad_dir)
+
+        # Fix the bug on disk WHILE the orchestrator process (and this `orch`
+        # object) is still alive -- exactly what happened with v8_ippo.
+        config["jobs"][0]["cwd"] = str(good_dir)
+        config_path.write_text(json.dumps(config))
+
+        capsys.readouterr()  # discard output so far before checking for the reload message
+
+        # Backoff elapses; the restart should re-read the config file and
+        # launch with the corrected cwd -- not the stale one from __init__.
+        _poll_until(orch, job, lambda j: j.status == "completed", timeout=10.0)
+
+        assert job.restart_count == 1  # fixed on the very next attempt, no more crashes
+        assert job.spec.cwd == str(good_dir)
+
+        # The whole point of this fix is that config drift is made visible,
+        # not just handled -- assert the reload was actually logged.
+        out = capsys.readouterr().out
+        assert "config changed on reload" in out
+        assert str(bad_dir) in out
+        assert str(good_dir) in out
+
+    def test_missing_config_file_falls_back_to_in_memory_spec(self, tmp_path, capsys):
+        # If the config file has since been deleted/moved, a restart must
+        # not crash the orchestrator or drop the job -- it should fall back
+        # to whatever spec is already in memory, loudly.
+        always_crash = "import sys\nprint('run_dir=%s' % sys.argv[1], flush=True)\nsys.exit(1)\n"
+        script = _write_script(tmp_path, "fake_always_crash2.py", always_crash)
+        run_dir_arg = str(tmp_path / "training_runs" / "fake_run_missing_cfg")
+        config_path = tmp_path / "gone.json"  # deliberately never written
+
+        spec = JobSpec(id="no_config_file", cwd=str(tmp_path),
+                        command=[sys.executable, str(script), run_dir_arg],
+                        restart_backoff_seconds=0.05, max_restarts=2)
+        orch = Orchestrator(jobs=[spec], log_dir=tmp_path / "logs", status_path=tmp_path / "status.json",
+                             config_path=config_path)
+        job = orch.jobs[0]
+
+        _poll_until(orch, job, lambda j: j.status == "pending" and j.restart_count == 1)
+        capsys.readouterr()
+
+        _poll_until(orch, job, lambda j: j.status == "pending" and j.restart_count == 2, timeout=10.0)
+
+        out = capsys.readouterr().out
+        assert "falling back to the in-memory spec" in out
+        # Spec is untouched -- still the original command, job keeps retrying.
+        assert job.spec.command == [sys.executable, str(script), run_dir_arg]

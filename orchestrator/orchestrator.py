@@ -27,6 +27,25 @@ do), the orchestrator will find it automatically and use it for resume.
 Anything that doesn't print such a line just won't get auto-resume — it
 still gets supervised, logged, and restarted (from scratch) on crash.
 
+Config hot-reload on restart: the config file (`--config`) is re-read for a
+job's entry right before each RESTART attempt (not the first launch, and not
+on every poll cycle -- see Orchestrator._reload_job_spec). This means a fix
+to a job's `cwd`/`command`/etc on disk takes effect on that job's next
+restart even though the orchestrator process itself has been running the
+whole time and never re-parsed the file at startup. Changes are printed
+loudly when they're picked up, and a missing/malformed config file (or a job
+whose id disappeared from it) falls back to the in-memory spec rather than
+crashing or dropping the job -- also printed loudly, never silently. This
+exists because of a real incident: `v8_ippo`'s `cwd` in `q6_jobs.json` was
+wrong, and by the time it was fixed on disk the orchestrator was already
+running with the broken spec loaded into memory -- every restart kept
+replaying the same broken cwd, burning through all `max_restarts` in about
+5 minutes, then sitting silently "failed" for the remaining ~45 hours of the
+run while a second job in the same process ran fine. Nobody was watching
+closely enough at minute 5 to catch it, and short of killing and restarting
+the whole orchestrator (losing the other job's live progress too), there was
+no way to get the fix into the running process. This closes that gap.
+
 macOS note on "load balancing": there is no supported way to pin a Python
 subprocess to specific CPU cores on macOS (psutil.Process.cpu_affinity()
 raises NotImplementedError there; it's a Linux/Windows-only API). So this
@@ -119,6 +138,7 @@ class Orchestrator:
         status_print_interval: float = 30.0,
         max_concurrent_jobs: Optional[int] = None,
         max_load_average: Optional[float] = None,
+        config_path: Optional[Path] = None,
     ) -> None:
         self.jobs = [JobState(spec=j) for j in jobs]
         self.log_dir = log_dir
@@ -127,6 +147,14 @@ class Orchestrator:
         self.status_print_interval = status_print_interval
         self.max_concurrent_jobs = max_concurrent_jobs
         self.max_load_average = max_load_average
+        # Remembered so that _reload_job_spec() can re-read this job's entry
+        # from disk before each restart (see below) -- without this, the
+        # ONLY way to get a config fix into an already-running orchestrator
+        # process is to kill and restart the whole thing, losing every other
+        # job's live progress too. May be None (e.g. tests constructing an
+        # Orchestrator directly from in-memory JobSpecs); hot-reload is
+        # simply disabled in that case, same as before this feature existed.
+        self.config_path = config_path
         self._stopping = False
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -172,10 +200,84 @@ class Orchestrator:
         return cmd
 
     # ------------------------------------------------------------------
+    # Config hot-reload (restarts only)
+    # ------------------------------------------------------------------
+
+    def _reload_job_spec(self, job: JobState) -> None:
+        """Re-read this job's entry from the on-disk config file and, if it
+        differs, swap it in as `job.spec` before a restart.
+
+        Why this exists: the orchestrator only parses the config file once,
+        at startup (see build_orchestrator()/__init__). If someone fixes a
+        bug in the config (wrong cwd, wrong flag, ...) while the orchestrator
+        is already running, an already-running process previously had no way
+        to notice -- every restart kept replaying the stale JobSpec captured
+        at construction time. That's exactly what happened to `v8_ippo`: its
+        `cwd` was fixed on disk minutes after a broken orchestrator run
+        started, but the running process never re-read it, burned through
+        all `max_restarts` in ~5 minutes, and then sat silently "failed" for
+        the remaining ~45 hours of the run.
+
+        Only called for RESTARTS (see _start_job) -- a job's very first
+        launch already uses a fresh-off-disk spec from __init__, so
+        re-parsing again there would be redundant.
+
+        Deliberately NOT called on every poll cycle: re-reading the config
+        file that often is wasteful, and risks reading it mid-edit. Reading
+        it once, right before we're about to act on it, is enough to close
+        the "already fixed but a running process won't notice" gap.
+
+        Fails open: if the config file is missing, malformed, or no longer
+        has an entry for this job's id, we fall back to the in-memory spec
+        (loud about it, not silent) rather than crashing the orchestrator or
+        dropping the job.
+        """
+        if self.config_path is None:
+            return
+        try:
+            fresh_config = json.loads(self.config_path.read_text())
+            entries = {entry["id"]: entry for entry in fresh_config["jobs"]}
+            new_spec = JobSpec(**entries[job.spec.id])
+        except FileNotFoundError:
+            print(f"[orchestrator] {job.spec.id}: config file {self.config_path} is "
+                  f"missing -- falling back to the in-memory spec for this restart.")
+            return
+        except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
+            print(f"[orchestrator] {job.spec.id}: could not reload config from "
+                  f"{self.config_path} ({exc!r}) -- falling back to the in-memory "
+                  f"spec for this restart.")
+            return
+
+        changes = []
+        if new_spec.cwd != job.spec.cwd:
+            changes.append(f"cwd was {job.spec.cwd!r}, now {new_spec.cwd!r}")
+        if new_spec.command != job.spec.command:
+            changes.append(f"command was {job.spec.command!r}, now {new_spec.command!r}")
+        if new_spec.max_restarts != job.spec.max_restarts:
+            changes.append(f"max_restarts was {job.spec.max_restarts!r}, "
+                            f"now {new_spec.max_restarts!r}")
+        if new_spec.restart_backoff_seconds != job.spec.restart_backoff_seconds:
+            changes.append(f"restart_backoff_seconds was {job.spec.restart_backoff_seconds!r}, "
+                            f"now {new_spec.restart_backoff_seconds!r}")
+        if changes:
+            print(f"[orchestrator] {job.spec.id}: config changed on reload -- "
+                  + "; ".join(changes))
+        job.spec = new_spec
+
+    # ------------------------------------------------------------------
     # Starting / polling jobs
     # ------------------------------------------------------------------
 
     def _start_job(self, job: JobState) -> None:
+        # A restart (as opposed to this job's very first launch) -- re-read
+        # its config entry from disk first, in case it was fixed/changed
+        # while this orchestrator process has been running. run_dir being
+        # set is the common case (crash happened after the job logged
+        # run_dir=...); restart_count > 0 also catches a crash that happened
+        # before the job ever got that far.
+        if job.run_dir is not None or job.restart_count > 0:
+            self._reload_job_spec(job)
+
         job.log_path = self.log_dir / f"{job.spec.id}.log"
         job._log_fh = open(job.log_path, "a", buffering=1)
         cmd = self._build_command(job)
@@ -397,7 +499,12 @@ def load_config(path: Path) -> Dict[str, Any]:
     return json.loads(path.read_text())
 
 
-def build_orchestrator(config: Dict[str, Any], log_dir: Path, status_path: Path) -> Orchestrator:
+def build_orchestrator(
+    config: Dict[str, Any],
+    log_dir: Path,
+    status_path: Path,
+    config_path: Optional[Path] = None,
+) -> Orchestrator:
     job_specs = [JobSpec(**j) for j in config["jobs"]]
     return Orchestrator(
         jobs=job_specs,
@@ -407,6 +514,7 @@ def build_orchestrator(config: Dict[str, Any], log_dir: Path, status_path: Path)
         status_print_interval=config.get("status_print_interval_seconds", 30.0),
         max_concurrent_jobs=config.get("max_concurrent_jobs"),
         max_load_average=config.get("max_load_average"),
+        config_path=config_path,
     )
 
 
@@ -426,7 +534,7 @@ def main() -> int:
     config = load_config(args.config)
     log_dir = args.log_dir or (args.config.parent / "orchestrator_logs")
     status_path = args.status_file or (args.config.parent / "orchestrator_status.json")
-    orch = build_orchestrator(config, log_dir, status_path)
+    orch = build_orchestrator(config, log_dir, status_path, config_path=args.config)
     orch.run()
     return 0
 
