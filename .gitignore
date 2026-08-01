@@ -44,10 +44,14 @@ training_runs/
 plots/
 
 # Orchestrator runtime output (per-job logs and live status files) --
-# ephemeral, regenerated on every run, analogous to training_runs/.
-orchestrator/*_logs/
-orchestrator/*_status.json
-orchestrator/*_status.tmp
+# ephemeral, regenerated on every run, analogous to training_runs/. Matches
+# both the old bare names (orchestrator_status.json) and the config-stem-keyed
+# names default_paths() now produces (orchestrator_status_q6_jobs.json,
+# orchestrator_logs_q6_jobs_v2/) so a second config's defaults aren't
+# accidentally left trackable.
+orchestrator/*logs*/
+orchestrator/*status*.json
+orchestrator/*status*.tmp
 
 # Node.js
 node_modules/
