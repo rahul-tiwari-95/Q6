@@ -1,8 +1,10 @@
 # Q6 — Kṛṣṇa vs Hunter: Deep RL Self-Play
 
-A two-agent reinforcement learning project where **Kṛṣṇa** (a pellet-collecting agent) and **Hunter** (a chasing agent) both learn entirely through self-play. Built with PyTorch, Double DQN, Dueling networks, and Fictitious Self-Play (FSP).
+A two-agent reinforcement learning project where **Kṛṣṇa** (a pellet-collecting agent) and **Hunter** (a chasing agent) both learn entirely through self-play. The central research question: when a reward function says "complete the objective" but the training distribution says "the objective is dangerous," does the agent learn to do the objective, or does it learn to avoid the danger and call that a win? See [`Q6.md`](Q6.md) for the full research narrative and roadmap.
 
-> **For researchers and collaborators:** See [`versions/`](versions/README.md) for the full research log — each version's thesis, results, failure mode, and rationale for the next iteration. The live dashboard at `http://localhost:8080/dashboard/versions.html` shows the same information interactively.
+Built with PyTorch. Phase 1–2 use Double DQN + Dueling networks + Fictitious Self-Play (FSP). Phase 3 adds a Gated Option Policy network (dual evade/collect heads) and Counterfactual Hindsight Experience Replay (CHER). `v8` is an independent PPO port of the same environment, for a structural DQN-vs-PPO comparison — see below.
+
+> **For researchers and collaborators:** See [`versions/`](versions/README.md) for the research log up to v6 on this branch. The deeper Phase 3 ablation work (rectified opponent sampling, floor tuning) lives on the `v7-ablations` branch — see its own [`versions/README.md`](https://github.com/rahul-tiwari-95/Q6/blob/v7-ablations/versions/README.md) for that thread. Write-ups intended for a general audience are in [`articles/`](articles/). The live dashboard at `http://localhost:8080/dashboard/versions.html` shows run data interactively.
 
 ---
 
@@ -13,19 +15,24 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
 # Verify everything works
-python -m pytest tests/ -q              # 147 tests
+python -m pytest tests/ -q              # 221 tests
 
 # Phase 1: Krishna learns vs scripted A* Hunter
 python3 train_v2.py --episodes 6000 --device mps
 
-# Phase 2: both agents learn via self-play
+# Phase 2: both agents learn via self-play (DQN)
 python3 train_phase2.py --episodes 6000 --device mps --name my_run
+
+# Phase 3: Gated Option Policy + CHER (see Q6.md for the research context)
+python3 train_phase3.py --episodes 6000 --device mps --name my_run
 
 # Visualise results in browser
 python3 dashboard/scan.py
 python3 -m http.server 8080
 # open http://localhost:8080/dashboard/
 ```
+
+Long training runs (Phase 3 and later commonly run 6,000+ episodes over many hours) support checkpoint/resume and can be supervised by a small crash-restart daemon — see [`orchestrator/README.md`](orchestrator/README.md) for running multiple jobs unattended.
 
 ---
 
@@ -119,33 +126,56 @@ The old default of 0.9999 would leave ε≈0.55 at episode 6000 — the agent ne
 
 ---
 
+## Phase 3 and beyond — GOP+CHER, reward redesign, and the DQN-vs-PPO comparison
+
+Phase 2 (v4) hit a **bimodal collapse**: pure evasion, zero collection, no in-between — the clearest sign that Krishna faced two competing objectives it couldn't hold at once. Phase 3 (`train_phase3.py`) answers this with a **Gated Option Policy** network: separate evade/collect heads plus a learned gate deciding which to trust, combined with **Counterfactual Hindsight Experience Replay (CHER)** — a synthetic teaching signal that shows the agent what it should have done in moments it judges to have been safe to collect. See [`versions/v5_phase3_gop_cher.md`](versions/v5_phase3_gop_cher.md) for the architecture and first results.
+
+From there the research question sharpened into: is collection paralysis a live-reward problem, a training-distribution problem, or both? That thread — reward redesign (v7), rectified opponent sampling, and floor-tuning ablations — lives on the **`v7-ablations`** branch, with each experiment pre-registered before running and written up (including the ones that failed) in that branch's `versions/`. Two of those are also distilled into general-audience write-ups in [`articles/`](articles/).
+
+**`v8`** (own branch) is an independent PPO port of the identical environment, reward, and opponent-pool design — the only variable changed is DQN → PPO. The question: is the risk-dominant collapse this project keeps rediscovering a property of DQN's stale-replay-buffer mechanics specifically, or of the game's payoff structure generally, which an on-policy algorithm would hit too. See `Q6.md` §3 for the full reasoning.
+
+---
+
 ## Repository Layout
 
 ```
 Q6/
 ├── agent/
 │   ├── dqn_v2_agent.py       # DQNv2: CNN + Dueling + Double DQN
+│   ├── gated_dqn_agent.py    # Phase 3: Gated Option Policy DQN agent
 │   ├── frozen_agent.py       # Read-only checkpoint opponent for FSP
 │   └── opponent_pool.py      # FSP snapshot pool (FIFO, max 20)
+│   (agent/ppo_agent.py, agent/frozen_ppo_agent.py — PPO variants, on the v8 branch)
 ├── environment/
 │   ├── hunter_gridworld.py   # Phase 1 env (scripted Hunter)
-│   └── selfplay_env.py       # Phase 2 env (Hunter externally controlled)
+│   └── selfplay_env.py       # Phase 2+ env (Hunter externally controlled)
 ├── model/
-│   └── cnn_q_network.py      # CNN Dueling Q-network
+│   ├── cnn_q_network.py      # CNN Dueling Q-network (Phase 1-2)
+│   └── gated_option_network.py  # Phase 3: dual evade/collect heads + gate
+│   (model/actor_critic_network.py — PPO actor-critic, on the v8 branch)
 ├── utils/
-│   ├── state_encoder.py      # 6-channel binary encoder (shared Phase 1+2)
+│   ├── state_encoder.py      # 6-channel binary encoder (shared across phases)
+│   ├── cher.py                # Counterfactual Hindsight Experience Replay (Phase 3)
+│   ├── hierarchical_pool.py   # Two-tier (easy/hard) opponent pool with rectified sampling
 │   ├── replay_recorder.py    # Per-step replay recording for dashboard
 │   └── environment_wrapper.py
 ├── dashboard/
-│   ├── scan.py               # Rebuilds index.json from training_runs/
+│   ├── scan.py               # Rebuilds index.json from training_runs/ (merge-safe)
 │   ├── index.html            # Run list
-│   ├── run.html              # Per-run metrics
+│   ├── run.html              # Per-run metrics (algorithm-aware: DQN/GOP/PPO)
 │   └── replay.html           # Step-by-step replay viewer
-├── tests/                    # 147 tests (pytest)
+├── orchestrator/
+│   ├── orchestrator.py       # Crash-restart, checkpoint-aware, config-hot-reload daemon
+│   └── q6_jobs.json           # Example multi-job config
+├── versions/                 # Research log — thesis/results/failure-mode per version
+├── articles/                 # General-audience write-ups distilled from versions/
+├── tests/                    # 221 tests (pytest)
 ├── train_v2.py               # Phase 1 training
-├── train_phase2.py           # Phase 2 self-play training
+├── train_phase2.py           # Phase 2 self-play training (DQN)
+├── train_phase3.py           # Phase 3 training (GOP + CHER + hierarchical pool)
 ├── verify_phase2.py          # Checkpoint sanity checker
 └── config.py                 # All hyperparameters centralised
+    (train_v8.py — independent PPO self-play training, on the v8 branch)
 ```
 
 ---
