@@ -1,0 +1,23 @@
+{
+  "poll_interval_seconds": 15,
+  "status_print_interval_seconds": 60,
+  "max_concurrent_jobs": null,
+  "max_load_average": null,
+  "jobs": [
+    {
+      "id": "v7_ablations_v2",
+      "cwd": "/Users/rahul/Q6-v7-ablations",
+      "command": [
+        "python3", "train_phase3.py",
+        "--episodes", "6000",
+        "--device", "mps",
+        "--name", "v7_ablations_v2_floor_tuning",
+        "--checkpoint-every", "50",
+        "--rectify-floor", "0.3",
+        "--rectify-warmup-eps", "4000"
+      ],
+      "max_restarts": 20,
+      "restart_backoff_seconds": 15.0
+    }
+  ]
+}
