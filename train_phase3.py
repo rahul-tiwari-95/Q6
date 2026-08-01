@@ -138,6 +138,8 @@ def run_training(
     easy_warmup_eps: int = 1000,
     pool_rectified: bool = True,
     pool_ema_alpha: float = 0.1,
+    rectify_floor: float = 0.1,
+    rectify_warmup_eps: int = 0,
     anchor_checkpoint: str | None = None,
     anchor_weight: float = 0.0,
     anchor_decay_eps: int = 3000,
@@ -196,9 +198,20 @@ def run_training(
     # toward snapshots Krishna is currently beating/tying (PSRO-style
     # rectified response) instead of pure recency. rectified=False restores
     # the original v7 p_latest-only behaviour for A/B comparison.
+    #
+    # rectify_floor defaults to 0.1 (the exact value used by the completed
+    # ablation-1 run, `versions/v7_ablation1_rectified.md`) so existing runs
+    # stay reproducible from their recorded CLI args. rectify_warmup_eps
+    # defaults to 0 (off): with no warmup, rectify_floor is in effect from
+    # episode 1, unchanged from that run. When rectify_warmup_eps > 0, the
+    # per-episode loop below ramps the *effective* floor down to
+    # rectify_floor via pool.set_rectify_floor() — see the ablation-1b block
+    # further down for why (mid-training vulnerability window found in that
+    # run, coinciding with easy_warmup_eps ending).
     pool = HierarchicalOpponentPool(
         run_dir / "pool", easy_max=5, hard_max=15,
         rectified=pool_rectified, ema_alpha=pool_ema_alpha,
+        rectify_floor=rectify_floor,
     )
     if not resume_dir:
         pool.add_snapshot(hunter, metadata={"episode": 0, "kind": "init"})
@@ -298,6 +311,23 @@ def run_training(
         if anchor_weight > 0.0:
             decay_progress = min(1.0, ep / max(1, anchor_decay_eps))
             krishna.set_anchor_weight(anchor_weight * (1.0 - decay_progress))
+
+        # --- Ablation 1b: linear warmup of the rectify floor ---
+        # Decouples rectification's kick-in from easy_warmup_eps, which is
+        # what caused the mid-training vulnerability window in the
+        # completed ablation-1 run (both effectively changed behaviour at
+        # ep 1000 — see versions/v7_ablation1_rectified.md). rectify_warmup_eps
+        # (CLI) is the number of episodes over which the effective floor
+        # ramps linearly from a near-uniform starting value
+        # (HierarchicalOpponentPool.UNIFORM_WARMUP_FLOOR) down to the
+        # configured rectify_floor. Default 0 disables ramping entirely —
+        # the floor is rectify_floor from episode 1, exactly reproducing the
+        # completed run's behaviour when rectify_floor is also left at 0.1.
+        if rectify_warmup_eps > 0:
+            warmup_progress = min(1.0, ep / max(1, rectify_warmup_eps))
+            start_floor = HierarchicalOpponentPool.UNIFORM_WARMUP_FLOOR
+            effective_floor = start_floor + (rectify_floor - start_floor) * warmup_progress
+            pool.set_rectify_floor(effective_floor)
 
         if mode == "fsp":
             # Two-phase easy curriculum: use easy opponents exclusively for warm-up
@@ -510,8 +540,10 @@ def run_training(
                 "hard_tier_slots": 15,
             },
             "ablation1_rectified_sampling": {
-                "enabled":       pool_rectified,
-                "ema_alpha":     pool_ema_alpha,
+                "enabled":            pool_rectified,
+                "ema_alpha":          pool_ema_alpha,
+                "rectify_floor":      rectify_floor,
+                "rectify_warmup_eps": rectify_warmup_eps,
             },
             "ablation2_frozen_anchor": {
                 "checkpoint":    anchor_checkpoint or "none",
@@ -614,6 +646,16 @@ def main() -> None:
     p.set_defaults(pool_rectified=True)
     p.add_argument("--pool-ema-alpha",   type=float, default=0.1,
                    help="EMA decay for per-snapshot Krishna outcome score (default 0.1)")
+    p.add_argument("--rectify-floor",    type=float, default=0.1,
+                   help="Minimum hard-tier sampling weight floor for rectified sampling "
+                        "(default 0.1, matching the completed ablation-1 run). Raising this "
+                        "keeps more pressure from hard opponents in rotation.")
+    p.add_argument("--rectify-warmup-eps", type=int, default=0,
+                   help="Episodes over which the effective rectify floor linearly ramps "
+                        "from a near-uniform starting value down to --rectify-floor "
+                        "(default 0 = no ramp, floor is --rectify-floor from episode 1). "
+                        "Added to decouple rectification's kick-in from --easy-warmup-eps "
+                        "ending at the same episode (see versions/v7_ablation1_rectified.md).")
 
     # --- Ablation 2: frozen-policy anchor for the collect head ---
     p.add_argument("--anchor-checkpoint", type=str,   default=None,
@@ -654,11 +696,13 @@ def main() -> None:
         resume_dir        = args.resume,
         checkpoint_every  = args.checkpoint_every,
         easy_warmup_eps   = args.easy_warmup_eps,
-        pool_rectified    = args.pool_rectified,
-        pool_ema_alpha    = args.pool_ema_alpha,
-        anchor_checkpoint = args.anchor_checkpoint,
-        anchor_weight     = args.anchor_weight,
-        anchor_decay_eps  = args.anchor_decay_eps,
+        pool_rectified      = args.pool_rectified,
+        pool_ema_alpha      = args.pool_ema_alpha,
+        rectify_floor       = args.rectify_floor,
+        rectify_warmup_eps  = args.rectify_warmup_eps,
+        anchor_checkpoint   = args.anchor_checkpoint,
+        anchor_weight       = args.anchor_weight,
+        anchor_decay_eps    = args.anchor_decay_eps,
     )
 
 

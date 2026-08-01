@@ -275,3 +275,83 @@ class TestMeanHardTierScore:
         # paths[2] never scored -> defaults to pool.default_score (0.5)
         expected = np.mean([0.2, 0.8, pool.default_score])
         assert pool.mean_hard_tier_score() == pytest.approx(expected)
+
+
+# ---------------------------------------------------------------------------
+# rectify_floor — constructor default, and set_rectify_floor() runtime hook
+#
+# Added after ablation 1's first real run (versions/v7_ablation1_rectified.md)
+# found a mid-training vulnerability window caused by full-strength
+# rectification (fixed floor=0.1) kicking in at the same episode
+# easy_warmup_eps ends. `rectify_floor` can now be raised at construction
+# time, and/or ramped in gradually at runtime via set_rectify_floor()
+# (train_phase3.py's --rectify-warmup-eps, mirroring the anchor_weight decay
+# pattern — see TestSetAnchorWeight in tests/test_gated_dqn_agent.py).
+# ---------------------------------------------------------------------------
+
+class TestRectifyFloorDefault:
+    def test_default_rectify_floor_is_one_tenth(self, tmp_path):
+        """Backward compat: the completed ablation-1 run used rectify_floor=0.1
+        without ever setting it explicitly, so the constructor default must
+        stay 0.1 for that run to remain reproducible from its recorded args."""
+        pool = HierarchicalOpponentPool(tmp_path / "pool")
+        assert pool.rectify_floor == pytest.approx(0.1)
+
+    def test_rectify_floor_settable_at_construction(self, tmp_path):
+        pool = HierarchicalOpponentPool(tmp_path / "pool", rectify_floor=0.3)
+        assert pool.rectify_floor == pytest.approx(0.3)
+
+
+class TestSetRectifyFloor:
+    def test_setter_updates_floor(self, tmp_path):
+        pool = HierarchicalOpponentPool(tmp_path / "pool", rectify_floor=0.1)
+        pool.set_rectify_floor(0.75)
+        assert pool.rectify_floor == pytest.approx(0.75)
+        pool.set_rectify_floor(0.1)
+        assert pool.rectify_floor == pytest.approx(0.1)
+
+    def test_setter_takes_effect_on_next_weights_call(self, tmp_path, agent):
+        """set_rectify_floor() must not be cached — hard_tier_weights() should
+        reflect the new floor immediately on the very next call, since the
+        training loop calls it once per episode before sampling."""
+        pool = HierarchicalOpponentPool(
+            tmp_path / "pool", easy_max=1, hard_max=2, rectify_floor=0.1
+        )
+        paths = _fill_hard_tier(pool, agent, n=2, easy_max=1)
+        pool.record_outcome(paths[0], 0.0)
+        pool.record_outcome(paths[1], 1.0)
+
+        low_floor_weights = pool.hard_tier_weights()
+        pool.set_rectify_floor(1.0)
+        high_floor_weights = pool.hard_tier_weights()
+
+        # Raising the floor must not decrease any weight, and must shrink the
+        # gap between the highest- and lowest-weighted snapshot (closer to
+        # uniform), matching the "raise the floor" mitigation's intent.
+        assert (high_floor_weights >= low_floor_weights).all()
+        low_ratio = low_floor_weights.max() / low_floor_weights.min()
+        high_ratio = high_floor_weights.max() / high_floor_weights.min()
+        assert high_ratio < low_ratio
+
+
+class TestUniformWarmupFloor:
+    def test_constant_is_one(self):
+        assert HierarchicalOpponentPool.UNIFORM_WARMUP_FLOOR == pytest.approx(1.0)
+
+    def test_uniform_warmup_floor_yields_near_uniform_weights(self, tmp_path, agent):
+        """UNIFORM_WARMUP_FLOOR is meant as a near-uniform starting point for
+        the rectify_warmup_eps ramp. Since scores/baseline are bounded to
+        [0, 1], a floor of 1.0 should keep the max/min weight ratio small
+        (<= 2x) even under maximally skewed scores — much flatter than the
+        default floor=0.1, which can produce an 11x skew in the same case."""
+        pool = HierarchicalOpponentPool(
+            tmp_path / "pool", easy_max=1, hard_max=2,
+            rectify_floor=HierarchicalOpponentPool.UNIFORM_WARMUP_FLOOR,
+        )
+        paths = _fill_hard_tier(pool, agent, n=2, easy_max=1)
+        pool.record_outcome(paths[0], 0.0)   # maximally dominated
+        pool.record_outcome(paths[1], 1.0)   # maximally winning
+
+        weights = pool.hard_tier_weights()
+        ratio = weights.max() / weights.min()
+        assert ratio <= 2.0 + 1e-9, f"expected near-uniform weights, got ratio={ratio}"

@@ -48,6 +48,15 @@ flag:
       is `rectify_floor` (default 0.1).  Weights are normalized to a
       probability distribution.
 
+      `rectify_floor` can be raised at construction time (see the
+      `train_phase3.py` `--rectify-floor` flag) or ramped in gradually at
+      runtime via `set_rectify_floor()` (see `train_phase3.py`
+      `--rectify-warmup-eps`, which mirrors the `anchor_weight` decay
+      pattern used for ablation 2) — this was added after ablation 1's
+      first real run found a mid-training vulnerability window caused by
+      full-strength rectification kicking in at the exact same episode the
+      easy-warmup curriculum ends (see versions/v7_ablation1_rectified.md).
+
 Fitness tracking
 -----------------
 Call `record_outcome(path, score)` after every FSP-mode episode, where
@@ -88,6 +97,14 @@ from agent.opponent_pool import OpponentPool
 
 class HierarchicalOpponentPool:
     INDEX_NAME = "hier_index.json"
+
+    # Starting floor for a `rectify_warmup_eps` ramp (see train_phase3.py).
+    # `record_outcome` clips scores to [0, 1], so `baseline` is also always
+    # in [0, 1] and `max(score_i - baseline, 0)` never exceeds 1.0. A floor
+    # of 1.0 therefore guarantees the fitness term contributes at most half
+    # of any snapshot's weight — a bounded, "near-uniform" starting point
+    # for the ramp (not perfectly uniform; that would need floor -> inf).
+    UNIFORM_WARMUP_FLOOR = 1.0
 
     def __init__(
         self,
@@ -180,6 +197,18 @@ class HierarchicalOpponentPool:
         else:
             self._scores[path] = (1.0 - self.ema_alpha) * prev + self.ema_alpha * score
         self._save_index()
+
+    def set_rectify_floor(self, floor: float) -> None:
+        """
+        Update the effective rectify floor at runtime.
+
+        Mirrors `GatedDQNAgent.set_anchor_weight()` — intended to be called
+        once per episode by the training loop when ramping the floor in via
+        `rectify_warmup_eps` (see `train_phase3.py`). Takes effect on the
+        very next `sample()` / `hard_tier_weights()` call, since both read
+        `self.rectify_floor` fresh rather than caching it.
+        """
+        self.rectify_floor = float(floor)
 
     # ------------------------------------------------------------------
     # Sampling
