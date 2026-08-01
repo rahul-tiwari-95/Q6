@@ -196,7 +196,7 @@ def scan_one(run_dir: Path, base: Path = REPO_ROOT) -> dict[str, Any] | None:
     }
 
 
-def build_index(existing_path: Path | None = None) -> dict[str, Any]:
+def build_index(existing_path: Path | None = None, runs_dirs: list[Path] | None = None) -> dict[str, Any]:
     """Build the run index, MERGING with whatever's already at `existing_path`
     rather than replacing it wholesale.
 
@@ -212,6 +212,14 @@ def build_index(existing_path: Path | None = None) -> dict[str, Any]:
     Runs found locally always win over a stale indexed copy of the same id
     (so re-scanning a run you still have gets you fresh data); runs indexed
     previously but no longer present locally are kept as-is.
+
+    `runs_dirs` defaults to just this repo's own `training_runs/` -- pass
+    additional directories (e.g. a sibling git-worktree's `training_runs/`,
+    such as `v7-ablations`'s) to pull those runs into this branch's index
+    too. Git worktrees each have their own untracked `training_runs/` on
+    disk, so a run trained on another branch/worktree is otherwise invisible
+    to this branch's dashboard even though `dashboard/data/index.json` is a
+    plain, branch-independent JSON file.
     """
     runs_by_id: dict[str, Any] = {}
 
@@ -224,8 +232,10 @@ def build_index(existing_path: Path | None = None) -> dict[str, Any]:
         except (json.JSONDecodeError, OSError):
             pass
 
-    if RUNS_DIR.exists():
-        for d in sorted(RUNS_DIR.iterdir(), reverse=True):
+    for runs_dir in (runs_dirs if runs_dirs is not None else [RUNS_DIR]):
+        if not runs_dir.exists():
+            continue
+        for d in sorted(runs_dir.iterdir(), reverse=True):
             if not d.is_dir():
                 continue
             entry = scan_one(d)
@@ -247,10 +257,16 @@ def main() -> None:
                          help="Rebuild from local training_runs/ only, discarding any "
                               "historical entries not present locally. Rarely what you "
                               "want -- see build_index()'s docstring.")
+    parser.add_argument("--runs-dir", action="append", type=Path, default=None,
+                         dest="runs_dirs",
+                         help="Additional training_runs/-style directory to scan, e.g. a "
+                              "sibling worktree's (repeatable). Defaults to just this repo's "
+                              "own training_runs/ if omitted.")
     args = parser.parse_args()
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     out = Path(args.out)
-    idx = build_index(existing_path=None if args.no_merge else out)
+    runs_dirs = [RUNS_DIR] + (args.runs_dirs or [])
+    idx = build_index(existing_path=None if args.no_merge else out, runs_dirs=runs_dirs)
     # json.dumps with allow_nan=False would raise on -inf/inf; instead
     # sanitize the structure first so JS JSON.parse never sees bare Infinity.
     def _sanitize(obj):

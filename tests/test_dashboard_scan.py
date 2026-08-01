@@ -150,6 +150,28 @@ def test_build_index_local_run_wins_over_stale_indexed_copy(tmp_path, monkeypatc
     assert entries[0]["phase_label"] != "STALE_SHOULD_BE_REPLACED"
 
 
+def test_build_index_scans_additional_runs_dirs(tmp_path, monkeypatch):
+    """A run living only in a second (e.g. sibling-worktree's) training_runs/
+    directory must be pulled in when passed via runs_dirs, alongside this
+    repo's own RUNS_DIR -- this is what --runs-dir gives dashboard/scan.py so
+    a run trained on another git worktree's branch shows up here too."""
+    sys.path.insert(0, str(REPO_ROOT))
+    from dashboard import scan
+    primary = tmp_path / "training_runs"
+    primary.mkdir()
+    other = tmp_path / "other_worktree_training_runs"
+    other.mkdir()
+    monkeypatch.setattr(scan, "RUNS_DIR", primary)
+    _write_fake_run(primary, "primary_run", n_replays=1)
+    _write_fake_run(other, "other_worktree_run", n_replays=1)
+
+    idx = scan.build_index(existing_path=None, runs_dirs=[primary, other])
+
+    ids = {r["id"] for r in idx["runs"]}
+    assert "primary_run" in ids
+    assert "other_worktree_run" in ids
+
+
 def test_build_index_no_merge_flag_ignores_existing(tmp_path, monkeypatch):
     sys.path.insert(0, str(REPO_ROOT))
     from dashboard import scan
