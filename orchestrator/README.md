@@ -33,11 +33,15 @@ for both Q6 training scripts, triggers their own graceful
 checkpoint-and-exit handler) and waits up to 60s for clean exits before the
 orchestrator itself exits.
 
-Per-job output streams to `orchestrator_logs/<job_id>.log`. A live
-`orchestrator_status.json` is rewritten every poll cycle with each job's
-status, restart count, run directory, and last-seen episode progress line —
-useful if you want to build a dashboard tile on top of it later, or just
-`cat` it from another terminal.
+Per-job output streams to `orchestrator_logs_<config stem>/<job_id>.log`. A
+live `orchestrator_status_<config stem>.json` is rewritten every poll cycle
+with each job's status, restart count, run directory, and last-seen episode
+progress line — useful if you want to build a dashboard tile on top of it
+later, or just `cat` it from another terminal. Both paths default to being
+keyed off the config file's own stem (e.g. `q6_jobs.json` →
+`orchestrator_status_q6_jobs.json`) rather than just its directory — see
+"Running multiple orchestrators at once" below for why — and can be
+overridden with `--log-dir`/`--status-file`.
 
 ## Job config format
 
@@ -111,6 +115,37 @@ If the config file is missing, malformed, or no longer has an entry for a
 given job's id at restart time, the orchestrator falls back to that job's
 in-memory spec rather than crashing or dropping the job — and says so
 explicitly in its output, so a broken config never fails silently either.
+
+## Ctrl-C'd jobs are marked `stopped`, not `completed`
+
+Both `train_v8.py` and `train_phase3.py` exit with code `0` when they receive
+`SIGTERM`/`SIGINT`, after checkpointing — that's what makes a clean shutdown
+possible. But it means exit code `0` alone can't distinguish "finished all
+its episodes" from "was interrupted mid-run and checkpointed on the way
+out." The orchestrator checks whether *it* is the one that requested the
+shutdown before trusting `rc == 0` as "completed" — if the process exited `0`
+while the orchestrator was already tearing everything down, the job is
+marked `stopped` instead, with a note to check its last logged episode.
+Without this, a job Ctrl-C'd partway through (e.g. at episode 2000 of a
+6000-episode run) would be permanently and silently mislabeled
+`completed successfully`, and nothing would prompt you to resume it. To
+actually finish such a job, just start the orchestrator again with the same
+config — auto-resume (above) picks it back up from its last checkpoint.
+
+## Running multiple orchestrators at once
+
+If two config files live in the same directory (e.g. `q6_jobs.json` and
+`q6_jobs_v2.json`, both under `orchestrator/`), each orchestrator instance
+gets its own default log directory and status file, keyed off the config's
+stem (`orchestrator_status_q6_jobs.json` vs.
+`orchestrator_status_q6_jobs_v2.json`). This exists because of a second real
+incident, found immediately after the one above: with both configs
+defaulting to the exact same `orchestrator_status.json`, running a second
+orchestrator instance while a first was already live silently overwrote the
+first's status entries — a genuinely-still-running job's entry vanished from
+the file entirely, clobbered by the second process's next write, even
+though the job itself kept running fine underneath. See `default_paths()`
+in `orchestrator.py`.
 
 ## macOS note on "load balancing"
 

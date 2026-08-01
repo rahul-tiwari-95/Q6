@@ -18,7 +18,9 @@ from pathlib import Path
 
 import pytest
 
-from orchestrator.orchestrator import JobSpec, JobState, Orchestrator, build_orchestrator, load_config
+from orchestrator.orchestrator import (
+    JobSpec, JobState, Orchestrator, build_orchestrator, default_paths, load_config,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -100,6 +102,37 @@ class TestLoadAverageThrottle:
         orch = Orchestrator(jobs=[], log_dir=Path("/tmp/x"), status_path=Path("/tmp/x/s.json"),
                              max_load_average=-1.0)
         assert orch._load_average_ok() is False
+
+
+class TestDefaultPaths:
+    def test_defaults_are_keyed_off_config_stem(self):
+        log_dir, status_path = default_paths(Path("/a/b/q6_jobs.json"), None, None)
+        assert log_dir == Path("/a/b/orchestrator_logs_q6_jobs")
+        assert status_path == Path("/a/b/orchestrator_status_q6_jobs.json")
+
+    def test_two_configs_in_same_directory_do_not_collide(self):
+        log_dir_1, status_path_1 = default_paths(Path("/a/b/q6_jobs.json"), None, None)
+        log_dir_2, status_path_2 = default_paths(Path("/a/b/q6_jobs_v2.json"), None, None)
+        assert log_dir_1 != log_dir_2
+        assert status_path_1 != status_path_2
+
+    def test_explicit_log_dir_overrides_default(self):
+        log_dir, _ = default_paths(Path("/a/b/q6_jobs.json"), Path("/custom/logs"), None)
+        assert log_dir == Path("/custom/logs")
+
+    def test_explicit_status_file_overrides_default(self):
+        _, status_path = default_paths(Path("/a/b/q6_jobs.json"), None, Path("/custom/status.json"))
+        assert status_path == Path("/custom/status.json")
+
+    def test_explicit_args_take_precedence_even_for_colliding_stems(self):
+        # If the caller passes explicit paths, two configs with the same stem
+        # (different directories) still don't collide -- the explicit args
+        # win outright, config_path is irrelevant to the result.
+        log_dir, status_path = default_paths(
+            Path("/other/dir/q6_jobs.json"), Path("/custom/logs"), Path("/custom/status.json")
+        )
+        assert log_dir == Path("/custom/logs")
+        assert status_path == Path("/custom/status.json")
 
 
 # ---------------------------------------------------------------------------
@@ -263,6 +296,45 @@ class TestIntegrationRealSubprocess:
 
         assert job.status == "stopped"
         assert job.status != "running"
+
+    def test_shutdown_does_not_mislabel_a_graceful_exit0_as_completed(self, tmp_path):
+        # Regression test for a real bug found on a live run: train_v8.py and
+        # train_phase3.py both catch SIGTERM, save a checkpoint, and exit 0
+        # (a *successful* shutdown from the script's own point of view). The
+        # orchestrator used to check `rc == 0` before checking `self._stopping`,
+        # so a job Ctrl-C'd partway through -- at episode 2,015 of a planned
+        # 6,000, in the incident that found this -- got permanently logged as
+        # "completed successfully", identical to actually finishing all 6,000.
+        # The interrupted run's own checkpoint (krishna_latest.pth / last_state.json,
+        # not krishna_final.pth) was the only place the truth was visible.
+        graceful_on_sigterm = """
+import signal, sys, time
+def handler(signum, frame):
+    sys.exit(0)  # simulates a real checkpoint-and-exit -- exit CODE is 0
+signal.signal(signal.SIGTERM, handler)
+print("run_dir=%s" % sys.argv[1], flush=True)
+time.sleep(30)  # would exit 1 (unhandled) if it ever got here uninterrupted
+"""
+        script = _write_script(tmp_path, "fake_graceful_sigterm.py", graceful_on_sigterm)
+        run_dir_arg = str(tmp_path / "training_runs" / "fake_run6")
+        spec = JobSpec(id="graceful_job", cwd=str(tmp_path),
+                        command=[sys.executable, str(script), run_dir_arg])
+        orch = Orchestrator(jobs=[spec], log_dir=tmp_path / "logs", status_path=tmp_path / "status.json")
+        job = orch.jobs[0]
+
+        orch._start_job(job)
+        assert job.status == "running"
+        # Give it a moment to install the signal handler and print run_dir.
+        for _ in range(50):
+            if job.log_path.exists() and "run_dir=" in job.log_path.read_text():
+                break
+            time.sleep(0.05)
+
+        orch._handle_shutdown(signum=15, frame=None)  # sends SIGTERM, waits, reconciles
+
+        assert job.proc.returncode == 0  # confirm this really was a graceful exit-0, not a crash
+        assert job.status == "stopped"
+        assert job.status != "completed"
 
 
 # ---------------------------------------------------------------------------

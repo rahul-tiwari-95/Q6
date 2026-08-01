@@ -340,19 +340,26 @@ class Orchestrator:
         if job._log_fh:
             job._log_fh.close()
             job._log_fh = None
+        if self._stopping:
+            # Checked BEFORE rc==0, deliberately: both train_v8.py and
+            # train_phase3.py exit 0 from their own SIGTERM handler after a
+            # graceful checkpoint-and-exit (that's a successful shutdown from
+            # the script's own point of view). If rc==0 were checked first,
+            # a job Ctrl-C'd at episode 2,015 of 6,000 would be indistinguishable
+            # from one that actually ran all 6,000 -- which is exactly what
+            # happened the first time this shipped: `orchestrator]
+            # v8_ippo completed successfully.` printed after an interrupt at
+            # ep 2015/6000, with no signal anywhere that the run was partial.
+            # During an intentional shutdown, ANY exit code means "stopped",
+            # full stop -- we told it to stop, so we can't claim it reached a
+            # natural conclusion regardless of what its exit code says.
+            job.status = "stopped"
+            print(f"[orchestrator] {job.spec.id} exited with code {rc} during shutdown "
+                  f"(not necessarily finished -- check its last logged episode).")
+            return
         if rc == 0:
             job.status = "completed"
             print(f"[orchestrator] {job.spec.id} completed successfully.")
-            return
-        if self._stopping:
-            # Don't schedule a restart while shutting down -- just record what
-            # actually happened. Without this guard, a job that crashes (or
-            # finishes exiting from its own SIGTERM handler) in the narrow
-            # window during shutdown would otherwise get silently scheduled
-            # for a restart that never runs, or worse, left showing "running"
-            # with a stale PID in the final status (see _handle_shutdown).
-            job.status = "stopped"
-            print(f"[orchestrator] {job.spec.id} exited with code {rc} during shutdown.")
             return
         job.restart_count += 1
         if job.restart_count > job.spec.max_restarts:
@@ -518,22 +525,43 @@ def build_orchestrator(
     )
 
 
+def default_paths(config_path: Path, log_dir_arg: Optional[Path], status_file_arg: Optional[Path]) -> tuple:
+    """Resolve --log-dir/--status-file, defaulting to paths keyed off the
+    config file's own stem (not just its directory) so two configs living in
+    the same directory never collide by default. See main()'s comment for
+    the incident that motivated this.
+    """
+    log_dir = log_dir_arg or (config_path.parent / f"orchestrator_logs_{config_path.stem}")
+    status_path = status_file_arg or (config_path.parent / f"orchestrator_status_{config_path.stem}.json")
+    return log_dir, status_path
+
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--config", type=Path, required=True,
                     help="Path to a JSON job config (see orchestrator/q6_jobs.json for an example).")
     p.add_argument("--log-dir", type=Path, default=None,
-                    help="Directory for per-job log files (default: <config dir>/orchestrator_logs)")
+                    help="Directory for per-job log files (default: <config dir>/orchestrator_logs_<config stem>)")
     p.add_argument("--status-file", type=Path, default=None,
-                    help="Path to the live status JSON file (default: <config dir>/orchestrator_status.json)")
+                    help="Path to the live status JSON file "
+                         "(default: <config dir>/orchestrator_status_<config stem>.json)")
     return p.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     config = load_config(args.config)
-    log_dir = args.log_dir or (args.config.parent / "orchestrator_logs")
-    status_path = args.status_file or (args.config.parent / "orchestrator_status.json")
+    # Defaults are keyed off the config file's own name (stem), not just its
+    # directory: two configs living in the same directory (e.g. q6_jobs.json
+    # and q6_jobs_v2.json, both under orchestrator/) previously shared the
+    # exact same default log-dir/status-file, so running two orchestrator
+    # instances at once -- which this tool exists to make routine -- meant
+    # the second one silently clobbered the first one's live status. Found
+    # live: a v8_ippo run's (already-wrong, see the rc==0-during-shutdown
+    # fix above) "completed" status entry vanished entirely, overwritten by
+    # a concurrently-started v7_ablations_v2's status write, while both were
+    # genuinely running side by side as intended. See default_paths().
+    log_dir, status_path = default_paths(args.config, args.log_dir, args.status_file)
     orch = build_orchestrator(config, log_dir, status_path, config_path=args.config)
     orch.run()
     return 0
