@@ -1,20 +1,19 @@
 """Minimal deterministic world kernel for the A1 nontriviality smoke test.
 
-One locality, N agents, a latent blight regime that shifts once. Each tick,
-one collective mitigation decision (mitigate / don't) is applied uniformly --
-this stands in for the full ballot/mandate/executor machinery in
-PREREGISTRATION.md §3, which isn't built yet. The physical world and its
-one hidden regime shift are what's under test here, not the institution.
+N localities, each with its own agents and its own noisy sickness draws, but
+one shared latent blight severity and one shared food/medicine/wealth pool --
+the physical economy is still the single-locality one from v2, just now fed
+by locality-level sickness counts instead of one pooled draw, because that's
+what makes locality-attributed REPORT messages meaningful. One collective
+mitigation decision per tick, same as before -- the full ballot/mandate/
+executor machinery from PREREGISTRATION.md §3 still isn't built.
 
-v2: fixed a real bug found by running v1 -- food/medicine stocks accumulated
-without bound during the low-blight period (production >> need with no
-spoilage), producing a buffer so large it absorbed almost any post-shift
-deficit regardless of policy. Every policy except never_mitigate scored a
-perfect 0.0. Fixed with per-tick spoilage on both stocks (matching I-3's own
-"artifact decay" principle -- resources aren't a bank account) and by
-collapsing food-yield-penalty and sickness-risk into one underlying blight
-SEVERITY that mitigation counters, so the two channels aren't fighting each
-other's parameterization independently.
+v3: adds the message/lineage layer (I-7, I-8). Each locality that notices a
+local sickness spike generates a REPORT with a fresh origin_id; existing
+reports get randomly FORWARDED (copied), with forwards biased toward one
+"hub" locality -- the high-reach-source scenario the source design's own
+worked example (a high-reach store owner) calls out. See messages.py for the
+counting utilities this makes checkable.
 """
 
 from __future__ import annotations
@@ -23,39 +22,46 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from no_way_home.messages import MessageLog
+
 
 @dataclass(frozen=True)
 class WorldConfig:
-    n_agents: int = 8
+    n_localities: int = 4
+    n_agents_per_locality: int = 6
     n_ticks: int = 2000
     shift_tick: int = 800
 
-    # Blight severity in [0, 1] drives both crop-yield penalty and sickness
-    # risk from one underlying hidden variable, rather than two independently
-    # tuned channels.
     severity_low_blight: float = 0.0
     severity_high_blight: float = 1.0
-    mitigation_severity_reduction: float = 0.75  # mitigation cuts EFFECTIVE severity by this fraction
+    mitigation_severity_reduction: float = 0.75
 
     base_food_yield_per_agent: float = 1.6
-    food_yield_penalty_per_severity: float = 1.1  # yield = base - penalty * effective_severity
+    food_yield_penalty_per_severity: float = 1.1
     base_sickness_prob: float = 0.03
-    sickness_prob_penalty_per_severity: float = 0.32  # prob = base + penalty * effective_severity
+    sickness_prob_penalty_per_severity: float = 0.32
 
     food_need_per_agent: float = 1.0
     medicine_production_per_tick: float = 1.5
 
-    # Spoilage: fraction of each stock lost per tick, after consumption.
-    # This is what keeps a good pre-shift period from banking an
-    # unlimited buffer against a bad post-shift period.
     food_spoilage_rate: float = 0.10
     medicine_spoilage_rate: float = 0.05
 
     starting_food_stock: float = 10.0
     starting_medicine_stock: float = 5.0
     starting_wealth: float = 20.0
-    wealth_income_per_tick: float = 1.0  # background economic activity, independent of blight
+    wealth_income_per_tick: float = 1.0
     mitigation_wealth_cost: float = 3.0
+
+    # Messages
+    report_sick_threshold: int = 3          # locality reports if this many+ agents sick this tick
+    forward_prob_per_tick: float = 0.4      # chance of one forward event per tick
+    hub_locality: int = 0                   # the high-reach source
+    hub_forward_boost: float = 5.0          # hub reports get forwarded this many times more often
+
+    @property
+    def n_agents(self) -> int:
+        return self.n_localities * self.n_agents_per_locality
 
 
 @dataclass
@@ -67,6 +73,7 @@ class WorldState:
     wealth: float = 0.0
     blight_high: bool = False
     events: list = field(default_factory=list)
+    messages: MessageLog = field(default_factory=MessageLog)
 
     @classmethod
     def initial(cls, cfg: WorldConfig) -> "WorldState":
@@ -82,7 +89,7 @@ class WorldState:
 
 def step(state: WorldState, mitigate: bool, rng: np.random.Generator) -> WorldState:
     """Advance the world by one tick. Mutates and returns state; callers
-    that need history read state.events afterward."""
+    that need history read state.events / state.messages afterward."""
     cfg = state.cfg
     state.tick += 1
 
@@ -104,8 +111,22 @@ def step(state: WorldState, mitigate: bool, rng: np.random.Generator) -> WorldSt
     state.food_stock += yield_per_agent * cfg.n_agents
     state.medicine_stock += cfg.medicine_production_per_tick
 
-    sick = rng.random(cfg.n_agents) < sickness_p
-    n_sick = int(sick.sum())
+    # Sickness drawn per locality, not pooled -- this is what a REPORT
+    # attaches to.
+    sick_per_locality = []
+    for loc in range(cfg.n_localities):
+        sick = rng.random(cfg.n_agents_per_locality) < sickness_p
+        n_sick_loc = int(sick.sum())
+        sick_per_locality.append(n_sick_loc)
+        if n_sick_loc >= cfg.report_sick_threshold:
+            state.messages.report(tick=state.tick, locality=loc)
+    n_sick = sum(sick_per_locality)
+
+    if rng.random() < cfg.forward_prob_per_tick:
+        state.messages.maybe_forward(
+            tick=state.tick, rng=rng,
+            hub_locality=cfg.hub_locality, hub_forward_boost=cfg.hub_forward_boost,
+        )
 
     food_needed = cfg.food_need_per_agent * cfg.n_agents
     food_shortfall_agents = 0
@@ -131,6 +152,7 @@ def step(state: WorldState, mitigate: bool, rng: np.random.Generator) -> WorldSt
         "blight_high": state.blight_high,
         "mitigate": mitigate,
         "n_sick": n_sick,
+        "sick_per_locality": sick_per_locality,
         "food_stock": state.food_stock,
         "medicine_stock": state.medicine_stock,
         "wealth": state.wealth,
@@ -143,7 +165,8 @@ def step(state: WorldState, mitigate: bool, rng: np.random.Generator) -> WorldSt
 
 def run(cfg: WorldConfig, policy_fn, seed: int) -> WorldState:
     """Run one full episode under `policy_fn(state, rng) -> bool` and return
-    the final WorldState (with full per-tick event history in .events)."""
+    the final WorldState (with full per-tick event history in .events, and
+    the full message log in .messages)."""
     rng = np.random.default_rng(seed)
     state = WorldState.initial(cfg)
     for _ in range(cfg.n_ticks):

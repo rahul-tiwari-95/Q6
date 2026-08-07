@@ -6,11 +6,20 @@ a real bug: determinism, conservation, and the regime shift firing when it
 should.
 """
 
+import numpy as np
 import pytest
 
+from no_way_home.messages import MessageLog
 from no_way_home.metrics import mitigation_rate, need_shortfall_per_10k
-from no_way_home.policies import POLICIES
-from no_way_home.world import WorldConfig, run
+from no_way_home.policies import (
+    LINEAGE_AWARE_THRESHOLD,
+    LINEAGE_NAIVE_THRESHOLD,
+    MESSAGE_WINDOW,
+    POLICIES,
+    lineage_aware_heuristic,
+    lineage_naive_heuristic,
+)
+from no_way_home.world import WorldConfig, WorldState, run
 
 
 def test_same_seed_same_policy_is_deterministic():
@@ -75,6 +84,49 @@ def test_mitigation_rate_zero_for_never_mitigate():
     cfg = WorldConfig(n_ticks=200)
     state = run(cfg, POLICIES["never_mitigate"], seed=0)
     assert mitigation_rate(state) == 0.0
+
+
+def test_raw_vs_unique_message_rate_distinguishes_copies_from_independent_reports():
+    """The exact I-7 claim, checked directly: ten independent reports and
+    one report forwarded ten times must look different under unique-origin
+    counting and must NOT be reliably distinguishable under raw counting."""
+    independent = MessageLog()
+    for loc in range(10):
+        independent.report(tick=5, locality=loc)
+
+    copies = MessageLog()
+    copies.report(tick=5, locality=0)
+    rng = np.random.default_rng(0)
+    for _ in range(10):
+        copies.maybe_forward(tick=5, rng=rng, hub_locality=None, hub_forward_boost=1.0)
+
+    assert independent.unique_origin_rate(6, 10) == pytest.approx(1.0)
+    assert copies.unique_origin_rate(6, 10) == pytest.approx(0.1)
+    # raw rate is roughly the same order of magnitude for both -- that's the
+    # whole point, a naive counter can't tell them apart
+    assert copies.raw_message_rate(6, 10) > copies.unique_origin_rate(6, 10) * 5
+
+
+def test_lineage_aware_ignores_a_forward_storm_that_fools_lineage_naive():
+    """Constructed, deterministic version of what the full-world runs found
+    empirically (results/provenance_test_v1.md): a single report, forwarded
+    many times, crosses the naive raw-count threshold but not the
+    unique-origin threshold at the same numeric cutoff."""
+    cfg = WorldConfig()
+    state = WorldState.initial(cfg)
+    state.tick = 29  # so the [tick+1-window, tick+1) window covers tick 5 onward
+    state.messages.report(tick=5, locality=0)
+    rng = np.random.default_rng(0)
+    for _ in range(15):
+        state.messages.maybe_forward(tick=6, rng=rng, hub_locality=None, hub_forward_boost=1.0)
+
+    raw_rate = state.messages.raw_message_rate(state.tick + 1, MESSAGE_WINDOW)
+    unique_rate = state.messages.unique_origin_rate(state.tick + 1, MESSAGE_WINDOW)
+    assert raw_rate > LINEAGE_NAIVE_THRESHOLD, "test setup should cross the naive threshold"
+    assert unique_rate <= LINEAGE_AWARE_THRESHOLD, "test setup should NOT cross the aware threshold"
+
+    assert lineage_naive_heuristic(state, rng) is True
+    assert lineage_aware_heuristic(state, rng) is False
 
 
 def test_zero_intelligence_constrained_never_exceeds_wealth():

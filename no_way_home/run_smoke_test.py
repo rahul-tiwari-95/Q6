@@ -15,19 +15,21 @@ from no_way_home.metrics import mitigation_rate, need_shortfall_per_10k
 from no_way_home.policies import POLICIES
 from no_way_home.world import WorldConfig, run
 
-DEFAULT_SEEDS = [0, 1, 2, 3, 4]
+DEFAULT_SEEDS = list(range(10))
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--seeds", type=int, nargs="+", default=DEFAULT_SEEDS)
-    parser.add_argument("--n-agents", type=int, default=8)
+    parser.add_argument("--n-localities", type=int, default=4)
+    parser.add_argument("--n-agents-per-locality", type=int, default=6)
     parser.add_argument("--n-ticks", type=int, default=2000)
     parser.add_argument("--shift-tick", type=int, default=800)
     parser.add_argument("--out", type=Path, default=Path("no_way_home/results/smoke_test_v1.md"))
     args = parser.parse_args()
 
-    cfg = WorldConfig(n_agents=args.n_agents, n_ticks=args.n_ticks, shift_tick=args.shift_tick)
+    cfg = WorldConfig(n_localities=args.n_localities, n_agents_per_locality=args.n_agents_per_locality,
+                       n_ticks=args.n_ticks, shift_tick=args.shift_tick)
 
     rows = []
     for name, policy_fn in POLICIES.items():
