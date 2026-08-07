@@ -74,12 +74,48 @@ qualification signal, not the candidates. That's a real, precisely-isolated pric
 term at all — the same discipline the Santa Fe Artificial Stock Market study used (mechanism-kill
 ablations, not just correlation) to tell what was actually driving their own result.
 
+## v5 — a learning citizen: does it discover lineage-awareness on its own? (current)
+
+Added `no_way_home/learning.py`: a citizen that learns its mitigation decision via tabular
+Q-learning, instead of following a fixed script — the first learning agent in this project,
+arriving only after Phase 2's substrate was actually built and tested, not skipped to get here
+faster. Directly tests the question `provenance_test_v1.md` flagged as open: "whether a learned
+policy would discover the unique-origin distinction on its own, given only raw message features
+as input." Full write-up: `learning_citizen_v1.md`.
+
+**A real methodological finding along the way, kept rather than silently fixed**: a constant
+learning rate never stabilized — training on 200 episodes instead of 50 made a specific,
+heavily-visited state bin's action preference *flip*, and overall performance got *worse* with
+more data, not better. Pure `1/n` decay (the textbook Robbins-Monro fix) stabilized it but
+overshot the other way — with sparse, mostly-zero per-tick rewards, rare bins' Q-values decayed
+toward zero and lost any real preference between actions. A floored decay
+(`alpha = max(0.05, 1/visits)`) was the actual fix: stable across training amounts (60864 vs.
+60900 on 50 vs. 200 episodes) while retaining enough sensitivity to rare-but-important reward
+signal to develop real preferences.
+
+**Headline finding**: with the floored-decay learner, given both `raw_message_rate` and
+`unique_origin_rate` as features — nothing hand-coding which one to trust — it reliably learns to
+NOT mitigate specifically in the forward-storm-signature bins (high raw rate, low unique rate),
+consistently across both 50- and 200-episode training runs, backed by thousands of visits to
+those exact bins. The lineage-aware distinction is learnable from raw features alone; it doesn't
+require hand-coding the decision rule, only giving the agent the right information to learn from.
+
+**But there's a real, named residual gap**, not glossed over: the learner still scores well above
+the hand-coded aware heuristic (60864 vs. 43526). Most likely reason, and it connects directly to
+an earlier finding: `smoke_test_v1.md` already showed that spending *discipline* is a separate
+skill from correct information in this world (`greedy_state_oracle`, with perfect hidden-state
+access, was beaten by a purely-reactive heuristic because it spent its wealth greedily). This
+learner has the identical blind spot for the identical reason — its state has no wealth/budget
+feature at all, so it can learn WHEN evidence is real but not WHETHER it can currently afford to
+act on it. Adding wealth as a third feature is the natural next step, not a new problem.
+
 ## Not yet built
 
-No learning agent (still every policy in `policies.py`/`institutions.py` is a fixed script, per
-the roadmap's own Phase 2 — "substrate without learning" comes before Phase 4's learner). No
-per-locality blight variation (severity is still global/shared across all 4 localities). No
-randomized shift timing (still a fixed tick, not drawn from a held-out family). No audit/removal/
-early-replacement mechanism (elections are only ever the scheduled kind, never triggered early).
-Each is a reasonable next increment; none should be skipped to reach "add a learner" faster than
-the institution itself has been shown to warrant it.
+The learner above is tested standalone, not yet wired into the ballot/election institution from
+`institutions.py` — composing them (a learned mandate inside the full elected-executor structure)
+is a natural next step. No wealth/budget feature for the learner (see above — the likely fix for
+the residual gap). No per-locality blight variation (severity is still global/shared across all 4
+localities). No randomized shift timing (still a fixed tick, not drawn from a held-out family). No
+audit/removal/early-replacement mechanism (elections are only ever the scheduled kind). Each is a
+reasonable next increment; none should be skipped to reach the next thing faster than what's
+already built has been shown to warrant it.

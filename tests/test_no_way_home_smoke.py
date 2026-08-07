@@ -14,6 +14,7 @@ from no_way_home.institutions import (
     EpistemicDelegationInstitution,
     calibrate_public_qualification,
 )
+from no_way_home.learning import RATE_BINS, TabularQMandateLearner, feature_raw_rate, feature_unique_rate
 from no_way_home.messages import MessageLog
 from no_way_home.metrics import mitigation_rate, need_shortfall_per_10k
 from no_way_home.policies import (
@@ -195,3 +196,46 @@ def test_reactive_mandate_ablation_matches_hardcoded_baseline_exactly():
     reactive_state = run(cfg, reactive, seed=0)
     mismatches = sum(1 for a, b in zip(hardcoded_state.events, reactive_state.events) if a["mitigate"] != b["mitigate"])
     assert mismatches == 0
+
+
+def _train_both_features_learner(cfg, n_episodes=50, start_seed=2000):
+    learner = TabularQMandateLearner(feature_fns=[feature_raw_rate, feature_unique_rate],
+                                      bin_edges=[RATE_BINS, RATE_BINS])
+    for seed in range(start_seed, start_seed + n_episodes):
+        run(cfg, learner, seed=seed)
+    return learner
+
+
+def test_floored_decay_learner_reliably_avoids_forward_storm_bins():
+    """The actual headline finding, locked in: with the real (floored-decay)
+    learner, the forward-storm-signature bins (high raw_rate, low
+    unique_rate) consistently prefer NOT mitigating, and this holds across
+    two different training-data amounts -- i.e. it's converged, not luck."""
+    cfg = WorldConfig()
+    forward_storm_bins = [(3, 1), (4, 1)]
+
+    for n_episodes in (50, 200):
+        learner = _train_both_features_learner(cfg, n_episodes=n_episodes)
+        visited = {b for b, a in learner.q_table.keys()}
+        for b in forward_storm_bins:
+            assert b in visited, f"expected bin {b} to be visited with {n_episodes} training episodes"
+            assert learner._q(b, True) <= learner._q(b, False), (
+                f"bin {b} should prefer NOT mitigating after {n_episodes} episodes, "
+                f"got Q(mitigate)={learner._q(b, True)} Q(dont)={learner._q(b, False)}"
+            )
+
+
+def test_floored_decay_learner_outcome_is_stable_across_training_amounts():
+    """Companion to the bin-level check: aggregate outcome shouldn't swing
+    wildly between 50 and 200 training episodes either, unlike the
+    constant-alpha version did during development (60864 -> 63491, and a
+    bin's preference flipped) -- see results/learning_citizen_v1.md."""
+    cfg = WorldConfig()
+    means = []
+    for n_episodes in (50, 200):
+        learner = _train_both_features_learner(cfg, n_episodes=n_episodes)
+        learner.freeze()
+        vals = [need_shortfall_per_10k(run(cfg, learner, seed=s)) for s in range(10)]
+        means.append(sum(vals) / len(vals))
+    relative_diff = abs(means[0] - means[1]) / means[0]
+    assert relative_diff < 0.05, f"outcome should be stable across training amounts, got {means}"
