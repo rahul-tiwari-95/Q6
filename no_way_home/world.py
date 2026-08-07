@@ -166,10 +166,25 @@ def step(state: WorldState, mitigate: bool, rng: np.random.Generator) -> WorldSt
 def run(cfg: WorldConfig, policy_fn, seed: int) -> WorldState:
     """Run one full episode under `policy_fn(state, rng) -> bool` and return
     the final WorldState (with full per-tick event history in .events, and
-    the full message log in .messages)."""
-    rng = np.random.default_rng(seed)
+    the full message log in .messages).
+
+    World physics and policy decisions get INDEPENDENT RNG streams, spawned
+    from the same seed via SeedSequence. Found by running the election test:
+    with one shared stream, a policy that consumes extra randomness
+    internally (e.g. EpistemicDelegationInstitution drawing 24 votes per
+    election) shifts every subsequent sickness/forwarding draw out of sync
+    with a simpler policy under the "same" seed -- so "same seed" silently
+    stopped meaning "same physical trajectory" the moment two policies
+    disagreed on how much randomness they use. That breaks any paired
+    same-seed comparison between policies, not just this one. Separate
+    streams mean the physical world is identical for a given seed no matter
+    what the policy does with its own rng."""
+    seed_seq = np.random.SeedSequence(seed)
+    world_seed, policy_seed = seed_seq.spawn(2)
+    world_rng = np.random.default_rng(world_seed)
+    policy_rng = np.random.default_rng(policy_seed)
     state = WorldState.initial(cfg)
     for _ in range(cfg.n_ticks):
-        mitigate = policy_fn(state, rng)
-        step(state, mitigate, rng)
+        mitigate = policy_fn(state, policy_rng)
+        step(state, mitigate, world_rng)
     return state

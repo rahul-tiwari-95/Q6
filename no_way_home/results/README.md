@@ -39,11 +39,47 @@ fooled depends on random forwarding luck rather than anything real in the world.
 `smoke_test_v1.md`'s table now includes both lineage policies alongside the original six —
 regenerate with `python3 -m no_way_home.run_smoke_test` after any world/policy change.
 
+## v4 — ballot + noisy election + delegated executor (current)
+
+Added `no_way_home/institutions.py`: the actual institution the project is named for.
+Every term (200 ticks), citizens cast two separate ballots — authorize mitigation spending this
+term (a scripted mandate vote, reading the lineage-aware report rate) and elect one of four
+frozen candidate executors by noisy plurality (24 voters, 70% vote for the best publicly-scored
+candidate, 30% vote randomly). Candidates span a real skill range (responsive / responsive-but-
+lineage-naive / constant-spender / cautious), scored on held-out calibration seeds before the
+election run, never on the run itself. Full write-up: `election_test_v1.md`.
+
+**Found a real bug building this**, not just a parameter-tuning issue: the mandate threshold and
+`instrument_responsive`'s own threshold were both `0.30` on the same signal, so mandate-authorized
+trivially implied responsive-triggered, and (since raw rate ≥ unique rate always) naive and
+constant-spender collapsed into the same behavior too. Three of four candidates scored
+identically until the mandate threshold was separated from the instrument thresholds.
+
+**Found a second, more fundamental bug while testing that fix**: the institution's 24-voter
+election consumes extra random draws from the *same* RNG stream used for world physics, so "same
+seed" silently stopped meaning "same sickness/blight trajectory" the moment a policy's internal
+randomness use differed from another policy's. Fixed by giving world physics and policy decisions
+independent RNG streams (`np.random.SeedSequence(seed).spawn(2)`), locked in with a test
+(`test_world_physics_identical_across_policies_that_consume_different_amounts_of_randomness`).
+This was silently true of every comparison in this repo before the fix, not just this one — worth
+knowing for anyone extending this further.
+
+**Headline finding**: the election picks the objectively-best candidate in 100% of terms across
+all seeds tested — voting works. But the institution still scored ~4.4% worse than a hard-coded
+best-executor baseline, and the instinct to blame "election noise" was wrong. A mechanism-
+isolation ablation (identical election, mandate re-checked every tick instead of committed for
+the 200-tick term) closes the gap to exactly zero — 0 mismatched ticks out of 2,000, across every
+seed, checked directly. The entire cost is the mandate's commitment length, not the vote, not the
+qualification signal, not the candidates. That's a real, precisely-isolated price of having a
+term at all — the same discipline the Santa Fe Artificial Stock Market study used (mechanism-kill
+ablations, not just correlation) to tell what was actually driving their own result.
+
 ## Not yet built
 
-No election/ballot/executor-selection machinery (PREREGISTRATION.md §3's core institutional
-layer — currently there's one global collective decision, not four qualified candidates and two
-ballots). No learning agent. No per-locality blight variation (severity is still global/shared).
-No randomized shift timing (still a fixed tick, not drawn from a held-out family). Each is a
-reasonable next increment; none should be skipped to reach "add a learner" faster than the world
-itself has been shown to warrant it.
+No learning agent (still every policy in `policies.py`/`institutions.py` is a fixed script, per
+the roadmap's own Phase 2 — "substrate without learning" comes before Phase 4's learner). No
+per-locality blight variation (severity is still global/shared across all 4 localities). No
+randomized shift timing (still a fixed tick, not drawn from a held-out family). No audit/removal/
+early-replacement mechanism (elections are only ever the scheduled kind, never triggered early).
+Each is a reasonable next increment; none should be skipped to reach "add a learner" faster than
+the institution itself has been shown to warrant it.

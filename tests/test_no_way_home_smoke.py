@@ -9,6 +9,11 @@ should.
 import numpy as np
 import pytest
 
+from no_way_home.institutions import (
+    CANDIDATES,
+    EpistemicDelegationInstitution,
+    calibrate_public_qualification,
+)
 from no_way_home.messages import MessageLog
 from no_way_home.metrics import mitigation_rate, need_shortfall_per_10k
 from no_way_home.policies import (
@@ -129,6 +134,22 @@ def test_lineage_aware_ignores_a_forward_storm_that_fools_lineage_naive():
     assert lineage_aware_heuristic(state, rng) is False
 
 
+def test_world_physics_identical_across_policies_that_consume_different_amounts_of_randomness():
+    """The real bug found while building the election test: a policy that
+    draws extra randomness internally (e.g. holding a 24-voter election)
+    must NOT perturb the physical world's sickness/forwarding trajectory
+    under the same seed. Compare a policy that consumes zero internal
+    randomness (never_mitigate) against one that consumes a lot (many calls
+    to rng.random() via zero_intelligence, called every tick) -- the
+    sequence of blight_high / n_sick per locality must be byte-identical."""
+    cfg = WorldConfig(n_ticks=300)
+    quiet = run(cfg, POLICIES["never_mitigate"], seed=7)
+    noisy = run(cfg, POLICIES["C1_zero_intelligence"], seed=7)
+    quiet_physics = [(e["blight_high"], e["sick_per_locality"]) for e in quiet.events]
+    noisy_physics = [(e["blight_high"], e["sick_per_locality"]) for e in noisy.events]
+    assert quiet_physics == noisy_physics
+
+
 def test_zero_intelligence_constrained_never_exceeds_wealth():
     """ZI-C must never leave wealth negative -- the whole point of the
     constraint (Gode & Sunder's no-loss rule, I-9)."""
@@ -136,3 +157,41 @@ def test_zero_intelligence_constrained_never_exceeds_wealth():
     state = run(cfg, POLICIES["C2_zero_intelligence_constrained"], seed=0)
     for e in state.events:
         assert e["wealth"] >= 0 - 1e-9
+
+
+def test_election_reliably_selects_the_true_best_candidate():
+    """With correct_vote_prob=0.7 and 24 voters, plurality voting should
+    converge to the objectively-best candidate essentially every term --
+    checked directly against held-out calibration scores, not assumed."""
+    cfg = WorldConfig()
+    scores = calibrate_public_qualification(cfg, list(range(1000, 1005)), mandate_window=30, mandate_threshold=0.10)
+    true_best = min(scores, key=scores.get)
+    for seed in range(3):
+        institution = EpistemicDelegationInstitution(qualification_scores=scores)
+        run(cfg, institution, seed=seed)
+        winners = [r.winner for r in institution.history]
+        assert winners.count(true_best) / len(winners) >= 0.9
+
+
+def test_reactive_mandate_ablation_matches_hardcoded_baseline_exactly():
+    """The mechanism-isolation finding, locked in: with the SAME election
+    but the mandate re-evaluated every tick instead of committed for the
+    200-tick term, the institution's mitigate decision must match a
+    hard-coded best-executor baseline on every single tick -- proving the
+    term-committed institution's cost (see results/election_test_v1.md) is
+    entirely about commitment length, not about voting or qualification."""
+    cfg = WorldConfig(n_ticks=1000)
+    scores = calibrate_public_qualification(cfg, list(range(1000, 1005)), mandate_window=30, mandate_threshold=0.10)
+    best = min(scores, key=scores.get)
+
+    def hardcoded_best(state, rng):
+        from no_way_home.institutions import _mandate_authorized
+        if not _mandate_authorized(state, 30, 0.10):
+            return False
+        return CANDIDATES[best](state, rng)
+
+    reactive = EpistemicDelegationInstitution(qualification_scores=scores, reevaluate_mandate_every_tick=True)
+    hardcoded_state = run(cfg, hardcoded_best, seed=0)
+    reactive_state = run(cfg, reactive, seed=0)
+    mismatches = sum(1 for a, b in zip(hardcoded_state.events, reactive_state.events) if a["mitigate"] != b["mitigate"])
+    assert mismatches == 0
