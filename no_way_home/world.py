@@ -4,9 +4,12 @@ N localities, each with its own agents and its own noisy sickness draws, but
 one shared latent blight severity and one shared food/medicine/wealth pool --
 the physical economy is still the single-locality one from v2, just now fed
 by locality-level sickness counts instead of one pooled draw, because that's
-what makes locality-attributed REPORT messages meaningful. One collective
-mitigation decision per tick, same as before -- the full ballot/mandate/
-executor machinery from PREREGISTRATION.md §3 still isn't built.
+what makes locality-attributed REPORT messages meaningful. This module's own
+`step()`/`run()` still only take one collective mitigation decision per tick
+via a plain policy_fn -- the full ballot/mandate/executor machinery from
+PREREGISTRATION.md §3 is built (see institutions.py, committed after this
+file), but it's layered ON TOP as a stateful policy_fn, not wired into the
+world kernel itself.
 
 v3: adds the message/lineage layer (I-7, I-8). Each locality that notices a
 local sickness spike generates a REPORT with a fresh origin_id; existing
