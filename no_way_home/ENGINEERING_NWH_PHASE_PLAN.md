@@ -6,7 +6,7 @@ pick up work cold. Keep it current: whoever completes a TODO item updates this f
 same commit that completes the work, not as a separate cleanup pass later.*
 
 Branch: `no-way-home`. Worktree: `/Users/rahul/Q6-nwh`. Last verified against the repo
-2026-08-08: `no_way_home/` is 13 modules, 32 tests passing across
+2026-08-09: `no_way_home/` is 15 modules, 32 tests passing across
 `tests/test_no_way_home_smoke.py` (27) and `tests/test_stats.py` (5). Also reconfirmed against
 the whole Q6 repo's suite (254/254) — this thread touches nothing outside `no_way_home/`.
 
@@ -105,37 +105,44 @@ silently depends on the winning candidate never touching `rng`). None of it touc
 `EpistemicDelegationInstitution` or the election mechanism itself. Full narrative:
 `results/README.md` (v7). Suite: 27/27 passing.
 
-**Power-calculation infrastructure is done, N is proposed but NOT locked** (2026-08-08):
-`stats.py` (a validated from-scratch Jonckheere-Terpstra test — no library implements this),
-`run_pilot_beta_sweep.py` (a 20-seed/arm, clearly non-confirmatory pilot — seeds 9000-9019,
-walled off from ever being reused as confirmatory data), and `run_power_calculation.py` (a Monte
-Carlo power/precision estimate against the pilot's own smoothed effect size). Full narrative:
-`results/README.md` (v8). Current recommendation: **N=30 seeds/arm** — chosen for
-knee-location precision (Wilson-bound reasoning), not the mechanically-smallest N that clears
-80% detection power (which was a misleadingly small N=5, correctly rejected in the report itself
-rather than acted on).
+**Increment 3's core confirmatory result is in** (2026-08-09): `PREREGISTRATION_INCREMENT3.md`
+locked N=50 (Rahul's call, above the initial N=30 suggestion, for knee-location precision) and
+the grid/instrument/test *before* `run_beta_sweep_v1.py` ran against seeds 20000-20049. Result:
+F(β) = 0.82, 0.82, 0.68, 0.00, 0.00 for β = 0, 0.25, 0.5, 0.75, 1.0 — Jonckheere-Terpstra
+J=18650.0, p=0.00010. **A knee exists at β=0.75, not "no partial credit until β=1.0."** Confirms
+the pilot's shape almost exactly (see `results/README.md` v9 for the full write-up and the
+mechanistic explanation of why the knee sits there).
 
-**Still stopping here — this is a proposal, not a lock.** Do not run the actual confirmatory
-β-sweep at N=30 (or any N) without Rahul explicitly signing off first, and do not treat the
-pilot's own observed shape (a sharp step between β=0.5 and β=0.75) as established — it's a
-20-seed observation offered as a reason to be interested in the real result, not a preview of
-it. Once Rahul signs off on N and the grid: (1) write a short pre-registration note (grid, N,
-test, alpha, the two control arms from Increment 2) as a new committed file, e.g.
-`no_way_home/PREREGISTRATION_INCREMENT3.md`, BEFORE running anything at the locked N; (2) run
-the confirmatory sweep on a fresh seed range disjoint from 9000-9019; (3) run the same JT test
-on the real data; (4) write up `results/beta_sweep_v1.md` with the honest result whatever it is.
+**One real gap left before this result is fully interpretable**: the bounded-decay-EMA control
+arm has not run. Its threshold needs a held-out calibration pass (seeds disjoint from both the
+pilot's 9000-9019 and the confirmatory 20000-20049 — e.g. 15000-15009, already named in
+`PREREGISTRATION_INCREMENT3.md`) before it can be compared fairly. Until it runs, the result
+above establishes the dose-response *shape* convincingly but not yet that it's specifically
+about lineage-awareness rather than any sufficiently bounded/decayed counting rule.
+
+Next atomic task, refilling the list per the rule above:
+
+1. **Calibrate and run the bounded-decay-EMA control arm.** Pick `half_life`/`floor`/`ceiling`
+   for `messages.py::bounded_decay_rate` and a threshold, using held-out seeds (e.g.
+   15000-15009) by the same method `mandate_threshold=0.10` was picked (compare pre-shift vs.
+   post-shift rate distributions, pick a cutoff that separates them). Then run it on the same
+   20000-20049 confirmatory seeds and add its result to `results/beta_sweep_v1.md`. This closes
+   the one named gap in Increment 3's confound-ruling-out story.
+
+Once that lands, Increment 3 is fully complete, and the natural next conversation is whether
+Increment 4 (the `CORROBORATION` channel) is warranted — the redesign doc's own gating condition
+("only if Increment 3's curve is interesting enough to justify a new channel") looks satisfied
+given a real, sharp, mechanistically-explained knee, but that's a call for Rahul, not an
+automatic next step.
 
 ## 5. Backlog (not yet broken into atomic TODOs)
 
 Full detail for all of these is in `ENVIRONMENT_REDESIGN.md` §4 — this is a pointer, not a
 duplicate, so it can't drift out of sync with the source of truth.
 
-- **Increment 3** (3-5 days): lock the β grid, the Jonckheere-Terpstra test, and a
-  power-calculated N in a committed pre-registration note *before* running anything. Then run
-  the sweep + both control arms (both now built, see above). This produces the actual
-  deliverable: a dose-response curve.
-- **Increment 4** (1-2 weeks, contingent on Increment 3's result being interesting): build the
-  `CORROBORATION` channel — a second, costly, independently-`Initiates`-ing evidence type.
+- **Increment 4** (1-2 weeks, contingent on Increment 3's result being interesting — looking
+  likely given the sharp knee found, pending Rahul's read): build the `CORROBORATION` channel —
+  a second, costly, independently-`Initiates`-ing evidence type.
 
 **Explicitly parked, not rejected** (don't pull these forward without a specific reason —
 see `ENVIRONMENT_REDESIGN.md` §5 for why each was cut): the full 8-tuple `Channel`

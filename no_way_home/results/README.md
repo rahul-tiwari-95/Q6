@@ -237,3 +237,50 @@ recommendation awaiting Rahul's sign-off, not a locked pre-registration — see
 
 Full suite (no_way_home-specific): 32/32 passing. Also reconfirmed against the whole Q6 repo's test
 suite (254/254 passing) — this work touches nothing outside `no_way_home/`.
+
+## v9 — Increment 3's confirmatory result: the beta-sweep dose-response curve
+
+**The actual deliverable of the environment redesign.** Rahul overrode the v8 N=30 suggestion in
+favor of N=50, specifically for tighter knee-location precision given how sharp the pilot's shape
+looked (Wilson upper bound on a zero-observed arm: 7.1% at N=50 vs. 11.4% at N=30). Locked in
+`PREREGISTRATION_INCREMENT3.md` — grid, instrument, N, the confirmatory seed range (20000-20049,
+disjoint from the pilot's 9000-9019), and the Jonckheere-Terpstra test — committed *before*
+`run_beta_sweep_v1.py` was run against those seeds.
+
+| β | Fooled / 50 | F(β) |
+|---:|---:|---:|
+| 0.0 | 41 | 0.82 |
+| 0.25 | 41 | 0.82 |
+| 0.5 | 34 | 0.68 |
+| 0.75 | 0 | **0.00** |
+| 1.0 | 0 | 0.00 |
+
+**Jonckheere-Terpstra: J = 18650.0, p = 0.00010.** Reject H0 — a monotone decreasing trend is
+real, not noise, at N=50.
+
+**Falsifiable shape claim, resolved: a knee exists, not "no partial credit."** β=0.75 already
+reaches F(β)=0.00 — full unique-origin dedup (β=1.0) is *not* required to get the forward-storm
+resistance; a 75%-weighted mix of unique-origin counting over raw counting is already enough.
+This confirms the pilot's N=20 shape almost exactly (pilot: 0.65/0.60/0.50/0.00/0.00; confirmatory:
+0.82/0.82/0.68/0.00/0.00 — same knee location, tighter numbers, same qualitative story) rather than
+regressing to something smoother, which was a real, live risk going in (`PREREGISTRATION_INCREMENT3.md`
+named this explicitly as one of the honest caveats before running).
+
+Mechanically: a typical forward-storm signature's mixed score `(1-β)·raw + β·unique` sits right at
+the 0.30 trigger threshold when β=0.5 (raw≈0.53, unique≈0.03 → score≈0.28, a coin-flip depending on
+storm strength — matching the 0.68 rate, neither near 0 nor near the naive 0.82), and drops
+comfortably clear of it at β=0.75 (score≈0.16) regardless of how strong the storm gets. The knee
+isn't a coincidence of this particular grid; it falls out of where the linear interpolation crosses
+the fixed threshold given this world's actual forward-storm magnitude.
+
+**Control arm reported, not yet complete**: `E_zero_intelligence_constrained` was fooled 50/50
+(1.00) on the same seeds — a fully uninformed baseline, as expected, included for reference since
+it has no β-knob and can't itself sit on the curve. The bounded-decay-EMA control (rules out "any
+bounded/decayed counting helps, not specifically lineage" as the real explanation) is **not yet
+run** — its threshold still needs calibrating on held-out seeds, disjoint from both the pilot and
+this confirmatory range. Until that lands, this result establishes the dose-response *shape*
+convincingly, but not yet that the effect is specifically about lineage-awareness rather than any
+sufficiently bounded/decayed counting rule. Named explicitly as the next step, not glossed over —
+see `ENGINEERING_NWH_PHASE_PLAN.md`.
+
+Full suite: 32/32 passing (unaffected — this only adds a new driver script).
