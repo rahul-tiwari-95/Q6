@@ -6,8 +6,9 @@ pick up work cold. Keep it current: whoever completes a TODO item updates this f
 same commit that completes the work, not as a separate cleanup pass later.*
 
 Branch: `no-way-home`. Worktree: `/Users/rahul/Q6-nwh`. Last verified against the repo
-immediately after Increment 2 landed (2026-08-08): `no_way_home/` is 10 modules, 27 tests
-passing in `tests/test_no_way_home_smoke.py`.
+2026-08-08: `no_way_home/` is 13 modules, 32 tests passing across
+`tests/test_no_way_home_smoke.py` (27) and `tests/test_stats.py` (5). Also reconfirmed against
+the whole Q6 repo's suite (254/254) — this thread touches nothing outside `no_way_home/`.
 
 ---
 
@@ -104,16 +105,25 @@ silently depends on the winning candidate never touching `rng`). None of it touc
 `EpistemicDelegationInstitution` or the election mechanism itself. Full narrative:
 `results/README.md` (v7). Suite: 27/27 passing.
 
-**Stopping here, not auto-generating Increment 3's TODO breakdown.** Increment 3's own first
-step — locking the β grid, the Jonckheere-Terpstra test, and an actual power-calculated N in a
-committed pre-registration note *before* running anything — is flagged in
-`ENVIRONMENT_REDESIGN.md` §5 as "the single biggest practical risk in the whole plan," and a
-power calculation is a real statistical decision, not a mechanical refactor like Increments 1-2
-were. Per this doc's own rule ("if mid-work you discover the next atomic step isn't obvious,
-that's a signal to stop and ask Rahul rather than guessing"), this is exactly that signal — don't
-silently pick an N or a grid and start running seeds. Next session: read this section, then ask
-Rahul how he wants to handle the power calculation (do it and propose a number for sign-off, or
-work through it together) before writing any Increment 3 code.
+**Power-calculation infrastructure is done, N is proposed but NOT locked** (2026-08-08):
+`stats.py` (a validated from-scratch Jonckheere-Terpstra test — no library implements this),
+`run_pilot_beta_sweep.py` (a 20-seed/arm, clearly non-confirmatory pilot — seeds 9000-9019,
+walled off from ever being reused as confirmatory data), and `run_power_calculation.py` (a Monte
+Carlo power/precision estimate against the pilot's own smoothed effect size). Full narrative:
+`results/README.md` (v8). Current recommendation: **N=30 seeds/arm** — chosen for
+knee-location precision (Wilson-bound reasoning), not the mechanically-smallest N that clears
+80% detection power (which was a misleadingly small N=5, correctly rejected in the report itself
+rather than acted on).
+
+**Still stopping here — this is a proposal, not a lock.** Do not run the actual confirmatory
+β-sweep at N=30 (or any N) without Rahul explicitly signing off first, and do not treat the
+pilot's own observed shape (a sharp step between β=0.5 and β=0.75) as established — it's a
+20-seed observation offered as a reason to be interested in the real result, not a preview of
+it. Once Rahul signs off on N and the grid: (1) write a short pre-registration note (grid, N,
+test, alpha, the two control arms from Increment 2) as a new committed file, e.g.
+`no_way_home/PREREGISTRATION_INCREMENT3.md`, BEFORE running anything at the locked N; (2) run
+the confirmatory sweep on a fresh seed range disjoint from 9000-9019; (3) run the same JT test
+on the real data; (4) write up `results/beta_sweep_v1.md` with the honest result whatever it is.
 
 ## 5. Backlog (not yet broken into atomic TODOs)
 
@@ -148,8 +158,11 @@ result.
 | `policies.py` | Scripted policies (ZI, heuristics, oracle). `zero_intelligence_constrained` is now also `CANDIDATES["E_zero_intelligence_constrained"]`, reused as-is, zero adapter code. |
 | `learning.py` | `TabularQMandateLearner` — the one learning agent so far. |
 | `metrics.py` | Pure functions over the event log (`need_shortfall_per_10k`, `mitigation_rate`) — I-11 discipline: metrics are reproducible from raw events, never computed inline during the run. |
+| `stats.py` | From-scratch, validated Jonckheere-Terpstra test (`jonckheere_terpstra_test`). No library provides this. Use this, don't re-derive or hand-roll another one. |
+| `run_pilot_beta_sweep.py` | Non-confirmatory pilot (seeds 9000-9019). Do not reuse those seeds for the real Increment 3 run. |
+| `run_power_calculation.py` | Monte Carlo power/precision calc feeding the N recommendation (currently N=30, unsigned-off). Re-run if the pilot is ever redone. |
 | `results/README.md` | Hand-maintained narrative index — the honest history, what broke and what fixed it, at every increment. Update this, not just the auto-generated per-run reports, when Increment 3 produces its result. |
-| `tests/test_no_way_home_smoke.py` | 27 tests, growing. |
+| `tests/test_no_way_home_smoke.py`, `tests/test_stats.py` | 27 + 5 tests, growing. |
 
 ## 7. Standing constraints (carried from the rest of Q6, still in force)
 

@@ -193,3 +193,47 @@ evidence, across the existing calibration seeds. Nothing broke, but it was a rea
 not a hypothetical.
 
 Full suite: 27/27 passing.
+
+## v8 — power calculation infrastructure + a pilot sweep (still not the confirmatory result)
+
+Unblocks Increment 3 without skipping its own stated prerequisite (a real power calculation, not
+an assumed N). Three pieces:
+
+**`no_way_home/stats.py`**: a from-scratch Jonckheere-Terpstra ordered-alternative trend test
+(permutation-based null, per `ENVIRONMENT_REDESIGN.md` §3) — no off-the-shelf implementation
+exists in this environment (scipy 1.13.1 has no JT function, nothing like pingouin is installed).
+Validated three ways in `tests/test_stats.py`, not trusted on the formula alone: the two-group
+case matches `scipy.stats.mannwhitneyu` exactly (confirmed empirically which argument order scipy
+uses, rather than assumed from memory); Type-I error calibration under pure noise (binary 0/1
+data specifically, since that's what Increment 3 actually feeds it) rejects at ~5%, not
+systematically more or less; and an obvious synthetic monotone trend is detected essentially every
+time. 5/5 passing.
+
+**`no_way_home/run_pilot_beta_sweep.py`**: `instrument_mixed(β)` run directly as a policy (no
+election/mandate gating, matching how `C3b`/`C3c` were compared in `provenance_test_v1.md`) across
+the pre-registered grid, 20 seeds/arm, seeds 9000-9019 (explicitly walled off from ever being
+reused as confirmatory data). **Explicitly not a confirmatory result** — it exists only to get real
+per-arm numbers for the power calculation. The pattern found is genuinely interesting and worth
+being curious about later: F(β) = 0.65, 0.60, 0.50, 0.00, 0.00 for β = 0, 0.25, 0.5, 0.75, 1.0 — a
+sharp step between β=0.5 and β=0.75, not a smooth gradient and not "no partial credit until β=1."
+Traces to the arithmetic directly: at β=0.5 the mixed score for a typical forward-storm signature
+(raw≈0.53, unique≈0.03) lands at ≈0.28, just under the 0.30 threshold — right at a knife's edge, so
+roughly half of storms tip it either way — while at β=0.75 the same storm scores ≈0.16, comfortably
+under regardless of storm strength.
+
+**`no_way_home/run_power_calculation.py`**: Monte Carlo power estimate using the pilot's own
+per-arm rates (Jeffreys-smoothed — `(successes+0.5)/(n+1)`, not the literal 0/20 and 20/20 the
+pilot produced, since plugging in exact 0.0 would make the calculation overconfident about
+something a 20-seed pilot can't actually establish). **The mechanical answer this produces — N=5
+already clears 80% power — is the wrong number to act on**, and is reported as such rather than
+just taken: 80% power only answers "will the JT test detect that *a* trend exists," not "is the
+per-arm estimate precise enough to locate the knee," which is what §3 actually needs reported. A
+second calculation (Wilson 95% upper bound on the true rate given 0 observed successes) shows N=5
+leaves a zero-observed arm consistent with a true rate as high as 43% — uninformative — versus
+~11% at N=30. **Recommendation: N=30 seeds/arm**, matching the existing project convention
+(`provenance_test_v1.md`, `election_test_v1.md`), not the mechanically-smallest N. This is a
+recommendation awaiting Rahul's sign-off, not a locked pre-registration — see
+`ENGINEERING_NWH_PHASE_PLAN.md`.
+
+Full suite (no_way_home-specific): 32/32 passing. Also reconfirmed against the whole Q6 repo's test
+suite (254/254 passing) — this work touches nothing outside `no_way_home/`.
