@@ -9,6 +9,7 @@ should.
 import numpy as np
 import pytest
 
+from no_way_home.channels import CHANNELS, ChannelTag
 from no_way_home.institutions import (
     CANDIDATES,
     EpistemicDelegationInstitution,
@@ -138,6 +139,41 @@ def test_lineage_role_matches_is_forward_exactly():
     assert len(reports) == 1 and len(forwards) == 10, "test setup should produce 1 report + 10 forwards"
     assert all(m.lineage_role == "Initiates" for m in reports)
     assert all(m.lineage_role == "Happens-only" for m in forwards)
+
+
+def test_channel_manipulability_tags_match_environment_redesign():
+    """Regression guard on channels.py's registry itself: an accidental
+    edit (e.g. a typo changing REPORT's manipulability from "signal" to
+    something else) would silently invalidate the audit these tags exist
+    to support, without touching any simulation behavior -- nothing else
+    in the suite would catch it."""
+    assert CHANNELS["blight_exposure"] == ChannelTag(emitter_class="autogenic", manipulability="index")
+    assert CHANNELS["resource_ledger"] == ChannelTag(emitter_class="autogenic", manipulability="cue")
+    assert CHANNELS["report"] == ChannelTag(emitter_class="allogenic", manipulability="signal")
+    assert CHANNELS["forward"] == ChannelTag(emitter_class="allogenic", manipulability="index-of-a-claim")
+
+
+def test_blight_exposure_index_channel_is_invariant_to_policy():
+    """The manipulability invariant itself (ENVIRONMENT_REDESIGN.md §2):
+    blight_exposure is tagged `index` with zero agent write access -- no
+    allogenic (agent-driven) emitter, i.e. no policy's mitigation choice or
+    message-generation code, may influence WorldState.blight_high. Checked
+    structurally, not by re-reading world.py's source: every registered
+    policy's blight_high trajectory for the same seed must be identical,
+    since the only thing that's allowed to set it is step()'s own
+    regime-shift logic. If any policy's own actions ever leaked into the
+    regime signal -- the exact failure this tag exists to rule out -- this
+    test would catch it directly."""
+    assert CHANNELS["blight_exposure"].manipulability == "index"
+    assert CHANNELS["blight_exposure"].emitter_class == "autogenic"
+
+    cfg = WorldConfig(n_ticks=1000, shift_tick=400)
+    reference = [e["blight_high"] for e in run(cfg, POLICIES["never_mitigate"], seed=7).events]
+    assert any(reference), "test setup should actually cross into the high-blight regime"
+
+    for policy_name, policy_fn in POLICIES.items():
+        trajectory = [e["blight_high"] for e in run(cfg, policy_fn, seed=7).events]
+        assert trajectory == reference, policy_name
 
 
 def test_lineage_aware_ignores_a_forward_storm_that_fools_lineage_naive():

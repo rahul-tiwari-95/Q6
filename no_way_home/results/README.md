@@ -109,6 +109,34 @@ learner has the identical blind spot for the identical reason — its state has 
 feature at all, so it can learn WHEN evidence is real but not WHETHER it can currently afford to
 act on it. Adding wealth as a third feature is the natural next step, not a new problem.
 
+## v6 — environment redesign, Increment 1: lineage_role + manipulability tags (schema only)
+
+First increment of the redesign proposed in `../ENVIRONMENT_REDESIGN.md` (research sweep +
+two independent designs + adversarial critique + synthesis, approved 2026-08-08). Deliberately
+schema-only — no simulation behavior changes, no new headline number, because the point of
+Increment 1 is turning two implicit conventions into explicit, checkable ones before building
+anything new on top of them.
+
+Two additions: `Message.lineage_role` (`../messages.py`), a derived `@property` returning
+`"Initiates"` for a fresh report or `"Happens-only"` for a forward — computed straight from
+the existing `is_forward` field, zero new state. And `../channels.py`, a small registry
+tagging the four live emitters with a manipulability class (`blight_exposure`=index,
+`resource_ledger`=cue, `report`=signal, `forward`=index-of-a-claim), deliberately not the
+full 8-tuple `Channel` type from the redesign doc — that's parked until there's a concrete
+reason to need it.
+
+The one substantive check this increment adds:
+`test_blight_exposure_index_channel_is_invariant_to_policy` verifies, structurally rather
+than by re-reading source, that `blight_exposure`'s `index` tag (zero agent write access) is
+actually true — every registered policy produces an identical `blight_high` trajectory for
+the same seed, confirming no policy's mitigation choice or message-generation code has ever
+leaked into the regime signal. Before this increment that was true only because nobody had
+broken it yet; now it's a checked invariant. Verified directly via grep first (`world.py`
+only ever writes `blight_high` in `WorldState.initial()` and `step()`'s own regime-shift
+logic) and then confirmed at runtime across all policies.
+
+Full suite: 19/19 passing.
+
 ## Not yet built
 
 The learner above is tested standalone, not yet wired into the ballot/election institution from
@@ -119,3 +147,8 @@ localities). No randomized shift timing (still a fixed tick, not drawn from a he
 audit/removal/early-replacement mechanism (elections are only ever the scheduled kind). Each is a
 reasonable next increment; none should be skipped to reach the next thing faster than what's
 already built has been shown to warrant it.
+
+Redesign-specific: the β-mixed lineage instrument, its two required control arms (bounded-decay
+EMA with no lineage info; a ZI-constrained ballot candidate), and the pre-registered dose-response
+experiment (Increments 2-3), plus the `CORROBORATION` channel (Increment 4, contingent on
+Increment 3's result). Full detail and current status: `../ENGINEERING_NWH_PHASE_PLAN.md`.
