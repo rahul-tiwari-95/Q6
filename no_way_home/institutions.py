@@ -37,6 +37,7 @@ import numpy as np
 
 from no_way_home.messages import MessageLog
 from no_way_home.metrics import need_shortfall_per_10k
+from no_way_home.policies import zero_intelligence_constrained
 from no_way_home.world import WorldConfig, WorldState
 
 InstrumentFn = Callable[[WorldState, np.random.Generator], bool]
@@ -61,11 +62,46 @@ def instrument_cautious(state: WorldState, rng: np.random.Generator) -> bool:
     return rate > 0.60  # double the responsive threshold -- waits for stronger evidence
 
 
+def mixed_score(state: WorldState, beta: float, window: int = 30) -> float:
+    """score_beta(state) = (1-beta)*raw_message_rate + beta*unique_origin_rate,
+    per ENVIRONMENT_REDESIGN.md §3. beta=0 reduces exactly to raw counting
+    (instrument_responsive_naive's signal), beta=1 exactly to unique-origin
+    counting (instrument_responsive's signal) -- both rate functions already
+    exist in messages.py, this only interpolates between them."""
+    raw = state.messages.raw_message_rate(current_tick=state.tick + 1, window=window)
+    unique = state.messages.unique_origin_rate(current_tick=state.tick + 1, window=window)
+    return (1.0 - beta) * raw + beta * unique
+
+
+def instrument_mixed(beta: float, threshold: float = 0.30) -> InstrumentFn:
+    """Factory for the beta-sweep instrument (ENVIRONMENT_REDESIGN.md §3):
+    mitigate iff mixed_score(state, beta) > threshold. window=30 and
+    threshold=0.30 are the same values instrument_responsive /
+    instrument_responsive_naive already use -- reused verbatim, not
+    re-tuned, so building this instrument doesn't quietly turn into a
+    hyperparameter search. The actual pre-registered beta grid
+    ({0, 0.25, 0.5, 0.75, 1.0}) and whether these get wired into CANDIDATES
+    as named election candidates is Increment 3's decision, not this one --
+    this factory is infrastructure only."""
+    if not 0.0 <= beta <= 1.0:
+        raise ValueError(f"beta must be in [0, 1], got {beta}")
+
+    def instrument(state: WorldState, rng: np.random.Generator) -> bool:
+        return mixed_score(state, beta) > threshold
+
+    return instrument
+
+
 CANDIDATES: dict[str, InstrumentFn] = {
     "A_responsive": instrument_responsive,
     "B_responsive_naive": instrument_responsive_naive,
     "C_constant_spender": instrument_constant_spender,
     "D_cautious": instrument_cautious,
+    # Second required control arm for Increment 3's beta-sweep experiment
+    # (ENVIRONMENT_REDESIGN.md §3): has no beta-knob and no rate threshold
+    # at all, so it structurally cannot produce a dose-response curve --
+    # this is what makes the sweep's question unanswerable by ZI alone.
+    "E_zero_intelligence_constrained": zero_intelligence_constrained,
 }
 
 

@@ -88,3 +88,23 @@ class MessageLog:
         """Lineage-aware count: dedupe by origin_id first."""
         recent = [m for m in self.messages if current_tick - window <= m.tick < current_tick]
         return len({m.origin_id for m in recent}) / window
+
+    def bounded_decay_rate(self, current_tick: int, half_life: float, floor: float, ceiling: float) -> float:
+        """Zero-lineage-info control arm (ENVIRONMENT_REDESIGN.md §3): every
+        raw message -- REPORT or FORWARD, no origin_id dedup anywhere in
+        this function -- contributes 2**(-age/half_life) to a running
+        total, age = current_tick - message.tick, then the total is clipped
+        to [floor, ceiling]. This is the MAX-MIN Ant System bounded-trace-
+        weight pattern (Stutzle & Hoos): independent confirmation that
+        clipped/decayed counting alone is a generic stigmergic-medium
+        stabilizer, not something specific to lineage awareness. Exists so
+        Increment 3's beta-sweep can rule out "any bounded counting helps"
+        as a confound for "lineage-aware counting helps" -- this function
+        must never look at origin_id, or it stops being a control."""
+        total = 0.0
+        for m in self.messages:
+            age = current_tick - m.tick
+            if age < 0:
+                continue
+            total += 2.0 ** (-age / half_life)
+        return max(floor, min(ceiling, total))

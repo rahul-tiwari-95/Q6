@@ -148,7 +148,48 @@ audit/removal/early-replacement mechanism (elections are only ever the scheduled
 reasonable next increment; none should be skipped to reach the next thing faster than what's
 already built has been shown to warrant it.
 
-Redesign-specific: the β-mixed lineage instrument, its two required control arms (bounded-decay
-EMA with no lineage info; a ZI-constrained ballot candidate), and the pre-registered dose-response
-experiment (Increments 2-3), plus the `CORROBORATION` channel (Increment 4, contingent on
-Increment 3's result). Full detail and current status: `../ENGINEERING_NWH_PHASE_PLAN.md`.
+Redesign-specific: the pre-registered dose-response experiment itself (Increment 3), plus the
+`CORROBORATION` channel (Increment 4, contingent on Increment 3's result). Full detail and
+current status: `../ENGINEERING_NWH_PHASE_PLAN.md`.
+
+## v7 — environment redesign, Increment 2: the β-instrument and its two control arms
+
+Second increment of the redesign (`../ENVIRONMENT_REDESIGN.md`). Still infrastructure, not the
+experiment itself — Increment 3 is where the actual dose-response result gets produced. Three
+additions:
+
+`institutions.py::mixed_score(state, beta, window)` and `instrument_mixed(beta, threshold)` — a
+factory implementing `score = (1-beta)*raw_message_rate + beta*unique_origin_rate`, reusing the
+existing `window=30`/`threshold=0.30` verbatim. Checked two ways: a direct arithmetic match
+against manual interpolation at each pre-registered β (0, 0.25, 0.5, 0.75, 1.0) on a log where raw
+and unique genuinely differ, and a behavioral check that β=0 and β=1 produce bitwise the same
+mitigate/no-mitigate decision as the two existing instruments across three distinct log shapes.
+
+`messages.py::MessageLog.bounded_decay_rate(current_tick, half_life, floor, ceiling)` — the first
+required control arm: an exponentially-decayed, floor/ceiling-clipped raw message count (MAX-MIN
+Ant System pattern) that never looks at `origin_id`. The test that matters most here:
+`test_bounded_decay_rate_carries_zero_lineage_information` confirms it scores a forward storm and
+an equal volume of independent reports identically — if it didn't, it would secretly be
+lineage-aware and would stop being a valid control for "does any bounded counting help, not
+specifically lineage."
+
+`institutions.py::CANDIDATES["E_zero_intelligence_constrained"]` — the second required control
+arm, wrapping the existing `policies.py::zero_intelligence_constrained` with zero adapter code
+(its signature already matched `InstrumentFn` exactly). Has no β-knob and no rate threshold, so it
+structurally cannot produce a dose-response curve, which is what makes the β-sweep question
+unanswerable by a ZI baseline alone.
+
+**A latent assumption checked, not just assumed, while adding the fifth candidate**: the existing
+`test_reactive_mandate_ablation_matches_hardcoded_baseline_exactly` (v4) only holds a clean
+0-mismatch guarantee because its winning candidate, `A_responsive`, decides from state alone and
+never touches `rng` — so it doesn't matter that the reactive institution's periodic elections
+consume extra draws from the policy RNG stream that a hardcoded-best baseline never consumes. The
+new ZI-constrained candidate DOES call `rng` every tick. If calibration had picked it as best, that
+ablation test's guarantee would likely have broken for a reason unrelated to term-commitment length
+— the exact thing it exists to isolate. Verified directly rather than assumed
+(`test_adding_zero_intelligence_control_does_not_change_which_candidate_is_best`): the random,
+constrained-only candidate does not out-qualify a threshold instrument that actually reads the
+evidence, across the existing calibration seeds. Nothing broke, but it was a real thing to check,
+not a hypothetical.
+
+Full suite: 27/27 passing.

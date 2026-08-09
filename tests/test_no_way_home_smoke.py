@@ -14,6 +14,10 @@ from no_way_home.institutions import (
     CANDIDATES,
     EpistemicDelegationInstitution,
     calibrate_public_qualification,
+    instrument_mixed,
+    instrument_responsive,
+    instrument_responsive_naive,
+    mixed_score,
 )
 from no_way_home.learning import RATE_BINS, TabularQMandateLearner, feature_raw_rate, feature_unique_rate
 from no_way_home.messages import MessageLog
@@ -112,6 +116,65 @@ def test_raw_vs_unique_message_rate_distinguishes_copies_from_independent_report
     # raw rate is roughly the same order of magnitude for both -- that's the
     # whole point, a naive counter can't tell them apart
     assert copies.raw_message_rate(6, 10) > copies.unique_origin_rate(6, 10) * 5
+
+
+def test_bounded_decay_rate_carries_zero_lineage_information():
+    """The defining property of the first Increment 3 control arm
+    (ENVIRONMENT_REDESIGN.md §3): bounded_decay_rate must NOT distinguish a
+    forward storm from an equal volume of independent reports, because it
+    never looks at origin_id. If it did distinguish them, it would secretly
+    be lineage-aware and would stop being a valid control for "does any
+    bounded/decayed counting help, not specifically lineage." Reuses the
+    same independent-vs-copies construction as
+    test_raw_vs_unique_message_rate_distinguishes_copies_from_independent_reports,
+    which is exactly the fixture pair this property needs to be checked
+    against."""
+    independent = MessageLog()
+    for loc in range(11):
+        independent.report(tick=5, locality=loc % 4)
+
+    copies = MessageLog()
+    copies.report(tick=5, locality=0)
+    rng = np.random.default_rng(0)
+    for _ in range(10):
+        copies.maybe_forward(tick=5, rng=rng, hub_locality=None, hub_forward_boost=1.0)
+
+    # unique_origin_rate sees these as very different (11 vs 1 unique origins) --
+    # that's the whole point of lineage-awareness, confirmed already above.
+    assert independent.unique_origin_rate(6, 10) != pytest.approx(copies.unique_origin_rate(6, 10))
+
+    # bounded_decay_rate must see them as the same: both logs have 11
+    # messages, all at tick 5, so both should decay identically regardless
+    # of how many distinct origin_ids are behind them.
+    independent_decay = independent.bounded_decay_rate(6, half_life=15, floor=0.0, ceiling=100.0)
+    copies_decay = copies.bounded_decay_rate(6, half_life=15, floor=0.0, ceiling=100.0)
+    assert independent_decay == pytest.approx(copies_decay)
+
+
+def test_bounded_decay_rate_decays_with_age_by_exact_half_life():
+    """Direct arithmetic check on the decay formula itself, not just a
+    qualitative comparison: a single message's contribution must be exactly
+    0.5 one half-life after it was sent, and exactly 0.25 two half-lives
+    after -- pytest.approx, not just 'smaller than before'."""
+    log = MessageLog()
+    log.report(tick=0, locality=0)
+    assert log.bounded_decay_rate(0, half_life=15, floor=0.0, ceiling=10.0) == pytest.approx(1.0)
+    assert log.bounded_decay_rate(15, half_life=15, floor=0.0, ceiling=10.0) == pytest.approx(0.5)
+    assert log.bounded_decay_rate(30, half_life=15, floor=0.0, ceiling=10.0) == pytest.approx(0.25)
+
+
+def test_bounded_decay_rate_is_bounded():
+    """The 'bounded' half of bounded-decay (MAX-MIN Ant System pattern):
+    a message flood must not push the rate above ceiling, and an empty log
+    must sit exactly at floor -- not just 'low', exactly floor, since floor
+    is a real clip, not an asymptote."""
+    log = MessageLog()
+    assert log.bounded_decay_rate(100, half_life=15, floor=0.2, ceiling=5.0) == pytest.approx(0.2)
+
+    flood = MessageLog()
+    for loc in range(500):
+        flood.report(tick=100, locality=loc % 4)
+    assert flood.bounded_decay_rate(100, half_life=15, floor=0.0, ceiling=5.0) == pytest.approx(5.0)
 
 
 def test_lineage_role_matches_is_forward_exactly():
@@ -221,6 +284,117 @@ def test_zero_intelligence_constrained_never_exceeds_wealth():
     state = run(cfg, POLICIES["C2_zero_intelligence_constrained"], seed=0)
     for e in state.events:
         assert e["wealth"] >= 0 - 1e-9
+
+
+def test_mixed_score_matches_manual_interpolation_at_preregistered_betas():
+    """Direct arithmetic check on mixed_score's formula, not just its
+    threshold-crossing behavior: at each point on the pre-registered beta
+    grid (ENVIRONMENT_REDESIGN.md §3), the score must equal the manual
+    (1-beta)*raw + beta*unique computation exactly (pytest.approx), using a
+    log where raw and unique genuinely differ (a forward storm) -- on a log
+    where they're equal, every beta would trivially "match" even a broken
+    formula."""
+    cfg = WorldConfig()
+    state = WorldState.initial(cfg)
+    state.tick = 29
+    state.messages.report(tick=5, locality=0)
+    rng = np.random.default_rng(0)
+    for _ in range(15):
+        state.messages.maybe_forward(tick=6, rng=rng, hub_locality=None, hub_forward_boost=1.0)
+
+    raw = state.messages.raw_message_rate(state.tick + 1, MESSAGE_WINDOW)
+    unique = state.messages.unique_origin_rate(state.tick + 1, MESSAGE_WINDOW)
+    assert raw != pytest.approx(unique), "test setup should make raw and unique genuinely differ"
+
+    for beta in (0.0, 0.25, 0.5, 0.75, 1.0):
+        expected = (1.0 - beta) * raw + beta * unique
+        assert mixed_score(state, beta, window=MESSAGE_WINDOW) == pytest.approx(expected)
+
+
+def test_instrument_mixed_beta_endpoints_match_existing_instruments_exactly():
+    """instrument_mixed is meant to interpolate BETWEEN the two existing
+    threshold instruments, not add new behavior at its endpoints
+    (ENVIRONMENT_REDESIGN.md §3: beta=0 is exactly instrument_responsive_naive,
+    beta=1 is exactly instrument_responsive). Checked across three distinct
+    message-log shapes -- independent reports, a forward storm, and a quiet
+    log -- not just one hand-picked case, since a formula that happens to
+    agree on a single state could still diverge on others."""
+    rng = np.random.default_rng(0)
+    cfg = WorldConfig()
+
+    def independent_reports_state():
+        state = WorldState.initial(cfg)
+        state.tick = 29
+        for loc in range(10):
+            state.messages.report(tick=5, locality=loc % cfg.n_localities)
+        return state
+
+    def forward_storm_state():
+        state = WorldState.initial(cfg)
+        state.tick = 29
+        state.messages.report(tick=5, locality=0)
+        for _ in range(15):
+            state.messages.maybe_forward(tick=6, rng=rng, hub_locality=None, hub_forward_boost=1.0)
+        return state
+
+    def quiet_state():
+        return WorldState.initial(cfg)
+
+    beta0 = instrument_mixed(0.0)
+    beta1 = instrument_mixed(1.0)
+    for build_state in (independent_reports_state, forward_storm_state, quiet_state):
+        state = build_state()
+        assert beta0(state, rng) == instrument_responsive_naive(state, rng)
+        assert beta1(state, rng) == instrument_responsive(state, rng)
+
+
+def test_instrument_mixed_rejects_beta_outside_unit_interval():
+    """Cheap input-validation guard: beta is meant to be read as a mixing
+    weight between two rates (ENVIRONMENT_REDESIGN.md §3's pre-registered
+    grid is entirely within [0, 1]) -- silently accepting beta=2.0 would
+    produce a 'score' with no defensible interpretation, so this should
+    fail loudly instead."""
+    with pytest.raises(ValueError):
+        instrument_mixed(1.5)
+    with pytest.raises(ValueError):
+        instrument_mixed(-0.1)
+
+
+def test_zero_intelligence_constrained_control_candidate_gets_a_real_calibration_score():
+    """Second required control arm for Increment 3 (ENVIRONMENT_REDESIGN.md
+    §3): E_zero_intelligence_constrained must be present in CANDIDATES and
+    calibrate cleanly like every other candidate -- a real, finite,
+    non-nan mean need-shortfall, not a crash or a placeholder. This
+    candidate has no beta-knob and no rate threshold, so unlike the other
+    four it structurally cannot produce a dose-response curve -- that
+    absence is the whole point of including it, not a gap to fill."""
+    assert "E_zero_intelligence_constrained" in CANDIDATES
+    cfg = WorldConfig()
+    scores = calibrate_public_qualification(cfg, list(range(1000, 1003)), mandate_window=30, mandate_threshold=0.10)
+    assert "E_zero_intelligence_constrained" in scores
+    score = scores["E_zero_intelligence_constrained"]
+    assert score == score, "score must not be NaN"  # NaN != NaN
+    assert score >= 0.0
+
+
+def test_adding_zero_intelligence_control_does_not_change_which_candidate_is_best():
+    """Honest check on a latent assumption this addition could have broken
+    silently: test_reactive_mandate_ablation_matches_hardcoded_baseline_exactly
+    only holds a clean 0-mismatch guarantee because the winning candidate
+    (A_responsive) makes its decision from state alone and never calls
+    rng -- so it doesn't matter that the reactive institution's periodic
+    elections consume extra draws from the policy rng stream that a
+    hardcoded-best baseline never consumes. E_zero_intelligence_constrained
+    DOES call rng every tick, so if it had become the qualification winner,
+    that ablation test's mismatches==0 guarantee would likely have broken
+    for a reason unrelated to term-commitment length -- the thing it's
+    supposed to isolate. Checked directly rather than assumed: the random,
+    constrained-only candidate should never out-qualify a threshold
+    instrument that actually reads the evidence."""
+    cfg = WorldConfig()
+    scores = calibrate_public_qualification(cfg, list(range(1000, 1005)), mandate_window=30, mandate_threshold=0.10)
+    best = min(scores, key=scores.get)
+    assert best != "E_zero_intelligence_constrained"
 
 
 def test_election_reliably_selects_the_true_best_candidate():
