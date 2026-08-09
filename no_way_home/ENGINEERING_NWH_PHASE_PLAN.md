@@ -6,8 +6,8 @@ pick up work cold. Keep it current: whoever completes a TODO item updates this f
 same commit that completes the work, not as a separate cleanup pass later.*
 
 Branch: `no-way-home`. Worktree: `/Users/rahul/Q6-nwh`. Last verified against the repo at
-commit `ef31628` (2026-08-08): `no_way_home/` is 1,138 lines across 9 modules, 16 tests
-passing in `tests/test_no_way_home_smoke.py`.
+commit `af4c313` (2026-08-08): `no_way_home/` is 9 modules, 17 tests passing in
+`tests/test_no_way_home_smoke.py`.
 
 ---
 
@@ -86,15 +86,13 @@ groupings sit here unbroken; break the next increment into atomic tasks the same
 Increment 1 is broken out below before adding it here. If mid-work you discover the next
 atomic step isn't obvious, that's a signal to stop and ask Rahul rather than guessing.*
 
-1. **Add `lineage_role` as a derived property on `messages.py::Message`.**
-   `Initiates` when `is_forward is False` (a report always initiates its own origin_id);
-   `Happens-only` when `is_forward is True`. This is a derived property over the existing
-   `is_forward` field — zero behavior change, zero new state. Acceptance: a test asserting
-   `lineage_role` is `Happens-only` for every message with `is_forward=True` and
-   `Initiates` for every message with `is_forward=False`, across the existing message log
-   fixtures — not a new fixture, reuse what `test_no_way_home_smoke.py` already builds.
+**Recently completed:** `lineage_role` derived property on `messages.py::Message`
+(2026-08-08) — `@property` returning `"Happens-only"` iff `is_forward` else `"Initiates"`,
+zero new state, locked in by `test_lineage_role_matches_is_forward_exactly`. Full narrative
+in `results/README.md` once Increment 1 finishes; see git log on `no-way-home` for the exact
+commit in the meantime.
 
-2. **Tag the four live emitters with a `manipulability` class.** Blight state = `index`
+1. **Tag the four live emitters with a `manipulability` class.** Blight state = `index`
    (zero agent write access — nothing in the current codebase writes to `state.blight_high`
    except `step()`'s own regime-shift logic, verify this with a grep before tagging).
    Resource ledger (`wealth`/`food_stock`/`medicine_stock`) = `cue`. `REPORT` = `signal`.
@@ -103,17 +101,19 @@ atomic step isn't obvious, that's a signal to stop and ask Rahul rather than gue
    abstraction layer; resist the urge to build the full 8-tuple `Channel` type from §2, it's
    explicitly out of scope until there's a reason to need it (see §5's parked list).
 
-3. **Add the manipulability invariant test.** Assert zero events in the log where an
+2. **Add the manipulability invariant test.** Assert zero events in the log where an
    `allogenic` emitter (agent-driven: `REPORT`, `FORWARD`) write to an `index`-tagged
    channel (`blight_high`). Concretely: no code path lets a policy or message-generation
    function mutate `state.blight_high` — this should currently pass trivially, which is
    fine; the point is making it a checked invariant instead of an accident of how the code
    happens to be organized, so a future change can't silently violate it.
 
-Together these three are Increment 1 from `ENVIRONMENT_REDESIGN.md` §4 (est. 1-2 days),
-broken into atomic units. None of them change simulation behavior — this increment is
-schema-only. Run the existing suite (`python3 -m pytest tests/test_no_way_home_smoke.py -q`)
-after all three land and confirm still 16 (or 16+N new) passing before committing.
+These two, plus the completed `lineage_role` item above, are Increment 1 from
+`ENVIRONMENT_REDESIGN.md` §4 (est. 1-2 days), broken into atomic units. None of them change
+simulation behavior — this increment is schema-only. Run the existing suite
+(`python3 -m pytest tests/test_no_way_home_smoke.py -q`) after both land and confirm all
+tests still passing before committing. Once both are done, pull Increment 2's first atomic
+task from §5 to bring this list back to 3.
 
 ## 5. Backlog (not yet broken into atomic TODOs)
 

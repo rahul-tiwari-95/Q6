@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from itertools import count
+from typing import Literal
 
 import numpy as np
 
@@ -23,12 +24,25 @@ def _next_origin_id() -> int:
     return next(_origin_id_counter)
 
 
+LineageRole = Literal["Initiates", "Happens-only"]
+
+
 @dataclass
 class Message:
     tick: int
     origin_id: int          # shared by a REPORT and every FORWARD of it
     locality: int            # where the ORIGINAL report came from
     is_forward: bool
+
+    @property
+    def lineage_role(self) -> LineageRole:
+        """Event Calculus framing (Kowalski & Sergot 1986), per
+        ENVIRONMENT_REDESIGN.md §2: a REPORT Initiates a fresh evidential
+        fluent (a brand-new origin_id); a FORWARD only Happens relative to
+        one that already exists and creates no new evidence. Derived
+        directly from is_forward -- the field this generalizes -- so this is
+        zero new state and zero behavior change, only a named invariant."""
+        return "Happens-only" if self.is_forward else "Initiates"
 
 
 @dataclass

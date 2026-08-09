@@ -113,6 +113,33 @@ def test_raw_vs_unique_message_rate_distinguishes_copies_from_independent_report
     assert copies.raw_message_rate(6, 10) > copies.unique_origin_rate(6, 10) * 5
 
 
+def test_lineage_role_matches_is_forward_exactly():
+    """Increment 1 of ENVIRONMENT_REDESIGN.md: lineage_role is a derived
+    property, not new state, so it must never disagree with is_forward --
+    every REPORT (is_forward=False) Initiates a fresh lineage, every FORWARD
+    (is_forward=True) is Happens-only. Reuses the same independent-reports-
+    vs-forwarded-copies construction as
+    test_raw_vs_unique_message_rate_distinguishes_copies_from_independent_reports
+    rather than a new fixture, since that's already the canonical way this
+    suite builds a log with both message kinds present."""
+    independent = MessageLog()
+    for loc in range(10):
+        independent.report(tick=5, locality=loc)
+    assert len(independent.messages) == 10
+    assert all(m.lineage_role == "Initiates" for m in independent.messages)
+
+    copies = MessageLog()
+    copies.report(tick=5, locality=0)
+    rng = np.random.default_rng(0)
+    for _ in range(10):
+        copies.maybe_forward(tick=5, rng=rng, hub_locality=None, hub_forward_boost=1.0)
+    reports = [m for m in copies.messages if not m.is_forward]
+    forwards = [m for m in copies.messages if m.is_forward]
+    assert len(reports) == 1 and len(forwards) == 10, "test setup should produce 1 report + 10 forwards"
+    assert all(m.lineage_role == "Initiates" for m in reports)
+    assert all(m.lineage_role == "Happens-only" for m in forwards)
+
+
 def test_lineage_aware_ignores_a_forward_storm_that_fools_lineage_naive():
     """Constructed, deterministic version of what the full-world runs found
     empirically (results/provenance_test_v1.md): a single report, forwarded
