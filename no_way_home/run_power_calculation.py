@@ -34,7 +34,7 @@ from no_way_home.stats import jonckheere_terpstra_test
 PILOT_SUCCESSES = [13, 12, 10, 0, 0]
 PILOT_N = 20
 
-CANDIDATE_NS = [5, 8, 10, 12, 15, 20, 25, 30]
+CANDIDATE_NS = [5, 8, 10, 12, 15, 20, 25, 30, 40, 50]
 N_REPLICATES = 500
 N_PERMUTATIONS_PER_REPLICATE = 999
 ALPHA = 0.05
@@ -115,14 +115,19 @@ def main() -> None:
                  f"this precision table are answering two different questions, and only the second "
                  f"one is close to what Increment 3 actually needs to report.")
 
-    lines.append(f"\n## Recommendation\n")
-    lines.append(f"**Not N={recommended_n}.** Recommend N=30 seeds/arm: matches the existing "
-                 f"project convention (provenance_test_v1.md, election_test_v1.md both use 30), "
-                 f"clears detection power with enormous margin (>99% against the pilot's smoothed "
-                 f"effect size), and gets the Wilson upper bound on a zero-observed arm down to "
-                 f"~11% -- still not razor-precise, but a defensible basis for a knee-location "
-                 f"claim, unlike N=5-10. This is a recommendation for Rahul's sign-off, not a "
-                 f"locked pre-registration.")
+    lines.append(f"\n## Decision\n")
+    lines.append(f"**Not N={recommended_n}.** Rahul signed off on **N=50 seeds/arm**, past the "
+                 f"initial N=30 suggestion, specifically for tighter precision on the "
+                 f"knee-location given how sharp the pilot's step-function shape looked (a hunch "
+                 f"worth respecting: a genuinely sharp transition is exactly the case where you "
+                 f"want enough resolution to trust *where* it sits, not just that it exists). "
+                 f"N=50 clears detection power with overwhelming margin against the pilot's "
+                 f"smoothed effect size, and gets the Wilson upper bound on a zero-observed arm "
+                 f"down to the value in the table above for N=50. Locked in "
+                 f"PREREGISTRATION_INCREMENT3.md -- this script's own recommendation logic above "
+                 f"is left as-is (mechanical smallest-N and the precision table) since it's "
+                 f"useful context, but the actual decision is N=50, not whatever this function "
+                 f"would output on its own.")
 
     lines.append(f"\n**Honest caveats**: (1) this is a power/precision calculation against the "
                  f"PILOT's own observed effect size, not a hypothesis-free calculation -- if the "
