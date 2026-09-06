@@ -67,6 +67,7 @@ Historical summaries are not a complete artifact archive: many referenced CSV fi
 
 - [Contribution guide](CONTRIBUTING.md): fast and full test commands, experiment template, and reproducibility requirements.
 - [Documentation index](docs/README.md) and [roadmap](docs/roadmap.md): current scope and criteria for the next experiment.
+- [Preview validation](docs/validation/2026-09-06.md): test coverage, CI, artifact integrity, and the recorded runtime.
 - [Training supervisor](orchestrator/README.md): local job logging, crash restart, and resume conventions.
 - [Citation metadata](CITATION.cff): cite the repository and the exact revision/artifact used.
 
