@@ -180,7 +180,13 @@ def collect_support(config, data, transitions, output, *, episodes_per_map=16, d
 
 def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_maps=256, fresh_maps=64,
               train_seed_start=300000, fresh_seed_start=950000, max_seconds=1200, max_rss_bytes=4 * 1024**3,
-              dashboard=None, prior_dir=None, supervised_dir=None, collection_episodes_per_map=16, smoke=False, checkpoints=None):
+              dashboard=None, prior_dir=None, supervised_dir=None, collection_episodes_per_map=16, smoke=False, checkpoints=None, _comparison=None):
+    # A private strategy supplies support selection and provenance for closely
+    # related studies; optimizer, evaluation and admission logic stay shared.
+    conditions = _comparison.conditions if _comparison else CONDITIONS
+    replication_condition = _comparison.replication_condition if _comparison else "exhaustive"
+    archive_condition = _comparison.archive_condition if _comparison else "double_dqn"
+    replication_key = _comparison.replication_key if _comparison else "exhaustive_replication"
     started = time.monotonic()
     output, protocol_file = Path(output), Path(protocol_file)
     prior_dir = Path(prior_dir) if prior_dir is not None else ROOT / "experiments/fixed_targets/pilot_v1"
@@ -210,7 +216,7 @@ def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_ma
                   train_seed_start=train_seed_start, fresh_seed_start=fresh_seed_start, max_seconds=max_seconds,
                   max_rss_bytes=max_rss_bytes, checkpoints=schedule, collection_episodes_per_map=collection_episodes_per_map)
     declared = dict(seeds=[0, 1, 2], updates=30000, train_maps=256, fresh_maps=64, train_seed_start=300000,
-                    fresh_seed_start=950000, max_seconds=1200, max_rss_bytes=4 * 1024**3, checkpoints=list(CHECKPOINTS), collection_episodes_per_map=16)
+                    fresh_seed_start=_comparison.fresh_seed_start if _comparison else 950000, max_seconds=1200, max_rss_bytes=4 * 1024**3, checkpoints=list(CHECKPOINTS), collection_episodes_per_map=16)
     deviations = [{"field": k, "actual": v, "declared": declared[k]} for k, v in actual.items() if v != declared[k]]
     if not runtime["python"].startswith("3.12.") or runtime["torch"].split("+")[0] != "2.8.0" or runtime["numpy"] != "2.0.2":
         deviations.append({"field": "runtime", "actual": runtime, "declared": "Python3.12/Torch2.8.0/NumPy2.0.2"})
@@ -240,6 +246,8 @@ def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_ma
             "successor_access": "full training bank for detached queries; outside-support successors never enter current-state support"},
         "evaluation": {"greedy_repetitions": 1, "epsilon_0_1_repetitions": 2,
             "rng": "competence.evaluation_draws excludes condition/checkpoint", "tie_atol": TIE_ATOL, "tie_rtol": 0}}
+    if _comparison:
+        _comparison.configure_protocol(protocol)
     output.mkdir(parents=True, exist_ok=True)
     (output / "models").mkdir(exist_ok=True)
     write_json(output / "protocol.json", protocol)
@@ -250,23 +258,27 @@ def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_ma
         shutil.copy2(path, destination)
     packages = sorted({f"{d.metadata['Name']}=={d.version}" for d in importlib.metadata.distributions() if d.metadata.get("Name")})
     (output / "environment.txt").write_text("\n".join(packages) + "\n")
-    command = ["python", "-m", "q6.coverage", "--output", str(output), "--protocol-file", str(protocol_file),
+    command = ["python", "-m", _comparison.module if _comparison else "q6.coverage", "--output", str(output), "--protocol-file", str(protocol_file),
         "--prior-dir", artifact_path(prior_dir), "--supervised-dir", artifact_path(supervised_dir),
         "--collection-episodes-per-map", str(collection_episodes_per_map), "--seeds", ",".join(map(str, seeds)), "--updates", str(updates),
         "--train-maps", str(train_maps), "--fresh-maps", str(fresh_maps), "--train-seed-start", str(train_seed_start),
         "--fresh-seed-start", str(fresh_seed_start), "--max-seconds", str(max_seconds), "--max-rss-bytes", str(max_rss_bytes),
         "--checkpoints", ",".join(map(str, schedule))]
+    if _comparison:
+        command.extend(_comparison.command_args())
     if smoke:
         command.append("--smoke")
     (output / "command.txt").write_text(shlex.join(command) + "\n# Reproduction needs a new output path.\n")
     provenance = {"archive": artifact_path(prior_dir), "files": {name: sha(prior_dir / name) for name in
         ("dataset.npz", "transitions.npz", "dataset_metadata.json", "sampling.json", "results.json", "protocol.json", "manifest.json")},
-        "archive_initial_policy_hashes": prior_results["run"]["initial_policy_hashes"], "exhaustive_replication": [],
+        "archive_initial_policy_hashes": prior_results["run"]["initial_policy_hashes"], replication_key: [],
         "training_arrays_identical": None, "transition_arrays_identical": None, "earlier_supervised_archive": artifact_path(supervised_dir),
         "earlier_supervised_metadata_sha256": sha(supervised_dir / "dataset_metadata.json"), "replication_required": not smoke and not deviations}
     for name in ("dataset_metadata.json", "sampling.json", "protocol.json"):
         shutil.copy2(prior_dir / name, output / ("prior_" + name))
     shutil.copy2(supervised_dir / "dataset_metadata.json", output / "earlier_supervised_dataset_metadata.json")
+    if _comparison:
+        _comparison.configure_provenance(provenance, output, prior_dir)
     torch.set_num_threads(1)
     torch.use_deterministic_algorithms(True)
     deadline = started + max_seconds
@@ -293,8 +305,12 @@ def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_ma
             phase = time.monotonic()
             try:
                 enforce()
-                selection = select_coverage_layouts(config, protocol["dataset"]["train_map_seeds"], fresh_maps,
-                                                 fresh_seed_start, prior_metadata["heldout"], earlier_metadata["heldout"], deadline)
+                if _comparison:
+                    selection = _comparison.select_layouts(config, protocol["dataset"]["train_map_seeds"], fresh_maps,
+                        fresh_seed_start, prior_metadata["heldout"], earlier_metadata["heldout"], deadline)
+                else:
+                    selection = select_coverage_layouts(config, protocol["dataset"]["train_map_seeds"], fresh_maps,
+                        fresh_seed_start, prior_metadata["heldout"], earlier_metadata["heldout"], deadline)
                 metadata = {"status": "generating", **selection, "complete_panels": [],
                     "enumeration_order": "map selection order, row-major non-wall/non-pellet position, remaining1..32 innermost"}
                 for panel in ("train", "heldout"):
@@ -316,6 +332,9 @@ def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_ma
                     {r["layout_hash"] for r in selection["heldout"]}),
                     "previous_supervised_fresh_layout_intersections": len({r["layout_hash"] for r in earlier_metadata["heldout"]} &
                     {r["layout_hash"] for r in selection["heldout"]})}
+                if _comparison:
+                    metadata["split_check"].pop("previous_fixed_targets_fresh_layout_intersections")
+                    metadata["split_check"].update(_comparison.split_checks(selection, prior_metadata))
                 del train_hashes, fresh_hashes
                 if any(metadata["split_check"].values()):
                     raise ConsistencyError("layout/observation leakage detected")
@@ -338,19 +357,23 @@ def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_ma
                 dataset_seconds += time.monotonic() - phase
             phase = time.monotonic()
             try:
-                coverage, collection_arrays = collect_support(config, data["train"], transitions, output,
-                    episodes_per_map=collection_episodes_per_map, deadline=deadline, enforce=enforce)
-                supports = {"exhaustive": np.arange(len(train_obs), dtype=np.int32),
-                            "collected_unique": collection_arrays["support_indices"]}
+                if _comparison:
+                    coverage, collection_arrays, supports = _comparison.prepare_supports(data["train"], transitions,
+                        output, prior_dir, smoke=smoke, required=provenance["replication_required"], enforce=enforce)
+                else:
+                    coverage, collection_arrays = collect_support(config, data["train"], transitions, output,
+                        episodes_per_map=collection_episodes_per_map, deadline=deadline, enforce=enforce)
+                    supports = {"exhaustive": np.arange(len(train_obs), dtype=np.int32),
+                                "collected_unique": collection_arrays["support_indices"]}
                 if coverage["status"] == "inconsistent_not_gate_evidence":
                     raise ConsistencyError(coverage["stop_reason"])
                 if coverage["status"] != "complete":
                     raise MemoryReached(coverage["stop_reason"]) if coverage["status"] == "incomplete_memory_cap" else BudgetReached(coverage["stop_reason"])
-                if len(supports["collected_unique"]) < 64:
+                if any(len(support) < 64 for support in supports.values()):
                     raise ConsistencyError("configuration failure: collected support cannot supply 64 distinct current states")
             finally:
                 collection_seconds += time.monotonic() - phase
-            for condition in CONDITIONS:
+            for condition in conditions:
                 for seed in seeds:
                     enforce()
                     active_key = (condition, seed)
@@ -424,20 +447,27 @@ def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_ma
                         sf.flush()
                         rates = [np.mean([r["success"] for r in cp_rows if r["panel"] == panel and r["mode"] == "greedy"]) for panel in ("train", "heldout")]
                         print(f"{condition} seed={seed} update={checkpoint}: train={rates[0]:.3f} fresh={rates[1]:.3f}", flush=True)
-                    if condition == "exhaustive":
-                        archive_model = prior_dir / "models" / f"double_dqn_seed{seed}_update30000.pt"
+                    if condition == replication_condition:
+                        archive_model = prior_dir / "models" / f"{archive_condition}_seed{seed}_update30000.pt"
                         check = {"seed": seed, "applicable": provenance["replication_required"], "final_weights_identical": None,
                                  "batch_index_sha256_identical": None, "initial_weights_identical": None}
                         if provenance["replication_required"]:
                             previous = torch.load(archive_model, map_location="cpu", weights_only=True)
                             check.update(archive_model=artifact_path(archive_model), archive_model_sha256=sha(archive_model),
                                 final_weights_identical=agent.parameter_hash() == previous["parameter_hash"],
-                                batch_index_sha256_identical=sampler.digest.hexdigest() == prior_sampling["double_dqn"][str(seed)]["batch_index_sha256"],
-                                initial_weights_identical=initial_hashes[condition][str(seed)] == prior_results["run"]["initial_policy_hashes"]["double_dqn"][str(seed)])
-                            if not all(check[k] for k in ("final_weights_identical", "batch_index_sha256_identical", "initial_weights_identical")):
-                                provenance["exhaustive_replication"].append(check)
-                                raise ConsistencyError("exhaustive arm failed archived deterministic replication")
-                        provenance["exhaustive_replication"].append(check)
+                                batch_index_sha256_identical=sampler.digest.hexdigest() == prior_sampling[archive_condition][str(seed)]["batch_index_sha256"],
+                                initial_weights_identical=initial_hashes[condition][str(seed)] == prior_results["run"]["initial_policy_hashes"][archive_condition][str(seed)])
+                            if _comparison:
+                                check["target_weights_identical"] = module_hash(agent.target) == previous["target_parameter_hash"]
+                                with np.load(prior_dir / "sample_counts.npz") as previous_counts:
+                                    check["global_counts_identical"] = bool(np.array_equal(sampler.counts, previous_counts[f"{archive_condition}_seed{seed}"]))
+                            required_checks = ["final_weights_identical", "batch_index_sha256_identical", "initial_weights_identical"]
+                            if _comparison:
+                                required_checks.extend(("target_weights_identical", "global_counts_identical"))
+                            if not all(check[k] for k in required_checks):
+                                provenance[replication_key].append(check)
+                                raise ConsistencyError(f"{replication_condition} arm failed archived deterministic replication")
+                        provenance[replication_key].append(check)
             phase = time.monotonic()
             try:
                 for policy in ("random_actions", "shortest_path"):
@@ -471,22 +501,31 @@ def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_ma
             "unique_states_sampled": int(np.count_nonzero(sampler.counts)), "batch_index_sha256": sampler.digest.hexdigest(), "global_batch_index_sha256": sampler.digest.hexdigest(),
             "local_batch_index_sha256": sampler.local.digest.hexdigest(), "support_states": len(sampler.support), "rng_seed_tuple": [seed, 66301]}
         live = ~transitions["ends"]
-        visited = collection_arrays["visited_counts"] > 0
+        visited = np.zeros(len(transitions["ends"]), bool) if _comparison else collection_arrays["visited_counts"] > 0
+        if _comparison:
+            visited[supports[condition]] = True
         outside = live & ~visited[np.maximum(transitions["successor_indices"], 0)]
         queries = int(np.dot(sampler.counts.astype(np.uint64), live.sum(axis=1).astype(np.uint64)))
         external = int(np.dot(sampler.counts.astype(np.uint64), outside.sum(axis=1).astype(np.uint64)))
+        prefix = "outside_support" if _comparison else "outside_collected_support"
         samples[condition][str(seed)]["successor_queries"] = {"nonterminal_queries": queries,
-            "outside_collected_support_queries": external, "outside_collected_support_fraction": external / queries if queries else None}
+            prefix + "_queries": external, prefix + "_fraction": external / queries if queries else None}
     provenance["paired_consistency"] = []
     for seed in seeds:
-        a, b = samplers.get(("exhaustive", seed)), samplers.get(("collected_unique", seed))
+        a, b = samplers.get((conditions[0], seed)), samplers.get((conditions[1], seed))
         check = {"seed": seed, "complete": a is not None and b is not None and a.updates == b.updates == updates,
-            "initial_weights_identical": initial_hashes.get("exhaustive", {}).get(str(seed)) == initial_hashes.get("collected_unique", {}).get(str(seed))
+            "initial_weights_identical": initial_hashes.get(conditions[0], {}).get(str(seed)) == initial_hashes.get(conditions[1], {}).get(str(seed))
                 if a is not None and b is not None else None,
             "same_update_count": a.updates == b.updates if a is not None and b is not None else None,
             "same_batch_indices_required": False}
+        required_checks = ["complete", "initial_weights_identical", "same_update_count"]
+        if _comparison:
+            check.update(same_local_batch_indices_required=True,
+                local_batch_index_sha256_identical=a.local.digest.hexdigest() == b.local.digest.hexdigest() if a and b else None,
+                local_per_row_counts_identical=bool(np.array_equal(a.local.counts, b.local.counts)) if a and b else None)
+            required_checks.extend(("local_batch_index_sha256_identical", "local_per_row_counts_identical"))
         provenance["paired_consistency"].append(check)
-        if status == "complete" and not all(check[k] for k in ("complete", "initial_weights_identical", "same_update_count")):
+        if status == "complete" and not all(check[k] for k in required_checks):
             status = "inconsistent_not_gate_evidence"
             provenance["stop_reason"] = "paired initialization or update-count consistency failed"
     np.savez_compressed(output / "sample_counts.npz", **{f"{c}_seed{s}": v.counts for (c, s), v in samplers.items()})
@@ -507,7 +546,7 @@ def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_ma
                 "efficient_success_rate": efficient_rate(rows, planner_steps)
                 if all((r["panel"], r["map_seed"]) in planner_steps for r in rows) else None}
     seed_results, aggregate, state_aggregate, references, loss_aggregate = [], [], [], [], []
-    for condition in CONDITIONS:
+    for condition in conditions:
         for checkpoint in schedule:
             for panel in ("train", "heldout"):
                 for mode in ("greedy", "epsilon_0_1"):
@@ -547,7 +586,7 @@ def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_ma
     eligible = status == "complete" and not smoke and not deviations
     random_fresh = next((r["success_rate"] for r in references if r["policy"] == "random_actions" and r["panel"] == "heldout"), None)
     per_condition = []
-    for condition in CONDITIONS:
+    for condition in conditions:
         gate_rows = []
         for seed in seeds:
             final = {r["panel"]: r for r in seed_results if r["condition"] == condition and r["seed"] == seed and r["checkpoint"] == updates and r["mode"] == "greedy"}
@@ -563,18 +602,18 @@ def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_ma
                 "efficient": bool(eligible and efficient is not None and efficient >= .8)})
         per_condition.append({"condition": condition, "per_seed": gate_rows,
             **{key: all(r[key] for r in gate_rows) for key in ("training_fit", "fresh", "efficient")}})
-    paired = {"direction": "collected_unique minus exhaustive", "scope": "final greedy, matched seed and layout", "per_seed": [], "per_layout": [], "aggregate": []}
+    paired = {"direction": f"{conditions[1]} minus {conditions[0]}", "scope": "final greedy, matched seed and layout", "per_seed": [], "per_layout": [], "aggregate": []}
     final_rows = {(r["condition"], r["seed"], r["panel"], r["map_seed"]): r for r in completed if r["checkpoint"] == updates and r["mode"] == "greedy"}
     for seed in seeds:
         for panel in ("train", "heldout"):
             pair = {r["condition"]: r for r in seed_results if r["seed"] == seed and r["panel"] == panel and r["checkpoint"] == updates and r["mode"] == "greedy"}
-            if set(pair) == set(CONDITIONS):
-                paired["per_seed"].append({"seed": seed, "panel": panel, **{key + "_delta": pair["collected_unique"][key] - pair["exhaustive"][key]
-                    if pair["collected_unique"][key] is not None and pair["exhaustive"][key] is not None else None
+            if set(pair) == set(conditions):
+                paired["per_seed"].append({"seed": seed, "panel": panel, **{key + "_delta": pair[conditions[1]][key] - pair[conditions[0]][key]
+                    if pair[conditions[1]][key] is not None and pair[conditions[0]][key] is not None else None
                     for key in ("success_rate", "mean_steps", "noop_rate", "efficient_success_rate")}})
             for layout in selection.get(panel, []):
-                left = final_rows.get(("exhaustive", seed, panel, layout["map_seed"]))
-                right = final_rows.get(("collected_unique", seed, panel, layout["map_seed"]))
+                left = final_rows.get((conditions[0], seed, panel, layout["map_seed"]))
+                right = final_rows.get((conditions[1], seed, panel, layout["map_seed"]))
                 if left is not None and right is not None:
                     paired["per_layout"].append({"seed": seed, "panel": panel, "map_seed": layout["map_seed"],
                         "noop_rate_delta": right["noop_steps"] / right["steps"] - left["noop_steps"] / left["steps"],
@@ -587,6 +626,7 @@ def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_ma
         if selected:
             paired["aggregate"].append({"panel": panel, "seeds": len(selected), **{f"mean_seed_{key}_delta": float(np.mean([r[f"{key}_delta"] for r in selected]))
                 if all(r[f"{key}_delta"] is not None for r in selected) else None for key in ("success_rate", "mean_steps", "noop_rate", "efficient_success_rate")}})
+    support_diagnostics = _comparison.support_diagnostics(output, data, supports, seeds) if _comparison and supports else None
     try:
         enforce()
     except BudgetReached as exc:
@@ -600,8 +640,8 @@ def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_ma
                     seed_gates[key] = False
     write_json(output / "provenance.json", provenance)
     interpretation = ("smoke_or_protocol_deviation_not_gate_evidence" if smoke or deviations else "incomplete_not_gate_evidence" if status != "complete"
-        else "both_fresh_gates_met" if all(c["fresh"] for c in per_condition) else "exhaustive_only_fresh_gate_met" if per_condition[0]["fresh"]
-        else "collected_only_fresh_gate_met" if per_condition[1]["fresh"] else "neither_fresh_gate_met")
+        else "both_fresh_gates_met" if all(c["fresh"] for c in per_condition) else (_comparison.first_pass_interpretation if _comparison else "exhaustive_only_fresh_gate_met") if per_condition[0]["fresh"]
+        else (_comparison.second_pass_interpretation if _comparison else "collected_only_fresh_gate_met") if per_condition[1]["fresh"] else "neither_fresh_gate_met")
     artifacts = {name: artifact_path(output / filename) for name, filename in {
         "protocol": "protocol.json", "evaluations": "evaluations.csv", "training": "losses.csv", "state_metrics": "state_metrics.csv",
         "dataset": "dataset.npz", "transitions": "transitions.npz", "dataset_metadata": "dataset_metadata.json", "references": "references.csv",
@@ -609,6 +649,10 @@ def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_ma
         "coverage": "coverage.json", "collection": "collection.npz", "collection_steps": "collection_steps.csv",
         "collection_episodes": "collection_episodes.csv", "local_sample_counts": "local_sample_counts.npz"}.items()}
     artifacts.update(directory=artifact_path(output), protocol_document=artifact_path(protocol_file), report="docs/experiments/coverage_results_v1.md")
+    if _comparison:
+        for key in ("collection", "collection_steps", "collection_episodes"):
+            artifacts.pop(key)
+        artifacts.update(_comparison.artifacts(output))
     result = {"schema_version": 1, "protocol": protocol, "run": {"id": output.name, "status": status, "interpretation": interpretation,
         "train_updates": total_updates, "training_examples": sum(r["examples_seen"] for c in samples.values() for r in c.values()),
         "wall_seconds": time.monotonic() - started, "dataset_wall_seconds": dataset_seconds, "reference_wall_seconds": reference_seconds, "collection_wall_seconds": collection_seconds,
@@ -625,6 +669,11 @@ def run_study(output, protocol_file, *, seeds=(0, 1, 2), updates=30000, train_ma
         "aggregate": aggregate, "seed_results": seed_results, "state_aggregate": state_aggregate, "state_metrics": artifacts["state_metrics"],
         "loss_aggregate": loss_aggregate, "references": references, "gates": {"eligible": eligible, "pooled_random_fresh_success": random_fresh, "per_condition": per_condition},
         "sampling": samples, "provenance": provenance, "coverage": coverage, "paired_differences": paired, "trajectories": trajectories, "artifacts": artifacts}
+    if _comparison:
+        result["support_diagnostics"] = support_diagnostics
+        result["run"]["limitations"] = _comparison.limitations
+        result["run"]["support_preparation_wall_seconds"] = result["run"].pop("collection_wall_seconds")
+        result["run"]["collection_steps"] = 0
     write_json(output / "paired_differences.json", paired)
     write_json(output / "trajectories.json", trajectories)
     write_json(output / "results.json", result)

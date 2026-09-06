@@ -4,6 +4,7 @@ The [root README](../README.md) is the entry point for installing and running Q6
 
 ## Current experiments
 
+- [Equal-size bank protocol](experiments/equal_support_protocol_v1.md): compare the archived collected bank with one uniformly selected bank of the same 59,626 states, preserving DDQN, four-action access and the update budget.
 - [Experience-coverage protocol](experiments/coverage_protocol_v1.md), [result](experiments/coverage_results_v1.md) and [validation](validation/coverage-v1.md): exhaustive DDQN reaches 80.21% fresh success versus 68.23% from collected unique states, despite better familiar-start success in the collected arm. Next: equal-size support control before online feedback or memory.
 - [Fixed-data target protocol](experiments/fixed_targets_protocol_v1.md), [result](experiments/fixed_targets_results_v1.md) and [validation](validation/fixed-targets-v1.md): exact and Double DQN targets both pass fresh success under matched coverage; DDQN improves efficient success, but both miss the stricter efficiency and every-seed fit diagnostics. The later coverage study tests that procedure under collected current-state support.
 - [Exact-target supervision protocol](experiments/supervised_protocol_v1.md) and [result](experiments/supervised_results_v1.md): the unchanged network reaches 85.42% fresh-layout success; every seed passes the supervised fresh gate, but full training fit and efficient routes remain unresolved. This is privileged supervision, not online-RL competence.

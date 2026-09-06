@@ -86,6 +86,7 @@ jobs:
           import q6.supervised
           import q6.fixed_targets
           import q6.coverage
+          import q6.equal_support
           import config
           import no_way_home.channels
           import orchestrator.orchestrator

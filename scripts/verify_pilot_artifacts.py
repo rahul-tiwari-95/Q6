@@ -352,6 +352,10 @@ def main():
                         "--study", str(manifest.parent), "--skip-forward-inference"], check=True)
     for diagnostic in sorted((ROOT / "experiments/coverage").glob("analysis*/support_diagnostic.json")):
         verify_coverage_support(diagnostic)
+    for manifest in sorted((ROOT / "experiments/equal_support").glob("*/manifest.json")):
+        verify_manifest(manifest.parent)
+        subprocess.run([sys.executable, str(ROOT / "scripts/audit_equal_support_study.py"),
+                        "--study", str(manifest.parent), "--skip-forward-inference"], check=True)
 
 
 if __name__ == "__main__":

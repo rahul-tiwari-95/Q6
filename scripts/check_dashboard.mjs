@@ -1,12 +1,12 @@
 // Exercise saved-study controls with DOM/canvas stubs; does not test browser layout.
-// Run from any directory: node /path/to/Q6/scripts/check_dashboard.mjs [competence-results.json] [--supervised supervised-results.json] [--missing-supervised] [--fixed fixed-targets-results.json] [--missing-fixed] [--coverage coverage-results.json] [--missing-coverage]
+// Run from any directory: node /path/to/Q6/scripts/check_dashboard.mjs [competence-results.json] [--supervised supervised-results.json] [--missing-supervised] [--fixed fixed-targets-results.json] [--missing-fixed] [--coverage coverage-results.json] [--missing-coverage] [--equal-support results.json] [--missing-equal-support]
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-let competencePath=null,supervisedPath=null,missingSupervised=false,fixedPath=null,missingFixed=false,coveragePath=null,missingCoverage=false;
+let competencePath=null,supervisedPath=null,missingSupervised=false,fixedPath=null,missingFixed=false,coveragePath=null,missingCoverage=false,equalSupportPath=null,missingEqualSupport=false;
 for(let i=2;i<process.argv.length;i++){
  const arg=process.argv[i];
  if(arg==='--supervised'){supervisedPath=process.argv[++i];assert(supervisedPath,'--supervised needs a real results path');}
@@ -15,6 +15,8 @@ for(let i=2;i<process.argv.length;i++){
  else if(arg==='--missing-fixed')missingFixed=true;
  else if(arg==='--coverage'){coveragePath=process.argv[++i];assert(coveragePath,'--coverage needs a real results path');}
  else if(arg==='--missing-coverage')missingCoverage=true;
+ else if(arg==='--equal-support'){equalSupportPath=process.argv[++i];assert(equalSupportPath,'--equal-support needs a real results path');}
+ else if(arg==='--missing-equal-support')missingEqualSupport=true;
  else if(!arg.startsWith('-')&&!competencePath)competencePath=arg;
  else throw Error('Unknown argument '+arg);
 }
@@ -48,7 +50,8 @@ const sandbox={document,location:{hash:''},history:{replaceState(){}},setInterva
  if(relative==='data/supervised.json'&&missingSupervised)return {status:404,ok:false};
  if(relative==='data/fixed_targets.json'&&missingFixed)return {status:404,ok:false};
  if(relative==='data/coverage.json'&&missingCoverage)return {status:404,ok:false};
- const override=relative==='data/competence.json'?competencePath:relative==='data/supervised.json'?supervisedPath:relative==='data/fixed_targets.json'?fixedPath:relative==='data/coverage.json'?coveragePath:null;
+ if(relative==='data/equal_support.json'&&missingEqualSupport)return {status:404,ok:false};
+ const override=relative==='data/competence.json'?competencePath:relative==='data/supervised.json'?supervisedPath:relative==='data/fixed_targets.json'?fixedPath:relative==='data/coverage.json'?coveragePath:relative==='data/equal_support.json'?equalSupportPath:null;
  const target=override||full;
  if(!fs.existsSync(target))return {status:404,ok:false};
  return {status:200,ok:true,json:async()=>JSON.parse(fs.readFileSync(target,'utf8'))};
@@ -62,29 +65,39 @@ assert(get('success-chart').innerHTML.includes('<svg'),'Existing adaptation curv
 assert(get('provenance-bars').innerHTML.includes('bar-row'),'Existing provenance bars render');
 const expectedMissing=[];if(missingSupervised)expectedMissing.push('data/supervised.json');if(missingFixed || (!fixedPath&&!fs.existsSync(path.join(root,'dashboard/data/fixed_targets.json'))))expectedMissing.push('data/fixed_targets.json');
 if(missingCoverage || (!coveragePath&&!fs.existsSync(path.join(root,'dashboard/data/coverage.json'))))expectedMissing.push('data/coverage.json');
+if(missingEqualSupport || (!equalSupportPath&&!fs.existsSync(path.join(root,'dashboard/data/equal_support.json'))))expectedMissing.push('data/equal_support.json');
 const unexpectedErrors=(get('load-status').textContent || '').split(' · ').filter(text=>text.includes('Could not load')&&!expectedMissing.some(path=>text.includes(path)));assert.deepEqual(unexpectedErrors,[],'No unexpected data errors');
 assert.equal(get('tab-coverage').attributes['aria-selected'],'true','Experience coverage is the default track');
+assert.equal(get('coverage-study').value,'equal_support','Equal-size banks is the default coverage study');
+for(const studyKey of ['equal_support','coverage']){
+ get('coverage-study').value=studyKey;get('coverage-study').listeners.change();
+ const equal=studyKey==='equal_support',conditions=equal?['collected_unique','uniform_subset']:['exhaustive','collected_unique'];
+ const label=condition=>({exhaustive:'Exhaustive states',collected_unique:'Collected unique states',uniform_subset:'Uniform subset'}[condition]);
+ get('coverage-epsilon').value='greedy';get('coverage-epsilon').listeners.change();
 if(debug.coverage?.aggregate?.length){
  assert.equal(get('coverage-content').hidden,false);
  const chartIds=['coverage-train-chart','coverage-fresh-chart','coverage-train-agreement','coverage-fresh-agreement','coverage-loss-chart'];
  for(const id of chartIds)assert(get(id).innerHTML.includes('<svg'));
- for(const condition of ['exhaustive','collected_unique'])if(debug.coverage.aggregate.some(r=>r.condition===condition))assert(get('coverage-fresh-chart').innerHTML.includes(condition==='exhaustive'?'Exhaustive states':'Collected unique states'));
+ for(const condition of conditions)if(debug.coverage.aggregate.some(r=>r.condition===condition))assert(get('coverage-fresh-chart').innerHTML.includes(label(condition)));
  assert(get('coverage-gate-results').innerHTML.includes('Efficient:'),'Separate efficiency gates visible');
  assert(get('coverage-state-table').innerHTML.includes('Winnable states'),'Full-state denominator visible');
  assert(get('coverage-paired-table').innerHTML.includes('Success Δ'),'Paired comparison visible');
- assert(get('coverage-evidence-links').innerHTML.includes('href="data/coverage.json"'),'Coverage download points to displayed study');
+ assert(get('coverage-evidence-links').innerHTML.includes(`href="data/${studyKey}.json"`),'Coverage download points to displayed study');
  const checkCoverageOutcomeCards=mode=>{
   const finalUpdate=debug.coverage.protocol.budget.updates_per_seed;
   for(const [id,key,format] of [['success','success_rate',value=>(100*value).toFixed(1)+'%'],['efficient','efficient_success_rate',value=>(100*value).toFixed(1)+'%'],['steps','mean_steps',value=>value.toFixed(1)]]){
    const values=[...get('coverage-outcome-'+id).innerHTML.matchAll(/<strong[^>]*>([^<]*)<\/strong>/g)].map(match=>match[1]);
-   const expected=['exhaustive','collected_unique'].map(condition=>{const value=debug.coverage.aggregate.find(r=>r.condition===condition && r.panel==='heldout' && r.mode===mode && r.checkpoint===finalUpdate)?.[key];return Number.isFinite(value)?format(value):'—';});
+   const expected=conditions.map(condition=>{const value=debug.coverage.aggregate.find(r=>r.condition===condition && r.panel==='heldout' && r.mode===mode && r.checkpoint===finalUpdate)?.[key];return Number.isFinite(value)?format(value):'—';});
    assert.deepEqual(values,expected,'Final fresh '+key+' cards match saved '+mode+' aggregates');
   }
  };
  checkCoverageOutcomeCards('greedy');
  assert(get('coverage-outcome-success').innerHTML.includes('Primary'));assert(get('coverage-outcome-efficient').innerHTML.includes('Secondary'));
  assert(debug.coverageSelected,'Default experience-coverage recording selected');
- const support=debug.coverage.coverage;
+ const supportRecords=equal?debug.coverage.coverage.per_condition:[debug.coverage.coverage];
+ for(const support of supportRecords){
+  if(equal){get('coverage-support-condition').value=support.condition;get('coverage-support-condition').listeners.change();}
+
  assert.equal((get('coverage-map-heatmap').innerHTML.match(/<rect /g)||[]).length,support.by_map.length,'Every declared layout has one coverage square');
  for(const row of support.by_map)assert(get('coverage-map-heatmap').innerHTML.includes(`Map ${row.map_seed.toLocaleString()}: ${row.visited_states.toLocaleString()} / ${row.states.toLocaleString()}`),'Layout tooltip reports saved numerator and denominator');
  assert.equal((get('coverage-time-bars').innerHTML.match(/class="diagnostic-row"/g)||[]).length,support.by_time_bucket.length,'Every time bucket rendered');
@@ -98,20 +111,36 @@ if(debug.coverage?.aggregate?.length){
   [5,support.successor_queries.outside_support_fraction,support.successor_queries.outside_support_nonterminal_transitions,support.successor_queries.nonterminal_transitions],
  ]){assert.equal(diagnosticCards[offset][2],(100*rate).toFixed(2)+'%');assert(diagnosticCards[offset][3].includes(`${numerator.toLocaleString()} / ${denominator.toLocaleString()}`),'Coverage subset numerator and denominator match saved data');}
  assert(diagnosticCards[4][3].includes('physical shortest path ≤ 2 moves; all remaining clocks'),'Goal-near coverage definition stays independent of remaining time');
+ assert(get('coverage-successor-caption').textContent.includes(support.successor_queries.outside_support_nonterminal_transitions.toLocaleString()));
+ }
  const layoutCells=[...get('coverage-layout-table').innerHTML.matchAll(/<tr>(<td>.*?)<\/tr>/g)].map(match=>[...match[1].matchAll(/<td>(.*?)<\/td>/g)].map(cell=>cell[1]));
  assert.equal(layoutCells.length,debug.coverage.paired_differences.per_layout.length);
  const signedDelta=(value,scale=1,suffix='')=>`${value>0?'+':''}${(value*scale).toFixed(1)}${suffix}`;
  debug.coverage.paired_differences.per_layout.forEach((row,index)=>{assert.equal(layoutCells[index][4],signedDelta(row.efficient_success_delta),'Per-layout efficient-success delta matches saved data');assert.equal(layoutCells[index][7],signedDelta(row.noop_rate_delta,100,' pp'),'Per-layout no-op-rate delta matches saved data');});
 
- assert(get('coverage-successor-caption').textContent.includes(support.successor_queries.outside_support_nonterminal_transitions.toLocaleString()));
+
  assert(get('coverage-successor-caption').textContent.includes('not optimizer samples'));
  assert(html.includes('does not add it to the training support'),'Current support and detached successor queries explicitly distinguished');
+ if(equal){
+  const membership=debug.coverage.coverage;
+  assert(get('coverage-intersection-caption').textContent.includes(membership.support_size.toLocaleString()),'Equal bank size is visible');
+  assert(get('coverage-intersection-caption').textContent.includes(membership.intersection.states.toLocaleString()),'Support intersection is visible');
+  assert(get('coverage-intersection-caption').textContent.includes('No new collection'));
+  assert(get('coverage-support-caption').textContent.includes('not new visits'));
+  assert(get('coverage-paired-caption').textContent.startsWith('Every difference is uniform subset minus collected unique states'),'Equal-size delta direction stays explicit');
+  assert(get('coverage-layout-caption').textContent.includes('uniform subset minus collected unique states'));
+  const ownRows=[...(debug.coverage.support_diagnostics?.per_seed || []),...(debug.coverage.support_diagnostics?.pooled || [])];
+  assert.equal(get('coverage-support-fit-panel').hidden,!ownRows.length);
+  const rendered=[...get('coverage-support-fit-table').innerHTML.matchAll(/<tr>(<td>.*?)<\/tr>/g)].map(match=>[...match[1].matchAll(/<td>(.*?)<\/td>/g)].map(cell=>cell[1]));
+  assert.equal(rendered.length,ownRows.length);
+  ownRows.forEach((row,index)=>{assert.equal(rendered[index][2],row.subset==='support'?'Own bank':'Outside own bank');assert.equal(rendered[index][3],row.states.toLocaleString());assert.equal(rendered[index][5],row.winnable_states.toLocaleString());assert.equal(rendered[index][7],(100*row.optimal_action_rate).toFixed(1)+'%');});
+ }else{assert.equal(get('coverage-bank-comparison').hidden,true);assert.equal(get('coverage-support-fit-panel').hidden,true);}
  const originalRun={...debug.coverage.run},originalGates=debug.coverage.gates;
  for(const [run,gates,phrase] of [
-  [{status:'complete'}, {eligible:true,per_condition:[{condition:'exhaustive',fresh:true},{condition:'collected_unique',fresh:true}]},'Both coverage conditions pass'],
-  [{status:'complete'}, {eligible:true,per_condition:[{condition:'exhaustive',fresh:true},{condition:'collected_unique',fresh:false}]},'Exhaustive states pass'],
-  [{status:'complete'}, {eligible:true,per_condition:[{condition:'exhaustive',fresh:false},{condition:'collected_unique',fresh:true}]},'Collected unique states pass'],
-  [{status:'complete'}, {eligible:true,per_condition:[{condition:'exhaustive',fresh:false},{condition:'collected_unique',fresh:false}]},'Neither coverage condition'],
+  [{status:'complete'}, {eligible:true,per_condition:[{condition:conditions[0],fresh:true},{condition:conditions[1],fresh:true}]},equal?'Both equal-size banks pass':'Both coverage conditions pass'],
+  [{status:'complete'}, {eligible:true,per_condition:[{condition:conditions[0],fresh:true},{condition:conditions[1],fresh:false}]},equal?'Collected unique states pass':'Exhaustive states pass'],
+  [{status:'complete'}, {eligible:true,per_condition:[{condition:conditions[0],fresh:false},{condition:conditions[1],fresh:true}]},equal?'The uniform subset passes':'Collected unique states pass'],
+  [{status:'complete'}, {eligible:true,per_condition:[{condition:conditions[0],fresh:false},{condition:conditions[1],fresh:false}]},equal?'Neither equal-size bank':'Neither coverage condition'],
   [{status:'complete',interpretation:'smoke_or_protocol_deviation_not_gate_evidence'}, {eligible:false},'Smoke or protocol-deviation'],
   [{status:'incomplete',interpretation:'incomplete_not_gate_evidence'}, {eligible:false},'Incomplete comparison'],
   [{status:'inconsistent_not_gate_evidence'}, {eligible:false},'Consistency check failed'],
@@ -121,9 +150,9 @@ if(debug.coverage?.aggregate?.length){
  debug.coverage.run=originalRun;debug.coverage.gates=originalGates;debug.renderCoverage();
  const originalAggregate=debug.coverage.aggregate,originalStates=debug.coverage.state_aggregate,originalLosses=debug.coverage.loss_aggregate;
  debug.coverage.run={status:'incomplete_admission_cap',interpretation:'incomplete_not_gate_evidence'};debug.coverage.gates={eligible:false};
- debug.coverage.aggregate=originalAggregate.filter(r=>r.condition==='exhaustive');debug.coverage.state_aggregate=originalStates.filter(r=>r.condition==='exhaustive');debug.coverage.loss_aggregate=originalLosses.filter(r=>r.condition==='exhaustive');debug.renderCoverage();
+ debug.coverage.aggregate=originalAggregate.filter(r=>r.condition===conditions[0]);debug.coverage.state_aggregate=originalStates.filter(r=>r.condition===conditions[0]);debug.coverage.loss_aggregate=originalLosses.filter(r=>r.condition===conditions[0]);debug.renderCoverage();
  assert(get('coverage-gate-note').textContent.includes('Incomplete comparison'));
- for(const id of chartIds)assert(!get(id).innerHTML.includes('Collected unique states'),'Incomplete comparison does not invent a missing curve');
+ for(const id of chartIds)assert(!get(id).innerHTML.includes(label(conditions[1])),'Incomplete comparison does not invent a missing curve');
  checkCoverageOutcomeCards('greedy');
  assert(get('coverage-outcome-success').innerHTML.includes('>—</strong>'),'Absent condition has no substituted final outcome');
  debug.coverage.aggregate=[];debug.renderCoverage();assert.equal(get('coverage-content').hidden,true);for(const id of [...chartIds,'coverage-outcome-success','coverage-outcome-efficient','coverage-outcome-steps'])assert.equal(get(id).innerHTML,'');
@@ -133,7 +162,7 @@ if(debug.coverage?.aggregate?.length){
  debug.coverage.aggregate=originalAggregate;debug.renderCoverage();assert(get('coverage-gate-note').textContent.includes('Consistency check failed'));assert(get('coverage-gate-note').textContent.includes('Archive mismatch <example> & paired check failed'),'Consistency banner preserves literal reason through textContent');
  debug.coverage.provenance=originalProvenance;
  debug.coverage.run=originalRun;debug.coverage.gates=originalGates;debug.coverage.aggregate=originalAggregate;debug.coverage.state_aggregate=originalStates;debug.coverage.loss_aggregate=originalLosses;debug.renderCoverage();
- const stableIds=['coverage-map-heatmap','coverage-time-bars','coverage-support-table','coverage-support-stats','coverage-train-agreement','coverage-fresh-agreement','coverage-loss-chart','coverage-paired-table','coverage-gate-results','coverage-fit-metrics'];
+ const stableIds=['coverage-bank-table','coverage-support-fit-table','coverage-map-heatmap','coverage-time-bars','coverage-support-table','coverage-support-stats','coverage-train-agreement','coverage-fresh-agreement','coverage-loss-chart','coverage-paired-table','coverage-gate-results','coverage-fit-metrics'];
  const before=new Map(stableIds.map(id=>[id,get(id).innerHTML]));
  get('coverage-epsilon').value='epsilon_0_1';get('coverage-epsilon').listeners.change();
  checkCoverageOutcomeCards('epsilon_0_1');assert(get('coverage-outcome-caption').textContent.includes('ε = 0.1'));
@@ -159,13 +188,13 @@ if(debug.coverage?.aggregate?.length){
   recordings++;
  }
  // Verify each paired network sees its own mode-aligned curve and shared reference panel.
- for(const condition of ['exhaustive','collected_unique'])for(const mode of ['greedy','epsilon_0_1'])for(const panel of ['train','heldout']){
+ for(const condition of conditions)for(const mode of ['greedy','epsilon_0_1'])for(const panel of ['train','heldout']){
   get('coverage-epsilon').value=mode;get('coverage-epsilon').listeners.change();
   get('coverage-replay-condition').value=condition;get('coverage-replay-condition').listeners.change();
   get('coverage-replay-controller').value='learner';get('coverage-replay-controller').listeners.change();
   get('coverage-replay-panel').value=panel;get('coverage-replay-panel').listeners.change();
   assert.equal(debug.coverageSelected.condition,condition);assert.equal(debug.coverageSelected.mode,mode);assert.equal(debug.coverageSelected.panel,panel);
-  assert(get('coverage-reference-bars').innerHTML.includes('Exhaustive states'));assert(get('coverage-reference-bars').innerHTML.includes('Collected unique states'));
+  for(const condition of conditions)assert(get('coverage-reference-bars').innerHTML.includes(label(condition)));
   assert(!get('coverage-reference-bars').innerHTML.includes('Historical'),'No historical panel mixed into coverage comparison');
  }
  get('coverage-replay-reset').listeners.click();assert.equal(get('coverage-replay-step').textContent,`0 / ${debug.coverageSelected.steps.length}`);
@@ -180,11 +209,17 @@ if(debug.coverage?.aggregate?.length){
  get('coverage-replay-reset').listeners.click();get('coverage-replay-play').listeners.click();debug.activateTab('supervised');assert.equal(intervals.size,0);
  await get('refresh').listeners.click();assert.equal(get('coverage-content').hidden,false);
  assert(!get('coverage-rollout-table').innerHTML.includes('NaN'));assert(!get('coverage-paired-table').innerHTML.includes('NaN'));
- console.log(`Experience coverage: ${debug.coverage.aggregate.length} rollout aggregates, ${debug.coverage.state_aggregate.length} state aggregates, ${debug.coverage.loss_aggregate.length} loss windows, all ${recordings} recordings, both conditions and action modes, ${support.by_map.length} layout cells and ${support.by_time_bucket.length} time buckets, seven gate interpretations, final outcome cards and mode changes, paired differences, Q labels, playback and refresh passed.`);
+ get('coverage-replay-reset').listeners.click();get('coverage-replay-play').listeners.click();assert.equal(intervals.size,1);
+ get('coverage-study').value=equal?'coverage':'equal_support';get('coverage-study').listeners.change();assert.equal(intervals.size,0,'Switching coverage studies stops replay');
+ get('coverage-study').value=studyKey;get('coverage-study').listeners.change();assert.equal(get('coverage-content').hidden,false);assert.equal(debug.coverageSelected.map_seed,debug.coverage.protocol.dataset.heldout_map_seeds[0],'Study switch restores its own first fresh map');
+
+ console.log(`${studyKey}: ${debug.coverage.aggregate.length} rollout aggregates, ${debug.coverage.state_aggregate.length} state aggregates, ${debug.coverage.loss_aggregate.length} loss windows, all ${recordings} recordings, both conditions and action modes, ${supportRecords[0].by_map.length} layout cells and ${supportRecords[0].by_time_bucket.length} time buckets, seven gate interpretations, final outcome cards and mode changes, paired differences, Q labels, playback and refresh passed.`);
 }else{
  assert.equal(get('coverage-content').hidden,true);assert.equal(get('coverage-empty').hidden,false);
  for(const id of ['coverage-train-chart','coverage-fresh-chart','coverage-train-agreement','coverage-fresh-agreement','coverage-loss-chart'])assert.equal(get(id).innerHTML,'');
- console.log('Missing experience-coverage comparison stays empty; no fabricated measurements.');
+ console.log(`Missing ${studyKey} comparison stays empty; no fabricated measurements.`);
+}
+
 }
 
 if(debug.fixed?.aggregate?.length){

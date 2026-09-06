@@ -144,13 +144,17 @@ def audit_model_predictions(study, data, protocol, conditions, result, DQN, *, s
 
 
 
-def audit_raw_tables(study, metadata, data, protocol, result, predictions, *, smoke):
+def audit_raw_tables(study, metadata, data, protocol, result, predictions, *, smoke, conditions=CONDITIONS,
+                     left_only_interpretation="exhaustive_only_fresh_gate_met",
+                     right_only_interpretation="collected_only_fresh_gate_met"):
+    """Check common paired-study metrics; historical defaults remain unchanged."""
+    left_condition, right_condition = conditions
     episodes, references, states, losses = [csv_rows(study / name) for name in
         ("evaluations.csv", "references.csv", "state_metrics.csv", "losses.csv")]
     seeds, checkpoints = protocol["seeds"], protocol["checkpoints"]
     final = max(checkpoints)
     expected_episodes = {(condition, seed, checkpoint, panel, mode, layout["map_seed"], rep)
-        for condition in CONDITIONS for seed in seeds for checkpoint in checkpoints for panel in PANELS
+        for condition in conditions for seed in seeds for checkpoint in checkpoints for panel in PANELS
         for mode in ("greedy", "epsilon_0_1") for layout in metadata[panel] for rep in range(1 if mode == "greedy" else 2)}
     episode_key = lambda r: (r["condition"], int(r["seed"]), int(r["checkpoint"]), r["panel"], r["mode"], int(r["map_seed"]), int(r["repetition"]))
     actual_keys = [episode_key(row) for row in episodes]
@@ -209,7 +213,7 @@ def audit_raw_tables(study, metadata, data, protocol, result, predictions, *, sm
         selected = [r for r in references if (r["policy"], r["panel"]) == (summary["policy"], summary["panel"])]
         common.audit_episode_summary(summary, selected)
         close(summary["efficient_success_rate"], efficient(selected))
-    for condition in CONDITIONS:
+    for condition in conditions:
         for seed in seeds:
             rows = [r for r in losses if r["condition"] == condition and int(r["seed"]) == seed]
             expected_loss_steps = sorted(set(range(100, final + 1, 100)) | {cp for cp in checkpoints if cp > 0})
@@ -227,7 +231,7 @@ def audit_raw_tables(study, metadata, data, protocol, result, predictions, *, sm
         close(summary["mean_loss"], np.mean(values)); close(summary["seed_loss_min"], min(values)); close(summary["seed_loss_max"], max(values))
         assert summary["seeds"] == len(selected)
         assert all(int(r["updates_in_window"]) == summary["updates_in_window"] for r in selected)
-    expected_states = {(condition, seed, checkpoint, panel, layout["map_seed"], bucket) for condition in CONDITIONS
+    expected_states = {(condition, seed, checkpoint, panel, layout["map_seed"], bucket) for condition in conditions
         for seed in seeds for checkpoint in checkpoints for panel in PANELS for layout in metadata[panel] for bucket in BUCKETS}
     state_key = lambda r: (r["condition"], int(r["seed"]), int(r["checkpoint"]), r["panel"], int(r["map_seed"]), r["time_bucket"])
     state_keys = [state_key(r) for r in states]
@@ -327,29 +331,29 @@ def audit_raw_tables(study, metadata, data, protocol, result, predictions, *, sm
             assert gate["efficient"] == bool(not smoke and efficiency >= .8)
         for gate_name in ("training_fit", "fresh", "efficient"):
             assert condition_gate[gate_name] == all(r[gate_name] for r in condition_gate["per_seed"])
-    assert {g["condition"] for g in result["gates"]["per_condition"]} == set(CONDITIONS)
+    assert {g["condition"] for g in result["gates"]["per_condition"]} == set(conditions)
     gates = {row["condition"]: row for row in result["gates"]["per_condition"]}
     expected_interpretation = ("smoke_or_protocol_deviation_not_gate_evidence" if smoke else
-        "both_fresh_gates_met" if all(g["fresh"] for g in gates.values()) else "exhaustive_only_fresh_gate_met" if gates["exhaustive"]["fresh"] else
-        "collected_only_fresh_gate_met" if gates["collected_unique"]["fresh"] else "neither_fresh_gate_met")
+        "both_fresh_gates_met" if all(g["fresh"] for g in gates.values()) else left_only_interpretation if gates[left_condition]["fresh"] else
+        right_only_interpretation if gates[right_condition]["fresh"] else "neither_fresh_gate_met")
     assert result["run"]["interpretation"] == expected_interpretation
     paired = read_json(study / "paired_differences.json")
     assert paired == result["paired_differences"]
-    assert paired["direction"] == "collected_unique minus exhaustive"
+    assert paired["direction"] == f"{right_condition} minus {left_condition}"
     assert len(paired["per_layout"]) == len(seeds) * sum(len(metadata[p]) for p in PANELS)
     assert len(paired["per_seed"]) == len(seeds) * 2
     for row in paired["per_layout"]:
-        left, right = (final_episode_lookup[c, row["seed"], row["panel"], row["map_seed"]] for c in CONDITIONS)
+        left, right = (final_episode_lookup[c, row["seed"], row["panel"], row["map_seed"]] for c in conditions)
         for metric in ("success", "steps", "noop_steps"):
             close(row[f"{metric}_delta"], int(right[metric]) - int(left[metric]))
         close(row["noop_rate_delta"], int(right["noop_steps"]) / int(right["steps"]) - int(left["noop_steps"]) / int(left["steps"]))
         close(row["efficient_success_delta"], efficient([right]) - efficient([left]))
     for row in paired["per_seed"]:
-        pair = {c: [final_episode_lookup[c, row["seed"], row["panel"], layout["map_seed"]] for layout in metadata[row["panel"]]] for c in CONDITIONS}
+        pair = {c: [final_episode_lookup[c, row["seed"], row["panel"], layout["map_seed"]] for layout in metadata[row["panel"]]] for c in conditions}
         values = {c: {"success_rate": np.mean([int(r["success"]) for r in rows]), "mean_steps": np.mean([int(r["steps"]) for r in rows]),
             "noop_rate": sum(int(r["noop_steps"]) for r in rows) / sum(int(r["steps"]) for r in rows), "efficient_success_rate": efficient(rows)} for c, rows in pair.items()}
-        for metric in values["exhaustive"]:
-            close(row[f"{metric}_delta"], values["collected_unique"][metric] - values["exhaustive"][metric])
+        for metric in values[left_condition]:
+            close(row[f"{metric}_delta"], values[right_condition][metric] - values[left_condition][metric])
     for row in paired["aggregate"]:
         selected = [r for r in paired["per_seed"] if r["panel"] == row["panel"]]
         assert row["seeds"] == len(seeds)

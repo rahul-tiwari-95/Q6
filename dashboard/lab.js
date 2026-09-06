@@ -30,9 +30,12 @@ const fixedLabel=condition=>({exact_q:'Exact targets',double_dqn:'Double DQN tar
 const fixedMode=()=>$('fixed-epsilon').value;
 const latestFixedUpdate=()=>Math.max(0,...(fixed?.aggregate || []).map(r=>r.checkpoint).filter(Number.isFinite));
 let coverage=null, coverageTrajectory=null, coverageFrame=0, coverageTimer=null;
-const coverageConditions=['exhaustive','collected_unique'];
-const coverageColors={exhaustive:'#a6e5c1',collected_unique:'#98b8d1'};
-const coverageLabel=condition=>({exhaustive:'Exhaustive states',collected_unique:'Collected unique states',shared:'Shared references'}[condition] || condition);
+let coverageConditions=['collected_unique','uniform_subset'];
+const coverageStudies={coverage:null,equal_support:null};
+const coverageIsEqual=()=>$('coverage-study').value==='equal_support';
+const coverageDirection=()=>coverageIsEqual()?'uniform subset minus collected unique states':'collected unique states minus exhaustive states';
+const coverageColors={exhaustive:'#a6e5c1',collected_unique:'#98b8d1',uniform_subset:'#e7b985'};
+const coverageLabel=condition=>({exhaustive:'Exhaustive states',collected_unique:'Collected unique states',uniform_subset:'Uniform subset',shared:'Shared references'}[condition] || condition);
 const coverageMode=()=>$('coverage-epsilon').value;
 const latestCoverageUpdate=()=>Math.max(0,...(coverage?.aggregate || []).map(r=>r.checkpoint).filter(Number.isFinite));
 const signed=(value,scale=1,suffix='')=>Number.isFinite(value)?`${value>0?'+':''}${(value*scale).toFixed(1)}${suffix}`:'—';
@@ -76,8 +79,26 @@ for (const [index,name] of tracks.entries()) {
 }
 if (tracks.includes(location.hash.slice(1))) activateTab(location.hash.slice(1));
 
+function selectCoverageStudy(){
+  stopCoveragePlayback();coverage=coverageStudies[$('coverage-study').value] || null;
+  coverageConditions=coverageIsEqual()?['collected_unique','uniform_subset']:['exhaustive','collected_unique'];
+  for(const id of ['coverage-replay-condition','coverage-replay-controller','coverage-replay-checkpoint','coverage-replay-panel','coverage-replay-seed','coverage-support-condition'])$(id).value='';
+  renderCoverage();
+}
+$('coverage-study').addEventListener('change',selectCoverageStudy);
 function renderCoverage(){
   stopCoveragePlayback();
+  const equal=coverageIsEqual();
+  $('coverage-study-context').textContent=equal?'Same number of states; different bank composition. Fresh panel belongs only to this study.':'Earlier measured coverage comparison, with its own fresh panel and larger exhaustive bank.';
+  $('coverage-intro-copy').textContent=equal?'Both conditions use the same Double DQN learner and the same number of training states. One reuses the archived bank of unique states reached by random collection; the other uses an equally sized uniform subset of the exhaustive state universe. This tests which states are included while holding bank size fixed. Both remain offline and receive all four action transitions.':'Both conditions use the same Double DQN target procedure, network, all four actions, and update budget. One samples every training state. The other samples unique states encountered during random collection on the same layouts. The support and sampling distribution change together; this is offline learning, with the movement rule visible initially.';
+  $('coverage-condition-preview').innerHTML=coverageConditions.map(c=>`<span>${coverageLabel(c)}</span>`).join('');
+  $('coverage-flow').innerHTML=(equal?[
+    ['Same state count','Archived collected bank / uniform subset'],['Different included states','Same exhaustive training universe'],['Same Double DQN','All actions, network, loss, updates'],['Separate fresh panel','Own rollouts; no oracle actions'],
+  ]:[['Same training layouts','Every possible state / random trajectories'],['Two fixed state banks','Exhaustive / unique collected states'],['Same Double DQN','All actions, network, loss, update budget'],['New fresh layouts','Own rollouts; no oracle actions']]).map(([title,detail])=>`<li><strong>${title}</strong><small>${detail}</small></li>`).join('');
+  $('coverage-flow-note').textContent=equal?'No new collection is performed. The collected bank is reused unchanged, and the uniform bank is sampled before training. Both banks are shared across learner seeds. Detached successor queries may reach states outside a bank without adding them to its direct training support.':'Random collection happens before learning and never adapts to either network. Collected states are sampled uniformly after duplicates are removed. Both conditions still receive all four action transitions at each training state, beyond ordinary trajectory-only experience.';
+  $('coverage-paired-caption').textContent=`Every difference is ${coverageDirection()}. Success, efficient-success, and no-op-rate differences are percentage points; a negative step difference means fewer steps. Failed episodes still count. These are descriptive paired measurements from this study's own final fresh panel.`;
+  $('coverage-layout-caption').textContent=`Per-layout success and efficient-success differences are −1, 0, or +1. No-op-rate differences are percentage points. Every difference is ${coverageDirection()}.`;
+
   const {run={},protocol={},gates={}}=coverage || {},dataset=protocol.dataset || {},latest=latestCoverageUpdate();
   const inconsistent=run.status==='inconsistent_not_gate_evidence',stopReason=coverage?.provenance?.stop_reason;
   const consistencyNotice=`Consistency check failed. This run is ineligible for the declared gates.${typeof stopReason==='string' && stopReason?` Reason: ${stopReason}`:''}`;
@@ -95,8 +116,14 @@ function renderCoverage(){
   else if(run.interpretation==='incomplete_not_gate_evidence' || (run.status && run.status!=='complete')) interpretation='Incomplete comparison. Partial measurements cannot pass the declared gates or establish a difference between coverage conditions.';
   else if(!eligible)interpretation='Smoke or protocol-deviation run. These measurements check execution and cannot pass the declared research gates.';
   else {
-    const exact=conditionGates.find(r=>r.condition==='exhaustive'),boot=conditionGates.find(r=>r.condition==='collected_unique');
-    if(exact?.fresh && boot?.fresh)interpretation='Both coverage conditions pass the fresh-success gate. Inspect the paired gap and efficiency before deciding how much offline state coverage was sufficient under this collector and budget.';
+    const exact=conditionGates.find(r=>r.condition===coverageConditions[0]),boot=conditionGates.find(r=>r.condition===coverageConditions[1]);
+    if(equal){
+      if(exact?.fresh && boot?.fresh)interpretation='Both equal-size banks pass the fresh-success gate. Compare the paired gap and efficiency before deciding which state composition helps under this fixed learner and budget.';
+      else if(exact?.fresh && boot?.fresh===false)interpretation='Collected unique states pass the fresh-success gate; the uniform subset does not. State composition matters under this equal-size, offline comparison. This does not establish that every trajectory-derived bank is better.';
+      else if(exact?.fresh===false && boot?.fresh)interpretation='The uniform subset passes the fresh-success gate; collected unique states do not. Bank composition remains a limitation at the same state count under this learner and budget. Inspect the coverage and own-bank fit diagnostics before attributing the gap to any particular missing states.';
+      else interpretation='Neither equal-size bank establishes the declared fresh-success gate. Inspect own-bank fitting, full-universe diagnostics, and coverage before interpreting which states matter.';
+    }
+    else if(exact?.fresh && boot?.fresh)interpretation='Both coverage conditions pass the fresh-success gate. Inspect the paired gap and efficiency before deciding how much offline state coverage was sufficient under this collector and budget.';
     else if(exact?.fresh && boot?.fresh===false)interpretation='Exhaustive states pass the fresh-success gate; collected unique states do not. The collected support and its uniform sampling distribution limit this fixed offline learner. This does not isolate the effect of any one missing state or establish that every collector fails.';
     else if(exact?.fresh===false && boot?.fresh)interpretation='Collected unique states pass the fresh-success gate; exhaustive states do not. Inspect fitting, paired outcomes, and sampling distributions before drawing a broader conclusion.';
     else interpretation='Neither coverage condition establishes the declared fresh-success gate. Inspect the exhaustive control and fitting diagnostics before interpreting the collected bank.';
@@ -119,33 +146,51 @@ function renderCoverage(){
   $('coverage-paired-table').innerHTML='<thead><tr><th>Panel</th><th>Paired seed</th><th>Success Δ</th><th>Efficient success Δ</th><th>Mean steps Δ</th><th>No-op rate Δ</th></tr></thead><tbody>'+(paired.per_seed || []).map(r=>`<tr><td>${supervisedPanelLabel(r.panel)}</td><td>${number(r.seed)}</td><td>${signed(r.success_rate_delta,100,' pp')}</td><td>${signed(r.efficient_success_rate_delta,100,' pp')}</td><td>${signed(r.mean_steps_delta)}</td><td>${signed(r.noop_rate_delta,100,' pp')}</td></tr>`).join('')+(paired.aggregate || []).map(r=>`<tr class="paired-total"><td>${supervisedPanelLabel(r.panel)}</td><td>Mean across seeds</td><td>${signed(r.mean_seed_success_rate_delta,100,' pp')}</td><td>${signed(r.mean_seed_efficient_success_rate_delta,100,' pp')}</td><td>${signed(r.mean_seed_mean_steps_delta)}</td><td>${signed(r.mean_seed_noop_rate_delta,100,' pp')}</td></tr>`).join('')+'</tbody>';
   $('coverage-layout-table').innerHTML='<thead><tr><th>Panel</th><th>Seed</th><th>Map</th><th>Success Δ</th><th>Efficient success Δ</th><th>Steps Δ</th><th>No-op steps Δ</th><th>No-op rate Δ</th></tr></thead><tbody>'+(paired.per_layout || []).map(r=>`<tr><td>${supervisedPanelLabel(r.panel)}</td><td>${number(r.seed)}</td><td>${number(r.map_seed)}</td><td>${signed(r.success_delta)}</td><td>${signed(r.efficient_success_delta)}</td><td>${signed(r.steps_delta)}</td><td>${signed(r.noop_steps_delta)}</td><td>${signed(r.noop_rate_delta,100,' pp')}</td></tr>`).join('')+'</tbody>';
   $('coverage-method').textContent=`${number(run.train_updates)} optimizer updates and ${number(run.training_examples)} state presentations across both conditions and all seeds · batch size ${number(protocol.budget?.batch_size)} · ${number(run.wall_seconds)} seconds elapsed. Both conditions share the network, Double DQN targets, all four actions, loss reduction, optimizer, and update budget. Their fixed current-state supports and uniform sampling distributions intentionally differ. Random collection happens before optimization. The collected bank contains unique pre-action states; detached successor queries do not expand it.`;
+  if(equal)$('coverage-method').textContent=$('coverage-method').textContent.replace('Random collection happens before optimization.','No new collection is performed; the archived collected bank is reused and a uniform subset with the same state count is selected before optimization.');
   const trainingCosts=coverageConditions.map(condition=>{const rows=Object.entries(run.per_condition_seed_timing || {}).filter(([key])=>key.startsWith(condition+':')).map(([,value])=>value);return rows.length?`${coverageLabel(condition)} optimization: ${rows.reduce((sum,r)=>sum+(r.training_wall_seconds || 0),0).toFixed(1)} s`:null;}).filter(Boolean);
   if(trainingCosts.length)$('coverage-method').textContent+=` ${trainingCosts.join(' · ')}. Equal update counts do not mean equal compute.`;
   if(Number.isFinite(run.peak_rss_bytes))$('coverage-method').textContent+=` Peak process memory: ${(run.peak_rss_bytes/1024**3).toFixed(2)} GiB; one CPU thread.`;
   listItems('coverage-limitations',run.limitations);
-  $('coverage-evidence-links').innerHTML='<a href="data/coverage.json" download>Download displayed data ↓</a>'+[['protocol_document','Study design'],['protocol','Saved protocol'],['report','Measured findings'],['training','Optimization loss'],['evaluations','Raw rollouts'],['state_metrics','Raw state measurements'],['dataset_metadata','Dataset provenance'],['sampling','Sampling provenance'],['paired_differences','Paired outcomes'],['coverage','Coverage counts'],['collection_steps','Raw collection steps'],['collection_episodes','Raw collection episodes'],['manifest','Artifact checksums']].flatMap(([key,label])=>{const path=coverage.artifacts?.[key];return typeof path==='string' && /^(docs|experiments)\/[a-zA-Z0-9_./-]+$/.test(path) && !path.split('/').includes('..')?[`<a href="../${escape(path)}">${label} ↗</a>`]:[];}).join('');
+  $('coverage-evidence-links').innerHTML=`<a href="data/${equal?'equal_support':'coverage'}.json" download>Download displayed data ↓</a>`+[['protocol_document','Study design'],['protocol','Saved protocol'],['report','Measured findings'],['training','Optimization loss'],['evaluations','Raw rollouts'],['state_metrics','Raw state measurements'],['dataset_metadata','Dataset provenance'],['sampling','Sampling provenance'],['paired_differences','Paired outcomes'],['coverage','Coverage counts'],['support_diagnostics','Own-bank fit diagnostics'],['collection_steps','Raw collection steps'],['collection_episodes','Raw collection episodes'],['manifest','Artifact checksums']].flatMap(([key,label])=>{const path=coverage.artifacts?.[key];return typeof path==='string' && /^(docs|experiments)\/[a-zA-Z0-9_./-]+$/.test(path) && !path.split('/').includes('..')?[`<a href="../${escape(path)}">${label} ↗</a>`]:[];}).join('');
   renderCoverageSupport();
+  renderCoverageSupportFit();
   renderCoverageComparison();
 }
 function renderCoverageSupport(){
-  const support=coverage?.coverage || {},maps=support.by_map || [],buckets=support.by_time_bucket || [],queries=support.successor_queries || {};
+  const equal=coverageIsEqual(),description=coverage?.coverage || {},records=equal?(description.per_condition || []):[{condition:'collected_unique',...description}];
+  $('coverage-bank-comparison').hidden=!equal;$('coverage-support-selector-label').hidden=!equal;
+  selectOptions('coverage-support-condition',records.map(r=>[r.condition,coverageLabel(r.condition)]),'collected_unique');
+  const support=records.find(r=>r.condition===$('coverage-support-condition').value) || {},maps=support.by_map || [],buckets=support.by_time_bucket || [],queries=support.successor_queries || {};
+
   const overall=support.overall || {},precisePercent=value=>Number.isFinite(value)?`${(100*value).toFixed(2)}%`:'—';
+  if(equal){
+    const intersection=description.intersection || {};
+    $('coverage-intersection-caption').textContent=`Each bank contains ${number(description.support_size)} states out of ${number(description.total_training_states)}. Their intersection contains ${number(intersection.states)} states (${precisePercent(intersection.overlap_fraction)} of either bank); union ${number(intersection.union_states)}; Jaccard overlap ${precisePercent(intersection.jaccard)}. No new collection is performed in this study.`;
+    $('coverage-bank-table').innerHTML='<thead><tr><th>Bank</th><th>Included states</th><th>Layouts represented</th><th>Current-state coverage</th><th>Winnable coverage</th><th>Goal-near coverage</th><th>Nonterminal edges outside support</th></tr></thead><tbody>'+records.map(r=>`<tr><td>${coverageLabel(r.condition)}</td><td>${number(r.unique_current_states)}</td><td>${number((r.by_map || []).filter(m=>m.visited_states>0).length)} / ${number(r.by_map?.length)}</td><td>${precisePercent(r.current_state_fraction)}</td><td>${precisePercent(r.winnable_current_state_fraction)}</td><td>${precisePercent(r.goal_near_current_state_fraction)}</td><td>${precisePercent(r.successor_queries?.outside_support_fraction)}</td></tr>`).join('')+'</tbody>';
+  }else{$('coverage-intersection-caption').textContent='';$('coverage-bank-table').innerHTML='';}
   $('coverage-support-caption').textContent=`Before learning, a uniform-random collector produced ${number(support.collection_episodes)} episodes and ${number(support.collection_steps)} action steps on the training layouts. Its fixed bank contains ${number(support.unique_current_states)} unique pre-action states out of ${number(support.total_training_states)} exhaustive states. The bank is shared by all collected-condition learner seeds.`;
+  if(equal)$('coverage-support-caption').textContent=`Inspecting ${coverageLabel(support.condition)}: ${number(support.unique_current_states)} included current states out of ${number(support.total_training_states)}. These are bank-membership counts, not new visits. ${description.synthetic_smoke_support?'This smoke uses synthetic support to validate execution; it does not use the archived collected bank.':'The collected bank is reused from the archived collector; the uniform bank is sampled from the exhaustive universe.'} Each bank is shared across learner seeds.`;
   $('coverage-support-stats').innerHTML=[
-    [percent(support.current_state_fraction),'Unique current-state coverage',`${number(support.unique_current_states)} / ${number(support.total_training_states)} states`],
-    [number(support.collection_episodes),'Collection episodes','Uniform random; completed before optimization'],
-    [number(support.collection_steps),'Collection action steps','Repeated visits are deduplicated for training'],
+    [percent(support.current_state_fraction),equal?'Included current-state coverage':'Unique current-state coverage',`${number(support.unique_current_states)} / ${number(support.total_training_states)} states`],
+    ...(equal?[[number(support.unique_current_states),'Included current states','Membership in this fixed bank'],['None','New collection','Archived collected bank reused; no new episodes']]:[[number(support.collection_episodes),'Collection episodes','Uniform random; completed before optimization'],[number(support.collection_steps),'Collection action steps','Repeated visits are deduplicated for training']]),
     [precisePercent(support.winnable_current_state_fraction),'Winnable-state coverage',`${number(overall.visited_winnable_states)} / ${number(overall.winnable_states)} still-winnable states`],
     [precisePercent(support.goal_near_current_state_fraction),'Goal-near state coverage',`${number(overall.visited_goal_near_states)} / ${number(overall.goal_near_states)} states · physical shortest path ≤ 2 moves; all remaining clocks`],
     [precisePercent(queries.outside_support_fraction),'Successor edges outside support',`${number(queries.outside_support_nonterminal_transitions)} / ${number(queries.nonterminal_transitions)} nonterminal action edges`],
   ].map(([value,label,detail])=>`<div><span>${label}</span><strong>${value}</strong><small>${detail}</small></div>`).join('');
   if(maps.length){
     const cols=Math.min(16,maps.length),cell=24,gap=3,w=cols*cell,h=Math.ceil(maps.length/cols)*cell;
-    $('coverage-map-heatmap').innerHTML=`<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><title>Collected unique current-state coverage across ${number(maps.length)} training layouts</title>${maps.map((row,i)=>{const x=(i%cols)*cell,y=Math.floor(i/cols)*cell,ratio=Number.isFinite(row.coverage_rate)?Math.max(0,Math.min(1,row.coverage_rate)):0;return `<rect x="${x}" y="${y}" width="${cell-gap}" height="${cell-gap}" rx="2" fill="#98b8d1" fill-opacity="${.08+.92*ratio}"><title>Map ${number(row.map_seed)}: ${number(row.visited_states)} / ${number(row.states)} unique current states (${percent(row.coverage_rate)})</title></rect>`;}).join('')}</svg>`;
+    $('coverage-map-heatmap').innerHTML=`<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><title>Included current-state coverage across ${number(maps.length)} training layouts</title>${maps.map((row,i)=>{const x=(i%cols)*cell,y=Math.floor(i/cols)*cell,ratio=Number.isFinite(row.coverage_rate)?Math.max(0,Math.min(1,row.coverage_rate)):0;return `<rect x="${x}" y="${y}" width="${cell-gap}" height="${cell-gap}" rx="2" fill="#98b8d1" fill-opacity="${.08+.92*ratio}"><title>Map ${number(row.map_seed)}: ${number(row.visited_states)} / ${number(row.states)} unique current states (${percent(row.coverage_rate)})</title></rect>`;}).join('')}</svg>`;
   }else $('coverage-map-heatmap').innerHTML='<p class="help-text">No saved per-layout coverage measurements.</p>';
   $('coverage-time-bars').innerHTML=buckets.map(row=>`<div class="diagnostic-row"><span>${row.time_bucket==='all'?'All remaining times':`${escape(row.time_bucket)} steps left`}<small>${number(row.visited_states)} / ${number(row.states)} states</small></span><div class="diagnostic-track">${Number.isFinite(row.coverage_rate)?`<div class="diagnostic-fill" style="width:${100*Math.max(0,Math.min(1,row.coverage_rate))}%;background:#98b8d1"></div>`:''}</div><strong>${percent(row.coverage_rate)}</strong></div>`).join('') || '<p class="help-text">No saved remaining-time coverage measurements.</p>';
-  $('coverage-successor-caption').textContent=`Across all four transitions from each unique collected current state, ${number(queries.outside_support_nonterminal_transitions)} of ${number(queries.nonterminal_transitions)} nonterminal successors (${percent(queries.outside_support_fraction)}) lie outside its current-state support. These are static bank counts, not optimizer samples or newly collected experience. Terminal transitions use their reward directly.`;
-  $('coverage-support-table').innerHTML='<thead><tr><th>Scope</th><th>Layout / remaining time</th><th>Collected states</th><th>Exhaustive states</th><th>Coverage</th><th>Collected winnable states</th><th>Exhaustive winnable states</th><th>Winnable coverage</th></tr></thead><tbody>'+[[maps,'Layout','map_seed'],[buckets,'Time bucket','time_bucket']].flatMap(([rows,label,key])=>rows.map(row=>`<tr><td>${label}</td><td>${escape(row[key])}</td><td>${number(row.visited_states)}</td><td>${number(row.states)}</td><td>${percent(row.coverage_rate)}</td><td>${number(row.visited_winnable_states)}</td><td>${number(row.winnable_states)}</td><td>${percent(row.winnable_coverage_rate)}</td></tr>`)).join('')+'</tbody>';
+  $('coverage-successor-caption').textContent=`Across all four transitions from each included current state, ${number(queries.outside_support_nonterminal_transitions)} of ${number(queries.nonterminal_transitions)} nonterminal successors (${percent(queries.outside_support_fraction)}) lie outside its current-state support. These are static bank counts, not optimizer samples or newly collected experience. Terminal transitions use their reward directly.`;
+  $('coverage-support-table').innerHTML='<thead><tr><th>Scope</th><th>Layout / remaining time</th><th>Included states</th><th>Exhaustive states</th><th>Coverage</th><th>Included winnable states</th><th>Exhaustive winnable states</th><th>Winnable coverage</th></tr></thead><tbody>'+[[maps,'Layout','map_seed'],[buckets,'Time bucket','time_bucket']].flatMap(([rows,label,key])=>rows.map(row=>`<tr><td>${label}</td><td>${escape(row[key])}</td><td>${number(row.visited_states)}</td><td>${number(row.states)}</td><td>${percent(row.coverage_rate)}</td><td>${number(row.visited_winnable_states)}</td><td>${number(row.winnable_states)}</td><td>${percent(row.winnable_coverage_rate)}</td></tr>`)).join('')+'</tbody>';
+}
+
+$('coverage-support-condition').addEventListener('change',renderCoverageSupport);
+function renderCoverageSupportFit(){
+  const diagnostic=coverage?.support_diagnostics || {},rows=[...(diagnostic.per_seed || []),...(diagnostic.pooled || [])];
+  $('coverage-support-fit-panel').hidden=!coverageIsEqual() || !rows.length;
+  $('coverage-support-fit-table').innerHTML=rows.length?'<thead><tr><th>Condition</th><th>Seed scope</th><th>Own membership</th><th>State evaluations</th><th>Unique states</th><th>Winnable evaluations</th><th>Unique winnable states</th><th>Optimal actions</th><th>Q MAE</th><th>Q RMSE</th><th>95th pct. state MAE</th></tr></thead><tbody>'+rows.map(r=>`<tr><td>${coverageLabel(r.condition)}</td><td>${Number.isFinite(r.seed)?`Seed ${number(r.seed)}`:`Pooled ${number(r.seeds)} seeds`}</td><td>${r.subset==='support'?'Own bank':'Outside own bank'}</td><td>${number(r.states)}</td><td>${number(r.unique_states ?? r.states)}</td><td>${number(r.winnable_states)}</td><td>${number(r.unique_winnable_states ?? r.winnable_states)}</td><td>${percent(r.optimal_action_rate)}</td><td>${decimal(r.mean_abs_q_error)}</td><td>${decimal(r.rmse_q_error)}</td><td>${decimal(r.q95_abs_q_error)}</td></tr>`).join('')+'</tbody>':'';
 }
 
 function renderCoverageComparison(){
@@ -178,7 +223,7 @@ function stopCoveragePlayback(){if(coverageTimer)clearInterval(coverageTimer);co
 function selectCoverageTrajectory(){
   stopCoveragePlayback();
   const rows=(coverage?.trajectories || []).filter(r=>r.policy!=='learner' || r.mode===coverageMode());
-  selectOptions('coverage-replay-condition',[...new Set(rows.map(r=>r.condition))].map(c=>[c,coverageLabel(c)]),'exhaustive');
+  selectOptions('coverage-replay-condition',[...new Set(rows.map(r=>r.condition))].map(c=>[c,coverageLabel(c)]),coverageConditions[0]);
   const atCondition=rows.filter(r=>r.condition===$('coverage-replay-condition').value);
   selectOptions('coverage-replay-controller',[...new Set(atCondition.map(r=>r.policy))].map(p=>[p,p==='learner'?'Trained network':policyLabel(p)]),'learner');
   const policy=$('coverage-replay-controller').value,available=atCondition.filter(r=>r.policy===policy),updates=[...new Set(available.map(r=>r.checkpoint))].sort((a,b)=>a-b);
@@ -845,7 +890,7 @@ async function loadData() {
   if(loadInProgress)return;loadInProgress=true;$('refresh').disabled=true;$('study-run').disabled=true;
   stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();stopCoveragePlayback();
   const adaptationPath=$('study-run').value==='pilot_v1'?'../experiments/adaptation/pilot_v1/results.json':'data/adaptation.json';
-  const results=await Promise.allSettled([getData(adaptationPath),getData('data/provenance.json'),getData('data/competence.json'),getData('data/supervised.json'),getData('data/fixed_targets.json'),getData('data/coverage.json')]);
+  const results=await Promise.allSettled([getData(adaptationPath),getData('data/provenance.json'),getData('data/competence.json'),getData('data/supervised.json'),getData('data/fixed_targets.json'),getData('data/coverage.json'),getData('data/equal_support.json')]);
   const errors=[];
   diagnostics=null;
   if(results[0].status==='fulfilled') {
@@ -865,11 +910,13 @@ async function loadData() {
   renderSupervised();
   if(results[4].status==='fulfilled')fixed=results[4].value;else {fixed=null;errors.push(results[4].reason.message);}
   renderFixed();
-  if(results[5].status==='fulfilled')coverage=results[5].value;else {coverage=null;errors.push(results[5].reason.message);}
+  if(results[5].status==='fulfilled')coverageStudies.coverage=results[5].value;else {coverageStudies.coverage=null;errors.push(results[5].reason.message);}
+  if(results[6].status==='fulfilled')coverageStudies.equal_support=results[6].value;else {coverageStudies.equal_support=null;errors.push(results[6].reason.message);}
+  coverage=coverageStudies[$('coverage-study').value] || null;coverageConditions=coverageIsEqual()?['collected_unique','uniform_subset']:['exhaustive','collected_unique'];
   renderCoverage();
   if(errors.length) $('load-status').textContent=errors.join(' · ');
   else {
-    const loaded=[coverage&&'Experience coverage',fixed&&'Fixed-data targets',supervised&&'Exact targets',competence&&'Competence',adaptation&&'Adaptation',provenance&&'Provenance'].filter(Boolean);
+    const loaded=[coverageStudies.equal_support&&'Equal-size banks',coverageStudies.coverage&&'Experience coverage',fixed&&'Fixed-data targets',supervised&&'Exact targets',competence&&'Competence',adaptation&&'Adaptation',provenance&&'Provenance'].filter(Boolean);
     $('load-status').textContent=`${loaded.join(' + ') || 'No'} saved ${loaded.length===1?'study':'studies'} loaded · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
   }
   $('refresh').disabled=false;$('study-run').disabled=false;loadInProgress=false;
