@@ -1,0 +1,14 @@
+beta counts reconstructed entirely from never-mitigate messages: [41, 41, 34, 0, 0]
+nonmonotone paired rows: 0
+direct policy checks matching analytical reconstruction: 50 / 50
+within-seed permutation p (+1 correction): 0.0001
+equivalent observed JT decreasing: 18650.0
+same seed events identical: True message log identical: False
+first origin IDs: 191 210
+terminal shortfall: 48 Q updates across 2 one-step runs: 0
+EXPLORATORY controls, seeds 15000-15009, 2000 ticks; not confirmatory
+aware .30 fooled 0 /10 shortfall 43474
+raw .60 fooled 2 /10 shortfall 41367
+raw .80 fooled 0 /10 shortfall 39272
+raw 1.00 fooled 0 /10 shortfall 38156
+never fooled 0 /10 shortfall 113176

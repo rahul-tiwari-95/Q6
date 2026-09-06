@@ -1,0 +1,6 @@
+Command: python3 -m pytest tests/ -q -o cache_dir=/tmp/q6-pytest-cache
+Observed progress: all tests except final Phase2 training smoke completed without failures.
+Intentionally interrupted to rerun only the unfinished final test with torch.set_num_threads(1).
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/Users/rahul/Library/Python/3.9/lib/python/site-packages/torch/autograd/graph.py:829: KeyboardInterrupt
+253 passed in 272.69s (0:04:32)

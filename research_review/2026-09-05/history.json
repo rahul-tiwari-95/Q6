@@ -1,0 +1,387 @@
+{
+  "retrieved": "2026-09-05",
+  "repo": "https://github.com/rahul-tiwari-95/Q6",
+  "branches": {
+    "main": "68a42c67da6048376136f2cd90107cf917d43b0e",
+    "conitnous": "81936c2ab4d5bf048b44be50818d0672b11c7f87",
+    "no-way-home": "379bd252792736956d6525f3f24dd2976e830d44",
+    "v7": "8ac5d532711caaeb5f0c255cfce2b532b6a2600e",
+    "v7-ablations": "1811d88a955252b44b2d698d9f16cb8fd572e77a",
+    "v8": "d5ba3dd68ed8c4990d6bff02cb495bb34429038b"
+  },
+  "local_published_files_compared": 157,
+  "local_published_file_differences": [],
+  "commits": [
+    {
+      "sha": "8f804a34796951662d333f6c2b33621acde34d41",
+      "date": "2025-10-12T07:04:28Z",
+      "author": "rahul-tiwari-95",
+      "title": "Initial commit",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/8f804a34796951662d333f6c2b33621acde34d41"
+    },
+    {
+      "sha": "71d49f90686621e143be8641da79f537dc7f09e9",
+      "date": "2025-10-13T23:36:32Z",
+      "author": "rahul-tiwari-95",
+      "title": "ommmit",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/71d49f90686621e143be8641da79f537dc7f09e9"
+    },
+    {
+      "sha": "8268dec38dae8ae270f6a0d24d3fdaef2e2fb148",
+      "date": "2026-01-10T23:02:05Z",
+      "author": "rahul-tiwari-95",
+      "title": "Version 5 - With SIngle DQN",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/8268dec38dae8ae270f6a0d24d3fdaef2e2fb148"
+    },
+    {
+      "sha": "49e1c8077782ccb016af9acbf29d63c61b884678",
+      "date": "2026-05-30T03:13:59Z",
+      "author": "rahul",
+      "title": "revisiting Q6 and tests cleanup etc",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/49e1c8077782ccb016af9acbf29d63c61b884678"
+    },
+    {
+      "sha": "cc834a072e9d77344d84ec5832c307568b9cad71",
+      "date": "2026-05-30T21:53:55Z",
+      "author": "rahul",
+      "title": "CNN + DDQN + Dueling - 0.85 win hunter",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/cc834a072e9d77344d84ec5832c307568b9cad71"
+    },
+    {
+      "sha": "1177b7cc7f977901dcc458eb5f071b5b2c1db80d",
+      "date": "2026-06-06T21:57:05Z",
+      "author": "rahul",
+      "title": "Phase 2: self-play FSP + CNN DQNv2 + reward shaping",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/1177b7cc7f977901dcc458eb5f071b5b2c1db80d"
+    },
+    {
+      "sha": "22e87ca7570f27248112054eac6e972875479097",
+      "date": "2026-06-06T21:57:10Z",
+      "author": "rahul",
+      "title": "Merge Phase 1 + Phase 2 self-play into main",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/22e87ca7570f27248112054eac6e972875479097"
+    },
+    {
+      "sha": "81936c2ab4d5bf048b44be50818d0672b11c7f87",
+      "date": "2026-06-06T21:58:33Z",
+      "author": "rahul",
+      "title": "docs: rewrite README for Phase 1+2 \u2014 architecture, FSP, lessons learned",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/81936c2ab4d5bf048b44be50818d0672b11c7f87"
+    },
+    {
+      "sha": "3f81fbb3ba1e4e22f726110d5292d04066014d71",
+      "date": "2026-06-06T21:58:38Z",
+      "author": "rahul",
+      "title": "Merge Phase 2 README into main",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/3f81fbb3ba1e4e22f726110d5292d04066014d71"
+    },
+    {
+      "sha": "738e4be8816b56d4565066e2b86b592e45520f4b",
+      "date": "2026-06-06T22:10:13Z",
+      "author": "Rahul",
+      "title": "Merge conitnous \u2192 main: Phase 2 self-play + dashboard UI improvements",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/738e4be8816b56d4565066e2b86b592e45520f4b"
+    },
+    {
+      "sha": "e1571ef994f9e04e358f21114fcf48af05d4dae1",
+      "date": "2026-06-06T22:10:13Z",
+      "author": "Rahul",
+      "title": "dashboard: richer UI \u2014 true black bg, chart labels+hints, colored lines, zero-line on reward, replays as collapsible dropdown",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/e1571ef994f9e04e358f21114fcf48af05d4dae1"
+    },
+    {
+      "sha": "0bbfab047432ae1448afae043ed16b775d47f0f3",
+      "date": "2026-06-15T22:16:20Z",
+      "author": "Rahul",
+      "title": "Phase 3 GOP+CHER complete: v5 run, dashboard overhaul, version history docs, UML diagrams, policy bias analysis",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/0bbfab047432ae1448afae043ed16b775d47f0f3"
+    },
+    {
+      "sha": "cb5153bd48fe09e28e572e6dad5f3c62bec2a880",
+      "date": "2026-06-15T22:55:15Z",
+      "author": "Rahul",
+      "title": "v7: correctness fixes + reward redesign + improved training",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/cb5153bd48fe09e28e572e6dad5f3c62bec2a880"
+    },
+    {
+      "sha": "8ac5d532711caaeb5f0c255cfce2b532b6a2600e",
+      "date": "2026-06-20T17:23:31Z",
+      "author": "Rahul",
+      "title": "dashboard: add avg100/gate/cher-dep charts for Phase 3 runs",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/8ac5d532711caaeb5f0c255cfce2b532b6a2600e"
+    },
+    {
+      "sha": "20a13694fe7caef5e242e054f0dc970d7f15c329",
+      "date": "2026-07-27T22:47:37Z",
+      "author": "jesco-absolut",
+      "title": "Add Q6.md: mission, research questions, version history, and roadmap",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/20a13694fe7caef5e242e054f0dc970d7f15c329"
+    },
+    {
+      "sha": "e3468ed09e332c3f2f57a362671452695b72887d",
+      "date": "2026-07-27T22:58:58Z",
+      "author": "jesco-absolut",
+      "title": "v8: Independent PPO self-play port (GAE + clipped surrogate)",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/e3468ed09e332c3f2f57a362671452695b72887d"
+    },
+    {
+      "sha": "60f0e2853186db05d9591010792e2d92936f9046",
+      "date": "2026-07-27T23:13:47Z",
+      "author": "jesco-absolut",
+      "title": "v8: close two test gaps found by review, fix minibatch-shuffle seeding",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/60f0e2853186db05d9591010792e2d92936f9046"
+    },
+    {
+      "sha": "81058095ad718541fbb9d60867faa3580825bca1",
+      "date": "2026-07-27T23:28:52Z",
+      "author": "jesco-absolut",
+      "title": "Ablation 1: fitness-rectified opponent sampling in the FSP hard tier",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/81058095ad718541fbb9d60867faa3580825bca1"
+    },
+    {
+      "sha": "da1cb0eda2f0e1536076784f27813e1d485f6430",
+      "date": "2026-07-27T23:29:03Z",
+      "author": "jesco-absolut",
+      "title": "Ablation 2: frozen-policy anchor loss for the collect head",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/da1cb0eda2f0e1536076784f27813e1d485f6430"
+    },
+    {
+      "sha": "f38fceefcca6fbfe79035a3b71102a39bc7d7df5",
+      "date": "2026-07-27T23:29:11Z",
+      "author": "jesco-absolut",
+      "title": "Wire both ablations into train_phase3.py",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/f38fceefcca6fbfe79035a3b71102a39bc7d7df5"
+    },
+    {
+      "sha": "d5ba3dd68ed8c4990d6bff02cb495bb34429038b",
+      "date": "2026-07-28T00:32:21Z",
+      "author": "jesco-absolut",
+      "title": "v8: add checkpoint/resume support (SIGTERM/SIGINT, periodic, --resume)",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/d5ba3dd68ed8c4990d6bff02cb495bb34429038b"
+    },
+    {
+      "sha": "2dc45afc50e2e2375e2b9e88341c37267b15e2d8",
+      "date": "2026-07-28T00:53:53Z",
+      "author": "jesco-absolut",
+      "title": "Fix mid-episode SIGTERM/checkpoint losing an episode on resume",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/2dc45afc50e2e2375e2b9e88341c37267b15e2d8"
+    },
+    {
+      "sha": "2526d4925e4212d0bd5fdd16eb45092eb40a251c",
+      "date": "2026-07-28T01:06:10Z",
+      "author": "jesco-absolut",
+      "title": "Add local training-run orchestrator (crash-restart, checkpoint resume)",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/2526d4925e4212d0bd5fdd16eb45092eb40a251c"
+    },
+    {
+      "sha": "98466c7d0e02014f77803b62f5d96b2a03d3e555",
+      "date": "2026-07-29T01:59:35Z",
+      "author": "jesco-absolut",
+      "title": "dashboard: PPO (v8) and v7-ablations chart support, index-merge safety fix",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/98466c7d0e02014f77803b62f5d96b2a03d3e555"
+    },
+    {
+      "sha": "88210d5b9693798e015abed2ee18ddab1692c9a9",
+      "date": "2026-07-29T03:19:18Z",
+      "author": "jesco-absolut",
+      "title": "orchestrator: set v7_ablations to --device mps per benchmark results",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/88210d5b9693798e015abed2ee18ddab1692c9a9"
+    },
+    {
+      "sha": "cb050cdf6ab86051a36e5d414ad3da1f20b39e6f",
+      "date": "2026-07-29T22:15:20Z",
+      "author": "jesco-absolut",
+      "title": "orchestrator: reduce v7_ablations to 6000 episodes",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/cb050cdf6ab86051a36e5d414ad3da1f20b39e6f"
+    },
+    {
+      "sha": "f7da744eb5400d207e78f63451c595ae4952018b",
+      "date": "2026-07-29T23:13:33Z",
+      "author": "jesco-absolut",
+      "title": "orchestrator: print PIDs on startup for external tracking",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/f7da744eb5400d207e78f63451c595ae4952018b"
+    },
+    {
+      "sha": "96f3cd1ee8c4dc7f1bde3cae0e2bd35f4361f3c3",
+      "date": "2026-07-29T23:44:39Z",
+      "author": "jesco-absolut",
+      "title": "orchestrator: fix v8_ippo cwd -- points at v8 branch worktree, not main",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/96f3cd1ee8c4dc7f1bde3cae0e2bd35f4361f3c3"
+    },
+    {
+      "sha": "891ef3ee0a8e9b7db74aecdcde609d7d5a1d847a",
+      "date": "2026-07-31T23:24:46Z",
+      "author": "jesco-absolut",
+      "title": "versions: document the real ablation-1 run (rectified opponent sampling)",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/891ef3ee0a8e9b7db74aecdcde609d7d5a1d847a"
+    },
+    {
+      "sha": "ae4523d8d4787c05bf1b1e54ed4376e67c4255ec",
+      "date": "2026-07-31T23:38:26Z",
+      "author": "jesco-absolut",
+      "title": "articles: draft ablation1 writeup (rectified opponent sampling)",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/ae4523d8d4787c05bf1b1e54ed4376e67c4255ec"
+    },
+    {
+      "sha": "d5172cc3568d22d7631e872def286ece2658c99d",
+      "date": "2026-07-31T23:45:50Z",
+      "author": "jesco-absolut",
+      "title": "orchestrator: hot-reload a job's config entry before each restart",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/d5172cc3568d22d7631e872def286ece2658c99d"
+    },
+    {
+      "sha": "8735e9ee83284ef0d3629812f9bee7d936376255",
+      "date": "2026-08-01T00:02:51Z",
+      "author": "jesco-absolut",
+      "title": "Ablation 1b: raise rectify floor + decouple its warmup from easy_warmup_eps",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/8735e9ee83284ef0d3629812f9bee7d936376255"
+    },
+    {
+      "sha": "9fd41b40b9459f9db18893175b44cc96c7f00408",
+      "date": "2026-08-01T00:03:04Z",
+      "author": "jesco-absolut",
+      "title": "orchestrator: add v7_ablations_v2 job config (not launched)",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/9fd41b40b9459f9db18893175b44cc96c7f00408"
+    },
+    {
+      "sha": "c5f54d056a8ce402c7fa6762ee11d383154eb785",
+      "date": "2026-08-01T03:22:00Z",
+      "author": "jesco-absolut",
+      "title": "orchestrator: fix shutdown mislabeling and multi-config status collision",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/c5f54d056a8ce402c7fa6762ee11d383154eb785"
+    },
+    {
+      "sha": "04bf782df5d92d470b3a314ac20ca867e814d540",
+      "date": "2026-08-01T03:24:48Z",
+      "author": "jesco-absolut",
+      "title": "orchestrator: fix gitignore glob to match stem-keyed status/log paths",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/04bf782df5d92d470b3a314ac20ca867e814d540"
+    },
+    {
+      "sha": "1811d88a955252b44b2d698d9f16cb8fd572e77a",
+      "date": "2026-08-01T21:11:50Z",
+      "author": "jesco-absolut",
+      "title": "Ablation 1b: document the real run \u2014 hypothesis rejected",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/1811d88a955252b44b2d698d9f16cb8fd572e77a"
+    },
+    {
+      "sha": "e3da1ab659d9b0a999d90d0f1985016a7aab80b7",
+      "date": "2026-08-01T21:12:16Z",
+      "author": "jesco-absolut",
+      "title": "dashboard: scan.py --runs-dir to pull in runs from other worktrees",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/e3da1ab659d9b0a999d90d0f1985016a7aab80b7"
+    },
+    {
+      "sha": "c2c407f6ac81e4cca5e2dfd85af336646459db36",
+      "date": "2026-08-01T21:12:24Z",
+      "author": "jesco-absolut",
+      "title": "docs: update README for Phase 3/v7/v8/orchestrator, add ablation-1b article",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/c2c407f6ac81e4cca5e2dfd85af336646459db36"
+    },
+    {
+      "sha": "68a42c67da6048376136f2cd90107cf917d43b0e",
+      "date": "2026-08-07T00:43:20Z",
+      "author": "jesco-absolut",
+      "title": "Add Q6 No Way Home: founding document for the multi-agent market-world thread",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/68a42c67da6048376136f2cd90107cf917d43b0e"
+    },
+    {
+      "sha": "e2ba97a2620a48979c23cd5feee220973eb3a2c0",
+      "date": "2026-08-07T00:55:17Z",
+      "author": "jesco-absolut",
+      "title": "No Way Home: trimmed pre-registration + first real code, A1 nontriviality smoke test",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/e2ba97a2620a48979c23cd5feee220973eb3a2c0"
+    },
+    {
+      "sha": "8e2e55b08ecae383993338777d542e79da4e87d7",
+      "date": "2026-08-07T20:51:42Z",
+      "author": "jesco-absolut",
+      "title": "No Way Home: multi-locality world + message/lineage layer, test I-7 directly",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/8e2e55b08ecae383993338777d542e79da4e87d7"
+    },
+    {
+      "sha": "0f57b61247f3a204f1a2c8412e6b4dbdb2c1e25c",
+      "date": "2026-08-07T22:05:52Z",
+      "author": "jesco-absolut",
+      "title": "No Way Home: ballot + noisy election + delegated executor -- the actual institution",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/0f57b61247f3a204f1a2c8412e6b4dbdb2c1e25c"
+    },
+    {
+      "sha": "92ff28139f948315aeb7093daf811945a52932d4",
+      "date": "2026-08-07T22:51:46Z",
+      "author": "jesco-absolut",
+      "title": "No Way Home: first learning citizen -- does it discover lineage-awareness on its own?",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/92ff28139f948315aeb7093daf811945a52932d4"
+    },
+    {
+      "sha": "12a49cc78ce1005e928db74659fdc5fdb1c2cee8",
+      "date": "2026-08-08T07:02:52Z",
+      "author": "jesco-absolut",
+      "title": "Add CITATIONS.md: working bibliography with one-line takeaways",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/12a49cc78ce1005e928db74659fdc5fdb1c2cee8"
+    },
+    {
+      "sha": "ef316280dec193983903233dd33f8d398d71dbf0",
+      "date": "2026-08-08T23:49:08Z",
+      "author": "jesco-absolut",
+      "title": "Add environment redesign proposal; fix stale world.py docstring",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/ef316280dec193983903233dd33f8d398d71dbf0"
+    },
+    {
+      "sha": "af4c3130344ed59c9886d95661846f1812debba6",
+      "date": "2026-08-09T00:17:33Z",
+      "author": "jesco-absolut",
+      "title": "Add README_FOR_DUMMIES.md and ENGINEERING_NWH_PHASE_PLAN.md",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/af4c3130344ed59c9886d95661846f1812debba6"
+    },
+    {
+      "sha": "cd33d0fac63b6bcb32eb838dd363cf66f5cb07de",
+      "date": "2026-08-09T00:23:44Z",
+      "author": "jesco-absolut",
+      "title": "Increment 1, TODO 1/3: add lineage_role to messages.py::Message",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/cd33d0fac63b6bcb32eb838dd363cf66f5cb07de"
+    },
+    {
+      "sha": "4d16b91981cbc10e165912bb62db726e3a7370fe",
+      "date": "2026-08-09T00:38:10Z",
+      "author": "jesco-absolut",
+      "title": "Increment 1, TODO 2-3/3: manipulability tags + invariant test",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/4d16b91981cbc10e165912bb62db726e3a7370fe"
+    },
+    {
+      "sha": "742823c4abf461fa5fe09a12b96c3930681fa444",
+      "date": "2026-08-09T00:59:41Z",
+      "author": "jesco-absolut",
+      "title": "Increment 2: beta-instrument + both required control arms",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/742823c4abf461fa5fe09a12b96c3930681fa444"
+    },
+    {
+      "sha": "4e3c0e61833811025b049c4a6f8588382d7775df",
+      "date": "2026-08-09T05:51:14Z",
+      "author": "jesco-absolut",
+      "title": "Unblock Increment 3: validated JT test, pilot sweep, power calculation",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/4e3c0e61833811025b049c4a6f8588382d7775df"
+    },
+    {
+      "sha": "13c83fec298fad38df863adee444799d3d570c4a",
+      "date": "2026-08-09T06:05:52Z",
+      "author": "jesco-absolut",
+      "title": "Add no_way_home/README.md as the folder's actual landing page",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/13c83fec298fad38df863adee444799d3d570c4a"
+    },
+    {
+      "sha": "80b762e4334efafd032ad7164b09ab575817da16",
+      "date": "2026-08-09T06:10:14Z",
+      "author": "jesco-absolut",
+      "title": "Lock N=50 pre-registration for Increment 3's beta-sweep, before running it",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/80b762e4334efafd032ad7164b09ab575817da16"
+    },
+    {
+      "sha": "379bd252792736956d6525f3f24dd2976e830d44",
+      "date": "2026-08-09T06:14:30Z",
+      "author": "jesco-absolut",
+      "title": "Increment 3 confirmatory result: a knee exists at beta=0.75, not beta=1.0",
+      "url": "https://github.com/rahul-tiwari-95/Q6/commit/379bd252792736956d6525f3f24dd2976e830d44"
+    }
+  ]
+}

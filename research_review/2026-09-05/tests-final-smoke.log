@@ -1,0 +1,5 @@
+Command: Python imports torch and pytest, calls torch.set_num_threads(1), then pytest.main([tests/test_train_phase2.py, -q, -o, cache_dir=/tmp/q6-pytest-cache, --junitxml=/tmp/q6-final-smoke.xml])
+.                                                                        [100%]
+----------------- generated xml file: /tmp/q6-final-smoke.xml ------------------
+1 passed in 186.88s (0:03:06)
+Exit code: 0
