@@ -68,6 +68,16 @@ if(debug.fixed?.aggregate?.length){
  assert(get('fixed-gate-results').innerHTML.includes('Efficient:'),'Separate efficiency gates visible');
  assert(get('fixed-state-table').innerHTML.includes('Winnable states'),'Full-state denominator visible');
  assert(get('fixed-paired-table').innerHTML.includes('Success Δ'),'Paired comparison visible');
+ const checkFixedOutcomeCards=mode=>{
+  const finalUpdate=debug.fixed.protocol.budget.updates_per_seed;
+  for(const [id,key,format] of [['success','success_rate',value=>(100*value).toFixed(1)+'%'],['efficient','efficient_success_rate',value=>(100*value).toFixed(1)+'%'],['steps','mean_steps',value=>value.toFixed(1)]]){
+   const values=[...get('fixed-outcome-'+id).innerHTML.matchAll(/<strong[^>]*>([^<]*)<\/strong>/g)].map(match=>match[1]);
+   const expected=['exact_q','double_dqn'].map(condition=>{const value=debug.fixed.aggregate.find(r=>r.condition===condition && r.panel==='heldout' && r.mode===mode && r.checkpoint===finalUpdate)?.[key];return Number.isFinite(value)?format(value):'—';});
+   assert.deepEqual(values,expected,'Final fresh '+key+' cards match saved '+mode+' aggregates');
+  }
+ };
+ checkFixedOutcomeCards('greedy');
+ assert(get('fixed-outcome-success').innerHTML.includes('Primary'));assert(get('fixed-outcome-efficient').innerHTML.includes('Secondary'));
  assert(debug.fixedSelected,'Default fixed-data recording selected');
  const originalRun={...debug.fixed.run},originalGates=debug.fixed.gates;
  for(const [run,gates,phrase] of [
@@ -87,7 +97,9 @@ if(debug.fixed?.aggregate?.length){
  debug.fixed.aggregate=originalAggregate.filter(r=>r.condition==='exact_q');debug.fixed.state_aggregate=originalStates.filter(r=>r.condition==='exact_q');debug.fixed.loss_aggregate=originalLosses.filter(r=>r.condition==='exact_q');debug.renderFixed();
  assert(get('fixed-gate-note').textContent.includes('Incomplete comparison'));
  for(const id of chartIds)assert(!get(id).innerHTML.includes('Double DQN targets'),'Incomplete comparison does not invent a missing curve');
- debug.fixed.aggregate=[];debug.renderFixed();assert.equal(get('fixed-content').hidden,true);for(const id of chartIds)assert.equal(get(id).innerHTML,'');
+ checkFixedOutcomeCards('greedy');
+ assert(get('fixed-outcome-success').innerHTML.includes('>—</strong>'),'Absent condition has no substituted final outcome');
+ debug.fixed.aggregate=[];debug.renderFixed();assert.equal(get('fixed-content').hidden,true);for(const id of [...chartIds,'fixed-outcome-success','fixed-outcome-efficient','fixed-outcome-steps'])assert.equal(get(id).innerHTML,'');
  const originalProvenance=debug.fixed.provenance;
  debug.fixed.provenance={stop_reason:'Archive mismatch <example> & paired check failed'};debug.fixed.run={status:'inconsistent_not_gate_evidence'};
  debug.renderFixed();assert.equal(get('fixed-content').hidden,true);assert.equal(get('fixed-empty-title').textContent,'Consistency check failed.');assert(get('fixed-empty-message').textContent.includes('Archive mismatch <example> & paired check failed'),'Empty consistency state preserves literal reason through textContent');
@@ -97,6 +109,7 @@ if(debug.fixed?.aggregate?.length){
  const stableIds=['fixed-train-agreement','fixed-fresh-agreement','fixed-loss-chart','fixed-paired-table','fixed-gate-results','fixed-fit-metrics'];
  const before=new Map(stableIds.map(id=>[id,get(id).innerHTML]));
  get('fixed-epsilon').value='epsilon_0_1';get('fixed-epsilon').listeners.change();
+ checkFixedOutcomeCards('epsilon_0_1');assert(get('fixed-outcome-caption').textContent.includes('ε = 0.1'));
  for(const id of stableIds)assert.equal(get(id).innerHTML,before.get(id),'Exploration preserves '+id);
  assert(get('fixed-fresh-chart').innerHTML.includes('Optimizer updates per seed'),'Fixed-data axis counts optimizer updates');
  let recordings=0;
@@ -140,7 +153,7 @@ if(debug.fixed?.aggregate?.length){
  get('fixed-replay-reset').listeners.click();get('fixed-replay-play').listeners.click();debug.activateTab('supervised');assert.equal(intervals.size,0);
  await get('refresh').listeners.click();assert.equal(get('fixed-content').hidden,false);
  assert(!get('fixed-rollout-table').innerHTML.includes('NaN'));assert(!get('fixed-paired-table').innerHTML.includes('NaN'));
- console.log(`Fixed-data targets: ${debug.fixed.aggregate.length} rollout aggregates, ${debug.fixed.state_aggregate.length} state aggregates, ${debug.fixed.loss_aggregate.length} loss windows, all ${recordings} recordings, both conditions and action modes, seven gate interpretations, paired differences, Q labels, playback and refresh passed.`);
+ console.log(`Fixed-data targets: ${debug.fixed.aggregate.length} rollout aggregates, ${debug.fixed.state_aggregate.length} state aggregates, ${debug.fixed.loss_aggregate.length} loss windows, all ${recordings} recordings, both conditions and action modes, seven gate interpretations, final outcome cards and mode changes, paired differences, Q labels, playback and refresh passed.`);
 }else{
  assert.equal(get('fixed-content').hidden,true);assert.equal(get('fixed-empty').hidden,false);
  for(const id of ['fixed-train-chart','fixed-fresh-chart','fixed-train-agreement','fixed-fresh-agreement','fixed-loss-chart'])assert.equal(get(id).innerHTML,'');

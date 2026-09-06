@@ -78,7 +78,7 @@ function renderFixed(){
   if(!ready){
     $('fixed-empty-title').textContent=inconsistent?'Consistency check failed.':fixed?'No completed comparison checkpoint.':'No saved fixed-data comparison yet.';
     $('fixed-empty-message').textContent=inconsistent?consistencyNotice:fixed?`The saved run has no complete rollout aggregates to display. Status: ${(run.status || 'unavailable').replaceAll('_',' ')}.${typeof stopReason==='string' && stopReason?` Reason: ${stopReason}`:''} No gate can be established.`:'Refresh after the declared study finishes. Earlier measured experiments remain available in the other tabs.';
-    for(const id of ['fixed-train-chart','fixed-fresh-chart','fixed-train-agreement','fixed-fresh-agreement','fixed-loss-chart'])$(id).innerHTML='';return;
+    for(const id of ['fixed-train-chart','fixed-fresh-chart','fixed-train-agreement','fixed-fresh-agreement','fixed-loss-chart','fixed-outcome-success','fixed-outcome-efficient','fixed-outcome-steps'])$(id).innerHTML='';$('fixed-outcome-caption').textContent='';return;
   }
   $('fixed-study-label').textContent=`${run.id || protocol.id || 'Saved comparison'} · ${(run.status || 'exploratory').replaceAll('_',' ')}`;
   const eligible=gates.eligible===true && !inconsistent,conditionGates=gates.per_condition || [];
@@ -122,6 +122,15 @@ function renderFixed(){
 function renderFixedComparison(){
   if(!fixed?.aggregate?.length)return;
   const latest=latestFixedUpdate(),states=fixed.state_aggregate || [],stateAll=states.filter(r=>r.time_bucket==='all'),rollouts=fixed.aggregate.filter(r=>r.mode===fixedMode());
+  const finalUpdate=fixed.protocol?.budget?.updates_per_seed ?? Math.max(0,...(fixed.protocol?.checkpoints || []).filter(Number.isFinite));
+  const finalRows=condition=>rollouts.find(r=>r.condition===condition && r.panel==='heldout' && r.checkpoint===finalUpdate);
+  const outcomes=[
+    ['success','Primary · Success','success_rate',percent,'All fresh episodes in the denominator'],
+    ['efficient','Secondary · Efficient success','efficient_success_rate',percent,`Success within ${number(fixed.protocol?.gates?.planner_step_multiplier)} × the shortest-path length`],
+    ['steps','Diagnostic · Mean steps','mean_steps',value=>Number.isFinite(value)?value.toFixed(1):'—','Includes failed episodes; fewer steps is better'],
+  ];
+  for(const [id,label,key,format,detail] of outcomes)$(`fixed-outcome-${id}`).innerHTML=`<span>${label}</span><div class="fixed-outcome-pair">${fixedConditions.map(condition=>`<div><small>${fixedLabel(condition)}</small><strong style="color:${fixedColors[condition]}">${format(finalRows(condition)?.[key])}</strong></div>`).join('')}</div><small>${detail}</small>`;
+  $('fixed-outcome-caption').textContent=`${number(finalUpdate)} updates per condition and seed · ${fixedMode()==='greedy'?'greedy actions':'ε = 0.1 exploration'}. Outcomes follow the rollout mode; declared gates stay greedy. Missing final measurements appear as —.`;
   const series=(rows,panel,key,low,high)=>fixedConditions.map(condition=>({label:fixedLabel(condition),color:fixedColors[condition],rows:rows.filter(r=>r.condition===condition && r.panel===panel).map(r=>({checkpoint:r.checkpoint,value:r[key],low:r[low],high:r[high]}))}));
   for(const [panel,id] of [['train','train'],['heldout','fresh']]){
     renderUpdateChart(`fixed-${id}-chart`,series(rollouts,panel,'success_rate','seed_success_min','seed_success_max'),fixed.protocol?.checkpoints,true,`${supervisedPanelLabel(panel)} episode success`);

@@ -4,7 +4,7 @@ The [root README](../README.md) is the entry point for installing and running Q6
 
 ## Current experiments
 
-- [Fixed-data target protocol](experiments/fixed_targets_protocol_v1.md): paired exact Q* versus Double DQN targets with the same states, actions, initialization, loss and update budget; a new fresh panel and a separate route-efficiency diagnostic.
+- [Fixed-data target protocol](experiments/fixed_targets_protocol_v1.md), [result](experiments/fixed_targets_results_v1.md) and [validation](validation/fixed-targets-v1.md): exact and Double DQN targets both pass fresh success under matched coverage; DDQN improves efficient success, but both miss the stricter efficiency and every-seed fit diagnostics. State coverage and online collection/replay are next.
 - [Exact-target supervision protocol](experiments/supervised_protocol_v1.md) and [result](experiments/supervised_results_v1.md): the unchanged network reaches 85.42% fresh-layout success; every seed passes the supervised fresh gate, but full training fit and efficient routes remain unresolved. This is privileged supervision, not online-RL competence.
 - [Supervised validation](validation/supervised-v1.md): tests, independently recomputed labels/predictions, dataset and sampling audits, and dashboard coverage.
 - [A-only competence protocol](experiments/competence_protocol_v1.md) and [result](experiments/competence_results_v1.md): both fixed training sets reach 100% greedy success for every seed; fresh-map competence remains unmet.

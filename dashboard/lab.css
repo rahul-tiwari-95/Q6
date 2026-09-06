@@ -136,3 +136,7 @@ body.theater.research-lab main { max-width:1440px; padding:42px 44px 22px; }
 .fixed-replay-selectors { grid-template-columns:1fr 1fr; }.fixed-replay-selectors label:first-child { grid-column:1/-1; }
 .paired-total td { color:var(--green); border-top:1px solid #496453; }
 .experiment-tabs { overflow-x:auto; }.experiment-tabs button { flex-shrink:0; }
+
+.fixed-outcome-heading { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 20px; margin:24px 0 12px; }.fixed-outcome-heading .eyebrow,.fixed-outcome-heading .help-text { margin:0; }
+.fixed-outcomes { grid-template-columns:repeat(3,minmax(0,1fr)); }.fixed-outcome-pair { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:15px 0 10px; }.fixed-outcome-pair strong { font-size:23px; }.fixed-outcome-pair small { display:block; font-size:9px; line-height:1.5; }.fixed-outcomes .stat-card>small { display:block; line-height:1.6; }
+@media(max-width:760px) { .fixed-outcomes { grid-template-columns:1fr; gap:10px; }.fixed-outcome-pair { margin:10px 0 6px; }.fixed-outcome-heading { margin-top:20px; } }

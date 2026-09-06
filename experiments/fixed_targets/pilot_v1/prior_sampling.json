@@ -1,0 +1,32 @@
+{
+  "0": {
+    "updates": 30000,
+    "examples_seen": 1920000,
+    "unique_states_sampled": 163840,
+    "batch_index_sha256": "f32490e1ca06867360c85f56477aa9adcb419196328954bf615904f183d32628",
+    "rng_seed_tuple": [
+      0,
+      66301
+    ]
+  },
+  "1": {
+    "updates": 30000,
+    "examples_seen": 1920000,
+    "unique_states_sampled": 163840,
+    "batch_index_sha256": "305e7552662dde4ed6d99d83216328cbf7cd9a4cd18a3c2b223707ebd6109224",
+    "rng_seed_tuple": [
+      1,
+      66301
+    ]
+  },
+  "2": {
+    "updates": 30000,
+    "examples_seen": 1920000,
+    "unique_states_sampled": 163840,
+    "batch_index_sha256": "ed922e2f3c34e583165a271905854e2cc0974865b854b073425792b7f518c781",
+    "rng_seed_tuple": [
+      2,
+      66301
+    ]
+  }
+}
