@@ -90,6 +90,19 @@ if(debug.coverage?.aggregate?.length){
  assert.equal((get('coverage-time-bars').innerHTML.match(/class="diagnostic-row"/g)||[]).length,support.by_time_bucket.length,'Every time bucket rendered');
  for(const row of support.by_time_bucket)assert(get('coverage-time-bars').innerHTML.includes((100*row.coverage_rate).toFixed(1)+'%'),'Saved time coverage ratio rendered');
  assert(get('coverage-support-caption').textContent.includes(support.unique_current_states.toLocaleString()));
+ const diagnosticCards=[...get('coverage-support-stats').innerHTML.matchAll(/<div><span>([^<]*)<\/span><strong>([^<]*)<\/strong><small>([^<]*)<\/small><\/div>/g)];
+ assert.equal(diagnosticCards.length,6,'Coverage summary preserves two rows of three diagnostic cards');
+ for(const [offset,rate,numerator,denominator] of [
+  [3,support.winnable_current_state_fraction,support.overall.visited_winnable_states,support.overall.winnable_states],
+  [4,support.goal_near_current_state_fraction,support.overall.visited_goal_near_states,support.overall.goal_near_states],
+  [5,support.successor_queries.outside_support_fraction,support.successor_queries.outside_support_nonterminal_transitions,support.successor_queries.nonterminal_transitions],
+ ]){assert.equal(diagnosticCards[offset][2],(100*rate).toFixed(2)+'%');assert(diagnosticCards[offset][3].includes(`${numerator.toLocaleString()} / ${denominator.toLocaleString()}`),'Coverage subset numerator and denominator match saved data');}
+ assert(diagnosticCards[4][3].includes('physical shortest path ≤ 2 moves; all remaining clocks'),'Goal-near coverage definition stays independent of remaining time');
+ const layoutCells=[...get('coverage-layout-table').innerHTML.matchAll(/<tr>(<td>.*?)<\/tr>/g)].map(match=>[...match[1].matchAll(/<td>(.*?)<\/td>/g)].map(cell=>cell[1]));
+ assert.equal(layoutCells.length,debug.coverage.paired_differences.per_layout.length);
+ const signedDelta=(value,scale=1,suffix='')=>`${value>0?'+':''}${(value*scale).toFixed(1)}${suffix}`;
+ debug.coverage.paired_differences.per_layout.forEach((row,index)=>{assert.equal(layoutCells[index][4],signedDelta(row.efficient_success_delta),'Per-layout efficient-success delta matches saved data');assert.equal(layoutCells[index][7],signedDelta(row.noop_rate_delta,100,' pp'),'Per-layout no-op-rate delta matches saved data');});
+
  assert(get('coverage-successor-caption').textContent.includes(support.successor_queries.outside_support_nonterminal_transitions.toLocaleString()));
  assert(get('coverage-successor-caption').textContent.includes('not optimizer samples'));
  assert(html.includes('does not add it to the training support'),'Current support and detached successor queries explicitly distinguished');

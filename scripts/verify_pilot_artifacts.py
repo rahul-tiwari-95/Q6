@@ -304,6 +304,29 @@ def verify_supervised(folder):
     print(f"{folder.name}: {len(groups)} supervised rollout groups, dataset split, final predictions, exposure and gates verified")
 
 
+def verify_coverage_support(path):
+    """Reconcile the separate post-hoc artifact without changing its inputs."""
+    from analyze_coverage_support import analyze
+
+    saved = read_json(path)
+    actual = analyze(ROOT / saved["source_directory"])
+
+    def same(left, right):
+        if isinstance(left, dict):
+            return isinstance(right, dict) and left.keys() == right.keys() and all(
+                same(left[key], right[key]) for key in left)
+        if isinstance(left, list):
+            return isinstance(right, list) and len(left) == len(right) and all(
+                same(a, b) for a, b in zip(left, right))
+        if isinstance(left, float):
+            return isinstance(right, (int, float)) and math.isclose(left, right, rel_tol=1e-12, abs_tol=1e-12)
+        return left == right
+
+    if not same(saved, actual):
+        raise ValueError(f"Post-hoc support diagnostic mismatch: {path.relative_to(ROOT)}")
+    print(f"{path.relative_to(ROOT)}: input hashes and saved-prediction support diagnostics verified")
+
+
 def main():
     for version in ("v1", "v2"):
         verify_adaptation(ROOT / "experiments/adaptation" / f"pilot_{version}")
@@ -327,6 +350,8 @@ def main():
         verify_manifest(manifest.parent)
         subprocess.run([sys.executable, str(ROOT / "scripts/audit_coverage_study.py"),
                         "--study", str(manifest.parent), "--skip-forward-inference"], check=True)
+    for diagnostic in sorted((ROOT / "experiments/coverage").glob("analysis*/support_diagnostic.json")):
+        verify_coverage_support(diagnostic)
 
 
 if __name__ == "__main__":

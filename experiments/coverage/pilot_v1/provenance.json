@@ -1,0 +1,81 @@
+{
+  "archive": "experiments/fixed_targets/pilot_v1",
+  "files": {
+    "dataset.npz": "e0e832b0861737494bd4653baa86944c6285fabc8ae4fce29214cceedcada76d",
+    "transitions.npz": "441129442a98667cc3a3a03060af9031d6f0148897c24fad5e77151706d10caa",
+    "dataset_metadata.json": "91e5ea3af64156a97fb1ad45d3f8d56d8a8da60385e2bc7d84804c316e43b9a0",
+    "sampling.json": "011dc47495c98122f28b3470b587c60c032418025cbc77d8dfb68a79cbe7fab1",
+    "results.json": "965710a73566f080c4fc899bbb9d5d5a7d24547b8cff1de87cd6fe433636bb49",
+    "protocol.json": "393550a39f73c7d72c4a3c6e0f75d93df484ac06011664c87db2d58e5a9638ab",
+    "manifest.json": "f3ac090eb320362a977b7a36f89d94c7a4d9751b865226177424020707575032"
+  },
+  "archive_initial_policy_hashes": {
+    "exact_q": {
+      "0": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c",
+      "1": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b",
+      "2": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4"
+    },
+    "double_dqn": {
+      "0": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c",
+      "1": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b",
+      "2": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4"
+    }
+  },
+  "exhaustive_replication": [
+    {
+      "seed": 0,
+      "applicable": true,
+      "final_weights_identical": true,
+      "batch_index_sha256_identical": true,
+      "initial_weights_identical": true,
+      "archive_model": "experiments/fixed_targets/pilot_v1/models/double_dqn_seed0_update30000.pt",
+      "archive_model_sha256": "2d3236ae3495a0fcc92dc237503d9231f058dee13a4297f3d57e5794aac30e6f"
+    },
+    {
+      "seed": 1,
+      "applicable": true,
+      "final_weights_identical": true,
+      "batch_index_sha256_identical": true,
+      "initial_weights_identical": true,
+      "archive_model": "experiments/fixed_targets/pilot_v1/models/double_dqn_seed1_update30000.pt",
+      "archive_model_sha256": "b5d1529282b029a29e03531093a0b55294ce18786cc30ffca3e7248e9b6177c2"
+    },
+    {
+      "seed": 2,
+      "applicable": true,
+      "final_weights_identical": true,
+      "batch_index_sha256_identical": true,
+      "initial_weights_identical": true,
+      "archive_model": "experiments/fixed_targets/pilot_v1/models/double_dqn_seed2_update30000.pt",
+      "archive_model_sha256": "1d4c578921f0517593f2e7b9922febd53b7a30360f5c7081f7a0dab26be1ea20"
+    }
+  ],
+  "training_arrays_identical": true,
+  "transition_arrays_identical": true,
+  "earlier_supervised_archive": "experiments/supervised/pilot_v1",
+  "earlier_supervised_metadata_sha256": "1b58d07e9cfc15a93fb28bf06abb53175d3a7eec2e3d6230831be894dbecc553",
+  "replication_required": true,
+  "paired_consistency": [
+    {
+      "seed": 0,
+      "complete": true,
+      "initial_weights_identical": true,
+      "same_update_count": true,
+      "same_batch_indices_required": false
+    },
+    {
+      "seed": 1,
+      "complete": true,
+      "initial_weights_identical": true,
+      "same_update_count": true,
+      "same_batch_indices_required": false
+    },
+    {
+      "seed": 2,
+      "complete": true,
+      "initial_weights_identical": true,
+      "same_update_count": true,
+      "same_batch_indices_required": false
+    }
+  ]
+}
