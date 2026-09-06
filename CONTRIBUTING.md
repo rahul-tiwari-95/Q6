@@ -71,13 +71,16 @@ node scripts/check_dashboard.mjs
 
 CI also runs these checks and checks the current dashboard JavaScript syntax. The dashboard harness exercises saved-data controls with DOM/canvas stubs; inspect the actual browser for layout and native interaction. Integrity does not establish independent replication or scientific validity.
 
-For a deeper read-only audit of the complete exact-target study, use its recorded Python 3.12, Torch 2.8.0 and NumPy 2.0.2 environment:
+For deeper read-only audits of the completed target studies, use their recorded Python 3.12, Torch 2.8.0 and NumPy 2.0.2 environment:
 
 ```bash
 python scripts/audit_supervised_study.py
+python scripts/audit_fixed_targets_study.py
 ```
 
-This separately checks every exact target, reconstructs the minibatch sampling schedule, reproduces final dense predictions from saved weights, and reconciles raw metrics and gates. It performs forward inference and isolated environment transitions, with no training or policy rollouts. Bit-exact predictions require the recorded environment; this stricter check is not part of the broader dependency-range CI. It accepts complete, undeviating v1 studies; smoke and incomplete artifacts use the general verifier above.
+These separately check exact targets, reconstruct minibatch sampling schedules, reproduce final dense predictions from saved weights, and reconcile raw metrics and gates. They perform forward inference and isolated environment transitions, with no training or policy rollouts. Bit-exact predictions require the recorded environment and are excluded from broader dependency-range CI. The supervised audit accepts complete, undeviating v1 studies; its smoke and incomplete artifacts can use the general verifier's `verify_supervised` function.
+
+The fixed-target audit additionally checks the compact transition table, paired sampling and initialization, exact-arm identity with the preceding study, paired outcomes and efficient-success denominators. Its `--skip-forward-inference` mode is included in general artifact verification and CI: it retains saved-model hashes and all dataset/metric checks while omitting bit-exact forward reproduction. Use `--study <directory> --allow-smoke` to audit a completed smoke structurally; this never makes it eligible for research gates. Incomplete or inconsistent fixed-target artifacts require inspection of their saved stop reason and partial evidence and are not accepted as complete studies by this audit.
 
 ## Build a package
 

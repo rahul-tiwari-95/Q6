@@ -10,6 +10,8 @@ import gzip
 import hashlib
 import json
 import math
+import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -314,6 +316,13 @@ def main():
     for manifest in sorted((ROOT / "experiments/supervised").glob("*/manifest.json")):
         verify_manifest(manifest.parent)
         verify_supervised(manifest.parent)
+    for manifest in sorted((ROOT / "experiments/fixed_targets").glob("*/manifest.json")):
+        verify_manifest(manifest.parent)
+        # Isolate archived q6 imports from the current checkout. The portable
+        # lane retains raw-data/model-hash checks; exact forward reproduction
+        # belongs to the separately documented, pinned-runtime audit.
+        subprocess.run([sys.executable, str(ROOT / "scripts/audit_fixed_targets_study.py"),
+                        "--study", str(manifest.parent), "--skip-forward-inference"], check=True)
 
 
 if __name__ == "__main__":

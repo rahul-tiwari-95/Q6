@@ -23,6 +23,14 @@ const supervisedMode=()=>$('supervised-epsilon').value;
 const supervisedPanelLabel=panel=>panel==='train'?'Training layouts':'Fresh layouts';
 const supervisedPolicyLabel=policy=>({learner:'Supervised network',prior_stream:'Historical frozen RL',random_actions:'Random actions',shortest_path:'Shortest path'}[policy] || policy);
 const latestSupervisedUpdate=()=>Math.max(0,...(supervised?.aggregate || []).map(r=>r.checkpoint).filter(Number.isFinite));
+let fixed=null, fixedTrajectory=null, fixedFrame=0, fixedTimer=null;
+const fixedConditions=['exact_q','double_dqn'];
+const fixedColors={exact_q:'#a6e5c1',double_dqn:'#98b8d1'};
+const fixedLabel=condition=>({exact_q:'Exact targets',double_dqn:'Double DQN targets',shared:'Shared references'}[condition] || condition);
+const fixedMode=()=>$('fixed-epsilon').value;
+const latestFixedUpdate=()=>Math.max(0,...(fixed?.aggregate || []).map(r=>r.checkpoint).filter(Number.isFinite));
+const signed=(value,scale=1,suffix='')=>Number.isFinite(value)?`${value>0?'+':''}${(value*scale).toFixed(1)}${suffix}`:'—';
+
 let loadInProgress = false;
 const replayRows = () => [...(adaptation?.trajectories || []),...(diagnostics?.trajectories || [])];
 
@@ -35,7 +43,7 @@ function selectOptions(id, options, preferred) {
   el.value = values.includes(previous) ? previous : values.includes(preferred) ? preferred : values[0] || '';
 }
 function listItems(id, values) { $(id).innerHTML = (values || []).map(v => `<li>${escape(v)}</li>`).join(''); }
-const tracks = ['supervised','competence','adaptation','provenance'];
+const tracks = ['fixed','supervised','competence','adaptation','provenance'];
 function activateTab(name) {
   for (const track of tracks) {
     const active = track === name;
@@ -46,6 +54,7 @@ function activateTab(name) {
   stopPlayback();
   stopCompetencePlayback();
   stopSupervisedPlayback();
+  stopFixedPlayback();
   history.replaceState(null,'',`#${name}`);
 }
 for (const [index,name] of tracks.entries()) {
@@ -59,6 +68,110 @@ for (const [index,name] of tracks.entries()) {
   });
 }
 if (tracks.includes(location.hash.slice(1))) activateTab(location.hash.slice(1));
+
+function renderFixed(){
+  stopFixedPlayback();
+  const {run={},protocol={},gates={}}=fixed || {},dataset=protocol.dataset || {},latest=latestFixedUpdate();
+  const inconsistent=run.status==='inconsistent_not_gate_evidence',stopReason=fixed?.provenance?.stop_reason;
+  const consistencyNotice=`Consistency check failed. This run is ineligible for the declared gates.${typeof stopReason==='string' && stopReason?` Reason: ${stopReason}`:''}`;
+  const ready=Boolean(fixed?.aggregate?.length);$('fixed-empty').hidden=ready;$('fixed-content').hidden=!ready;
+  if(!ready){
+    $('fixed-empty-title').textContent=inconsistent?'Consistency check failed.':fixed?'No completed comparison checkpoint.':'No saved fixed-data comparison yet.';
+    $('fixed-empty-message').textContent=inconsistent?consistencyNotice:fixed?`The saved run has no complete rollout aggregates to display. Status: ${(run.status || 'unavailable').replaceAll('_',' ')}.${typeof stopReason==='string' && stopReason?` Reason: ${stopReason}`:''} No gate can be established.`:'Refresh after the declared study finishes. Earlier measured experiments remain available in the other tabs.';
+    for(const id of ['fixed-train-chart','fixed-fresh-chart','fixed-train-agreement','fixed-fresh-agreement','fixed-loss-chart'])$(id).innerHTML='';return;
+  }
+  $('fixed-study-label').textContent=`${run.id || protocol.id || 'Saved comparison'} · ${(run.status || 'exploratory').replaceAll('_',' ')}`;
+  const eligible=gates.eligible===true && !inconsistent,conditionGates=gates.per_condition || [];
+  const status=value=>!eligible?'Not eligible':value===true?'Met':value===false?'Not met':'Not measured';
+  let interpretation;
+  if(inconsistent)interpretation=consistencyNotice;
+  else if(run.interpretation==='incomplete_not_gate_evidence' || (run.status && run.status!=='complete')) interpretation='Incomplete comparison. Partial measurements cannot pass the declared gates or establish a difference between target procedures.';
+  else if(!eligible)interpretation='Smoke or protocol-deviation run. These measurements check execution and cannot pass the declared research gates.';
+  else {
+    const exact=conditionGates.find(r=>r.condition==='exact_q'),boot=conditionGates.find(r=>r.condition==='double_dqn');
+    if(exact?.fresh && boot?.fresh)interpretation='Both target procedures pass the fresh-success gate under fixed, broad state coverage. Inspect the paired gap, training fit, and route efficiency before deciding what transfers to online learning.';
+    else if(exact?.fresh && boot?.fresh===false)interpretation='Exact targets pass the fresh-success gate; Double DQN targets do not. Under this matched dataset and budget, the bootstrapped target procedure remains a learning limitation. This does not show that every bootstrapped method fails.';
+    else if(exact?.fresh===false && boot?.fresh)interpretation='Double DQN targets pass the fresh-success gate; exact targets do not. Inspect paired results and fitting diagnostics before drawing a broader conclusion.';
+    else interpretation='Neither target procedure establishes the declared fresh-success gate. Inspect whether the exact-target control fits its training states before interpreting the bootstrapped comparison.';
+    const unresolved=conditionGates.filter(r=>r.training_fit===false).map(r=>fixedLabel(r.condition));
+    if(unresolved.length)interpretation+=` Training fit remains unresolved for ${unresolved.join(' and ')}.`;
+    const inefficient=conditionGates.filter(r=>r.efficient===false).map(r=>fixedLabel(r.condition));
+    if(inefficient.length)interpretation+=` The separate efficiency gate is unmet for ${inefficient.join(' and ')}.`;
+    interpretation+=' This remains an offline experiment with privileged coverage, not online RL competence.';
+  }
+  $('fixed-gate-note').textContent=interpretation;$('fixed-gate-note').classList.toggle('passed',eligible && conditionGates.length===2 && conditionGates.every(r=>r.fresh===true && r.training_fit===true && r.efficient===true));
+  $('fixed-stats').innerHTML=[
+    [number(protocol.seeds?.length),'Paired initialization seeds','Same initial weights within each pair'],
+    [number(latest),'Latest optimizer checkpoint','Matched updates per condition and seed'],
+    [number(dataset.train_states),'Fixed training states','All four actions in each sampled row'],
+    [number(dataset.heldout_map_seeds?.length),'New fresh layouts',`First map ${number(dataset.heldout_map_seeds?.[0])} · shared by both conditions`],
+  ].map(([value,label,detail])=>`<div class="stat-card"><span>${label}</span><strong>${value}</strong><small>${detail}</small></div>`).join('');
+  $('fixed-gates').textContent=`Training fit requires ${percent(protocol.gates?.training_success)} greedy training success and ${percent(protocol.gates?.training_state_optimal)} optimal-action agreement on still-winnable training states in every seed. Fresh success requires ${percent(protocol.gates?.heldout_success)} in every seed and a score above random. Efficient success means collecting within twice the shortest-path length, with all episodes in the denominator; its separate threshold is ${percent(protocol.gates?.efficient_success ?? protocol.gates?.heldout_efficient_success)} per seed. The exploration toggle does not change these greedy gates.`;
+  $('fixed-gate-results').innerHTML=conditionGates.map(c=>`<div class="gate-row"><strong>${fixedLabel(c.condition)}</strong><p>All-seed gates · Training fit: ${status(c.training_fit)} · Fresh: ${status(c.fresh)} · Efficient: ${status(c.efficient)}</p>${(c.per_seed || []).map(r=>`<p>Seed ${number(r.seed)} · Train success ${percent(r.train_success)} / agreement ${percent(r.train_state_optimal)} · Fresh success ${percent(r.fresh_success)} / efficient ${percent(r.fresh_efficient_success)}</p><small>Training fit: ${status(r.training_fit)} · Fresh: ${status(r.fresh)} · Efficient: ${status(r.efficient)}</small>`).join('')}</div>`).join('');
+  const paired=fixed.paired_differences || {};
+  $('fixed-paired-table').innerHTML='<thead><tr><th>Panel</th><th>Paired seed</th><th>Success Δ</th><th>Efficient success Δ</th><th>Mean steps Δ</th><th>No-op rate Δ</th></tr></thead><tbody>'+(paired.per_seed || []).map(r=>`<tr><td>${supervisedPanelLabel(r.panel)}</td><td>${number(r.seed)}</td><td>${signed(r.success_rate_delta,100,' pp')}</td><td>${signed(r.efficient_success_rate_delta,100,' pp')}</td><td>${signed(r.mean_steps_delta)}</td><td>${signed(r.noop_rate_delta,100,' pp')}</td></tr>`).join('')+(paired.aggregate || []).map(r=>`<tr class="paired-total"><td>${supervisedPanelLabel(r.panel)}</td><td>Mean across seeds</td><td>${signed(r.mean_seed_success_rate_delta,100,' pp')}</td><td>${signed(r.mean_seed_efficient_success_rate_delta,100,' pp')}</td><td>${signed(r.mean_seed_mean_steps_delta)}</td><td>${signed(r.mean_seed_noop_rate_delta,100,' pp')}</td></tr>`).join('')+'</tbody>';
+  $('fixed-layout-table').innerHTML='<thead><tr><th>Panel</th><th>Seed</th><th>Map</th><th>Success Δ</th><th>Steps Δ</th><th>No-op steps Δ</th></tr></thead><tbody>'+(paired.per_layout || []).map(r=>`<tr><td>${supervisedPanelLabel(r.panel)}</td><td>${number(r.seed)}</td><td>${number(r.map_seed)}</td><td>${signed(r.success_delta)}</td><td>${signed(r.steps_delta)}</td><td>${signed(r.noop_steps_delta)}</td></tr>`).join('')+'</tbody>';
+  $('fixed-method').textContent=`${number(run.train_updates)} optimizer updates and ${number(run.training_examples)} state presentations across both conditions and all seeds · batch size ${number(protocol.budget?.batch_size)} · ${number(run.wall_seconds)} seconds elapsed. Both conditions reuse the same state batches, all four action labels, network, loss reduction, optimizer, and update budget. No live environment collection is used for training. Read the protocol for target-network refresh and terminal handling.`;
+  const trainingCosts=fixedConditions.map(condition=>{const rows=Object.entries(run.per_condition_seed_timing || {}).filter(([key])=>key.startsWith(condition+':')).map(([,value])=>value);return rows.length?`${fixedLabel(condition)} optimization: ${rows.reduce((sum,r)=>sum+(r.training_wall_seconds || 0),0).toFixed(1)} s`:null;}).filter(Boolean);
+  if(trainingCosts.length)$('fixed-method').textContent+=` ${trainingCosts.join(' · ')}. Equal update counts do not mean equal compute.`;
+  if(Number.isFinite(run.peak_rss_bytes))$('fixed-method').textContent+=` Peak process memory: ${(run.peak_rss_bytes/1024**3).toFixed(2)} GiB; one CPU thread.`;
+  listItems('fixed-limitations',run.limitations);
+  $('fixed-evidence-links').innerHTML='<a href="data/fixed_targets.json" download>Download displayed data ↓</a>'+[['protocol_document','Study design'],['protocol','Saved protocol'],['report','Measured findings'],['training','Optimization loss'],['evaluations','Raw rollouts'],['state_metrics','Raw state measurements'],['dataset_metadata','Dataset provenance'],['sampling','Paired sampling summary'],['paired_differences','Paired outcomes'],['manifest','Artifact checksums']].flatMap(([key,label])=>{const path=fixed.artifacts?.[key];return typeof path==='string' && /^(docs|experiments)\/[a-zA-Z0-9_./-]+$/.test(path) && !path.split('/').includes('..')?[`<a href="../${escape(path)}">${label} ↗</a>`]:[];}).join('');
+  renderFixedComparison();
+}
+function renderFixedComparison(){
+  if(!fixed?.aggregate?.length)return;
+  const latest=latestFixedUpdate(),states=fixed.state_aggregate || [],stateAll=states.filter(r=>r.time_bucket==='all'),rollouts=fixed.aggregate.filter(r=>r.mode===fixedMode());
+  const series=(rows,panel,key,low,high)=>fixedConditions.map(condition=>({label:fixedLabel(condition),color:fixedColors[condition],rows:rows.filter(r=>r.condition===condition && r.panel===panel).map(r=>({checkpoint:r.checkpoint,value:r[key],low:r[low],high:r[high]}))}));
+  for(const [panel,id] of [['train','train'],['heldout','fresh']]){
+    renderUpdateChart(`fixed-${id}-chart`,series(rollouts,panel,'success_rate','seed_success_min','seed_success_max'),fixed.protocol?.checkpoints,true,`${supervisedPanelLabel(panel)} episode success`);
+    renderUpdateChart(`fixed-${id}-agreement`,series(stateAll,panel,'optimal_action_rate','seed_optimal_action_min','seed_optimal_action_max'),fixed.protocol?.checkpoints,true,`${supervisedPanelLabel(panel)} optimal-action agreement`);
+  }
+  const losses=fixed.loss_aggregate || [];
+  renderUpdateChart('fixed-loss-chart',fixedConditions.map(condition=>({label:fixedLabel(condition),color:fixedColors[condition],rows:losses.filter(r=>r.condition===condition).map(r=>({checkpoint:r.checkpoint,value:r.mean_loss,low:r.seed_loss_min,high:r.seed_loss_max}))})),losses.map(r=>r.checkpoint),false,'Within-condition minibatch loss');
+  $('fixed-curve-legend').innerHTML=fixedConditions.map(c=>`<span><i style="background:${fixedColors[c]}"></i>${fixedLabel(c)}</span>`).join('');
+  $('fixed-mode-note').textContent=`Rollouts and network replays use ${fixedMode()==='greedy'?'greedy actions':'ε = 0.1 exploration'}. Curves use optimizer updates; shading is the seed range. Exhaustive greedy agreement, loss, paired final differences, and declared gates stay unchanged when this mode changes.`;
+  $('fixed-fit-metrics').innerHTML=fixedConditions.flatMap(condition=>{const row=stateAll.find(r=>r.condition===condition && r.panel==='heldout' && r.checkpoint===latest);return [['MAE',row?.mean_abs_q_error],['RMSE',row?.rmse_q_error],['95th pct. state MAE',row?.q95_abs_q_error]].map(([label,value])=>`<div><span>${fixedLabel(condition)} · ${label}</span><strong>${decimal(value)}</strong><small>Fresh states at ${number(latest)} updates</small></div>`);}).join('');
+  $('fixed-rollout-table').innerHTML='<thead><tr><th>Condition</th><th>Updates</th><th>Panel</th><th>Success</th><th>Seed range</th><th>Efficient success</th><th>Episodes</th><th>Mean steps</th><th>No-op rate</th></tr></thead><tbody>'+rollouts.map(r=>`<tr><td>${fixedLabel(r.condition)}</td><td>${number(r.checkpoint)}</td><td>${supervisedPanelLabel(r.panel)}</td><td>${percent(r.success_rate)}</td><td>${percent(r.seed_success_min)}–${percent(r.seed_success_max)}</td><td>${percent(r.efficient_success_rate)}</td><td>${number(r.episodes)}</td><td>${decimal(r.mean_steps)}</td><td>${percent(r.noop_rate)}</td></tr>`).join('')+'</tbody>';
+  $('fixed-state-table').innerHTML='<thead><tr><th>Condition</th><th>Updates</th><th>Panel</th><th>Remaining time</th><th>States</th><th>Winnable states</th><th>Q MAE</th><th>Q RMSE</th><th>95th pct. state MAE</th><th>Signed Q bias</th><th>Optimal actions</th></tr></thead><tbody>'+states.map(r=>`<tr><td>${fixedLabel(r.condition)}</td><td>${number(r.checkpoint)}</td><td>${supervisedPanelLabel(r.panel)}</td><td>${escape(r.time_bucket)}</td><td>${number(r.states)}</td><td>${number(r.winnable_states)}</td><td>${decimal(r.mean_abs_q_error)}</td><td>${decimal(r.rmse_q_error)}</td><td>${decimal(r.q95_abs_q_error)}</td><td>${decimal(r.mean_signed_q_bias)}</td><td>${percent(r.optimal_action_rate)}</td></tr>`).join('')+'</tbody>';
+  selectFixedTrajectory();
+}
+function stopFixedPlayback(){if(fixedTimer)clearInterval(fixedTimer);fixedTimer=null;$('fixed-replay-play').textContent='▶ Play';$('fixed-replay-play').setAttribute('aria-label','Play saved fixed-data trajectory');}
+function selectFixedTrajectory(){
+  stopFixedPlayback();
+  const rows=(fixed?.trajectories || []).filter(r=>r.policy!=='learner' || r.mode===fixedMode());
+  selectOptions('fixed-replay-condition',[...new Set(rows.map(r=>r.condition))].map(c=>[c,fixedLabel(c)]),'exact_q');
+  const atCondition=rows.filter(r=>r.condition===$('fixed-replay-condition').value);
+  selectOptions('fixed-replay-controller',[...new Set(atCondition.map(r=>r.policy))].map(p=>[p,p==='learner'?'Trained network':policyLabel(p)]),'learner');
+  const policy=$('fixed-replay-controller').value,available=atCondition.filter(r=>r.policy===policy),updates=[...new Set(available.map(r=>r.checkpoint))].sort((a,b)=>a-b);
+  selectOptions('fixed-replay-checkpoint',updates.map(c=>[String(c),policy==='learner'?number(c):'Reference']),String(latestFixedUpdate()));$('fixed-replay-checkpoint').disabled=policy!=='learner' || updates.length<2;
+  const atStep=available.filter(r=>r.checkpoint===Number($('fixed-replay-checkpoint').value));
+  selectOptions('fixed-replay-panel',[...new Set(atStep.map(r=>r.panel))].map(p=>[p,supervisedPanelLabel(p)]),'heldout');
+  const atPanel=atStep.filter(r=>r.panel===$('fixed-replay-panel').value);
+  selectOptions('fixed-replay-seed',[...new Set(atPanel.map(r=>r.seed))].sort((a,b)=>a-b).map(s=>[String(s),String(s)]),'0');
+  fixedTrajectory=atPanel.find(r=>r.seed===Number($('fixed-replay-seed').value)) || null;fixedFrame=0;
+  $('fixed-replay-scrub').max=fixedTrajectory?.steps.length || 0;$('fixed-replay-scrub').value='0';
+  for(const id of ['fixed-replay-play','fixed-replay-reset','fixed-replay-scrub'])$(id).disabled=!fixedTrajectory;
+  drawFixedWorld();renderFixedReferences();
+}
+function drawFixedWorld(){
+  const t=fixedTrajectory,description=t?`${fixedLabel(t.condition)} · ${t.policy==='learner'?`${number(t.checkpoint)} offline optimizer updates · ${t.mode==='greedy'?'greedy':'ε = 0.1'}`:policyLabel(t.policy)}. ${supervisedPanelLabel(t.panel)} · seed ${t.seed} · map ${t.map_seed}. Recorded on the first panel layout, selected before outcomes. No new learning occurs during replay.`:'';
+  drawRecordedWorld('fixed',t,fixedFrame,description,t?`${fixedLabel(t.condition)}, ${policyLabel(t.policy)}`:'');
+}
+function renderFixedReferences(){
+  if(!fixed)return;
+  const panel=$('fixed-replay-panel').value || 'heldout',update=$('fixed-replay-controller').value==='learner'?Number($('fixed-replay-checkpoint').value):latestFixedUpdate();
+  const rows=fixedConditions.map(condition=>[fixed.aggregate.find(r=>r.condition===condition && r.panel===panel && r.checkpoint===update && r.mode===fixedMode()),`${fixedLabel(condition)} at ${stepLabel(update)}`,fixedColors[condition]]);
+  for(const [policy,color] of [['random_actions','#e7b985'],['shortest_path','#b5a7d2']])rows.push([fixed.references?.find(r=>r.policy===policy && r.panel===panel),policyLabel(policy),color]);
+  $('fixed-reference-title').textContent=supervisedPanelLabel(panel);
+  $('fixed-reference-bars').innerHTML=rows.filter(([r])=>r).map(([r,label,color])=>`<div class="diagnostic-row"><span>${escape(label)}</span><div class="diagnostic-track">${Number.isFinite(r.success_rate)?`<div class="diagnostic-fill" style="width:${100*r.success_rate}%;background:${color}"></div>`:''}</div><strong>${percent(r.success_rate)}</strong></div>`).join('');
+  $('fixed-reference-caption').textContent=`Networks use ${fixedMode()==='greedy'?'greedy actions':'ε = 0.1'} on the same panel. Random and planner use their own policies. Episodes: ${rows.filter(([r])=>r).map(([r,label])=>`${label}: ${number(r.episodes)}`).join(' · ')}.`;
+}
+$('fixed-epsilon').addEventListener('change',renderFixedComparison);
+for(const id of ['fixed-replay-condition','fixed-replay-controller','fixed-replay-checkpoint','fixed-replay-panel','fixed-replay-seed'])$(id).addEventListener('change',selectFixedTrajectory);
+$('fixed-replay-play').addEventListener('click',()=>{if(fixedTimer){stopFixedPlayback();return;}if(!fixedTrajectory)return;if(fixedFrame>=fixedTrajectory.steps.length)fixedFrame=0;$('fixed-replay-play').textContent='Ⅱ Pause';$('fixed-replay-play').setAttribute('aria-label','Pause saved fixed-data trajectory');fixedTimer=setInterval(()=>{fixedFrame=Math.min(fixedFrame+1,fixedTrajectory.steps.length);$('fixed-replay-scrub').value=String(fixedFrame);drawFixedWorld();if(fixedFrame>=fixedTrajectory.steps.length)stopFixedPlayback();},160);});
+$('fixed-replay-reset').addEventListener('click',()=>{stopFixedPlayback();fixedFrame=0;$('fixed-replay-scrub').value='0';drawFixedWorld();});
+$('fixed-replay-scrub').addEventListener('input',event=>{stopFixedPlayback();fixedFrame=Number(event.target.value);drawFixedWorld();});
 
 function renderSupervised() {
   stopSupervisedPlayback();
@@ -579,9 +692,9 @@ async function getData(path) {
 }
 async function loadData() {
   if(loadInProgress)return;loadInProgress=true;$('refresh').disabled=true;$('study-run').disabled=true;
-  stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();
+  stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();
   const adaptationPath=$('study-run').value==='pilot_v1'?'../experiments/adaptation/pilot_v1/results.json':'data/adaptation.json';
-  const results=await Promise.allSettled([getData(adaptationPath),getData('data/provenance.json'),getData('data/competence.json'),getData('data/supervised.json')]);
+  const results=await Promise.allSettled([getData(adaptationPath),getData('data/provenance.json'),getData('data/competence.json'),getData('data/supervised.json'),getData('data/fixed_targets.json')]);
   const errors=[];
   diagnostics=null;
   if(results[0].status==='fulfilled') {
@@ -599,14 +712,16 @@ async function loadData() {
   renderCompetence();
   if(results[3].status==='fulfilled')supervised=results[3].value;else {supervised=null;errors.push(results[3].reason.message);}
   renderSupervised();
+  if(results[4].status==='fulfilled')fixed=results[4].value;else {fixed=null;errors.push(results[4].reason.message);}
+  renderFixed();
   if(errors.length) $('load-status').textContent=errors.join(' · ');
   else {
-    const loaded=[supervised&&'Exact targets',competence&&'Competence',adaptation&&'Adaptation',provenance&&'Provenance'].filter(Boolean);
+    const loaded=[fixed&&'Fixed-data targets',supervised&&'Exact targets',competence&&'Competence',adaptation&&'Adaptation',provenance&&'Provenance'].filter(Boolean);
     $('load-status').textContent=`${loaded.join(' + ') || 'No'} saved ${loaded.length===1?'study':'studies'} loaded · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
   }
   $('refresh').disabled=false;$('study-run').disabled=false;loadInProgress=false;
 }
 $('refresh').addEventListener('click',loadData);
 $('study-run').addEventListener('change',loadData);
-document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();}});
 await loadData();

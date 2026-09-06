@@ -129,3 +129,10 @@ body.theater.research-lab main { max-width:1440px; padding:42px 44px 22px; }
 @media(max-width:1000px) { .competence-support-card { padding:15px; }.competence-intro { gap:20px; }.competence-observation-grid { grid-template-columns:1.1fr 1fr; }.competence-charts { gap:15px; }.competence-mode-label select { min-width:165px; } }
 @media(max-width:760px) { .competence-intro { align-items:flex-start; flex-direction:column; gap:18px; }.support-preview { justify-content:flex-start; }.competence-charts,.competence-observation-grid { grid-template-columns:1fr; }.competence-support-cards { grid-template-columns:1fr; gap:9px; }.competence-support-card .support-values { margin:9px 0; }.competence-support-card strong { margin-bottom:4px; }.study-toolbar { flex-wrap:wrap; gap:12px; }.study-toolbar label { flex-wrap:wrap; }.experiment-tabs { overflow-x:auto; gap:20px; }.experiment-tabs button { flex-shrink:0; }.competence-intro h2 { font-size:24px; }.competence-mode-label select { width:auto; }.competence-legend { gap:12px; }.step-diagnostics .evidence-table td,.step-diagnostics .evidence-table th { padding:6px; } }
 @media(max-width:760px) { .supervised-fit-panel { grid-template-columns:1fr; gap:20px; }.supervision-flow { grid-template-columns:1fr 1fr; gap:12px; }.supervision-flow li { padding:12px; }.supervision-flow li::after { display:none; } }
+
+/* Fixed-data target comparison reuses the established research panels. */
+#fixed-world-canvas { display:block; width:min(100%,390px); height:auto; aspect-ratio:1; margin:auto; }
+#fixed-replay-step { font:10px var(--mono); color:var(--muted); min-width:55px; text-align:right; }
+.fixed-replay-selectors { grid-template-columns:1fr 1fr; }.fixed-replay-selectors label:first-child { grid-column:1/-1; }
+.paired-total td { color:var(--green); border-top:1px solid #496453; }
+.experiment-tabs { overflow-x:auto; }.experiment-tabs button { flex-shrink:0; }

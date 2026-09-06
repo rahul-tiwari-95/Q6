@@ -1,16 +1,18 @@
 // Exercise saved-study controls with DOM/canvas stubs; does not test browser layout.
-// Run from any directory: node /path/to/Q6/scripts/check_dashboard.mjs [competence-results.json] [--supervised supervised-results.json] [--missing-supervised]
+// Run from any directory: node /path/to/Q6/scripts/check_dashboard.mjs [competence-results.json] [--supervised supervised-results.json] [--missing-supervised] [--fixed fixed-targets-results.json] [--missing-fixed]
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-let competencePath=null,supervisedPath=null,missingSupervised=false;
+let competencePath=null,supervisedPath=null,missingSupervised=false,fixedPath=null,missingFixed=false;
 for(let i=2;i<process.argv.length;i++){
  const arg=process.argv[i];
  if(arg==='--supervised'){supervisedPath=process.argv[++i];assert(supervisedPath,'--supervised needs a real results path');}
  else if(arg==='--missing-supervised')missingSupervised=true;
+ else if(arg==='--fixed'){fixedPath=process.argv[++i];assert(fixedPath,'--fixed needs a real results path');}
+ else if(arg==='--missing-fixed')missingFixed=true;
  else if(!arg.startsWith('-')&&!competencePath)competencePath=arg;
  else throw Error('Unknown argument '+arg);
 }
@@ -42,20 +44,109 @@ const intervals=new Map();let intervalId=0;
 const sandbox={document,location:{hash:''},history:{replaceState(){}},setInterval:callback=>{const id=++intervalId;intervals.set(id,callback);return id;},clearInterval(id){intervals.delete(id);},console,fetch:async relative=>{
  const full=path.resolve(root,'dashboard',relative);files.push(relative);
  if(relative==='data/supervised.json'&&missingSupervised)return {status:404,ok:false};
- const override=relative==='data/competence.json'?competencePath:relative==='data/supervised.json'?supervisedPath:null;
+ if(relative==='data/fixed_targets.json'&&missingFixed)return {status:404,ok:false};
+ const override=relative==='data/competence.json'?competencePath:relative==='data/supervised.json'?supervisedPath:relative==='data/fixed_targets.json'?fixedPath:null;
  const target=override||full;
  if(!fs.existsSync(target))return {status:404,ok:false};
  return {status:200,ok:true,json:async()=>JSON.parse(fs.readFileSync(target,'utf8'))};
 }};
 const context=vm.createContext(sandbox);
-await vm.runInContext(`(async()=>{${source}\n globalThis.labDebug={activateTab,renderCompetence,renderCompetenceComparison,selectCompetenceTrajectory,drawCompetenceWorld,loadData,renderSupervised,get supervised(){return supervised;},get supervisedSelected(){return supervisedTrajectory;},drawSupervisedWorld,set supervisedFrame(value){supervisedFrame=value;},get competence(){return competence;},get selected(){return competenceTrajectory;},get condition(){return competenceCondition;},set frame(value){competenceFrame=value;}};})()`,context);
+await vm.runInContext(`(async()=>{${source}\n globalThis.labDebug={get fixed(){return fixed;},renderFixed,get fixedSelected(){return fixedTrajectory;},set fixedFrame(value){fixedFrame=value;},drawFixedWorld,activateTab,renderCompetence,renderCompetenceComparison,selectCompetenceTrajectory,drawCompetenceWorld,loadData,renderSupervised,get supervised(){return supervised;},get supervisedSelected(){return supervisedTrajectory;},drawSupervisedWorld,set supervisedFrame(value){supervisedFrame=value;},get competence(){return competence;},get selected(){return competenceTrajectory;},get condition(){return competenceCondition;},set frame(value){competenceFrame=value;}};})()`,context);
 const get=id=>elements.get(id),debug=sandbox.labDebug;
 assert.equal(get('adaptation-content').hidden,false,'Existing adaptation data render');
 assert.equal(get('provenance-content').hidden,false,'Existing provenance data render');
 assert(get('success-chart').innerHTML.includes('<svg'),'Existing adaptation curve render');
 assert(get('provenance-bars').innerHTML.includes('bar-row'),'Existing provenance bars render');
-assert(!get('load-status').textContent.includes('Could not load'),'No data errors');
-assert.equal(get('tab-supervised').attributes['aria-selected'],'true','Exact targets is the default track');
+const expectedMissing=[];if(missingSupervised)expectedMissing.push('data/supervised.json');if(missingFixed || (!fixedPath&&!fs.existsSync(path.join(root,'dashboard/data/fixed_targets.json'))))expectedMissing.push('data/fixed_targets.json');
+const unexpectedErrors=(get('load-status').textContent || '').split(' · ').filter(text=>text.includes('Could not load')&&!expectedMissing.some(path=>text.includes(path)));assert.deepEqual(unexpectedErrors,[],'No unexpected data errors');
+assert.equal(get('tab-fixed').attributes['aria-selected'],'true','Fixed-data targets is the default track');
+if(debug.fixed?.aggregate?.length){
+ assert.equal(get('fixed-content').hidden,false);
+ const chartIds=['fixed-train-chart','fixed-fresh-chart','fixed-train-agreement','fixed-fresh-agreement','fixed-loss-chart'];
+ for(const id of chartIds)assert(get(id).innerHTML.includes('<svg'));
+ for(const condition of ['exact_q','double_dqn'])if(debug.fixed.aggregate.some(r=>r.condition===condition))assert(get('fixed-fresh-chart').innerHTML.includes(condition==='exact_q'?'Exact targets':'Double DQN targets'));
+ assert(get('fixed-gate-results').innerHTML.includes('Efficient:'),'Separate efficiency gates visible');
+ assert(get('fixed-state-table').innerHTML.includes('Winnable states'),'Full-state denominator visible');
+ assert(get('fixed-paired-table').innerHTML.includes('Success Δ'),'Paired comparison visible');
+ assert(debug.fixedSelected,'Default fixed-data recording selected');
+ const originalRun={...debug.fixed.run},originalGates=debug.fixed.gates;
+ for(const [run,gates,phrase] of [
+  [{status:'complete'}, {eligible:true,per_condition:[{condition:'exact_q',fresh:true},{condition:'double_dqn',fresh:true}]},'Both target procedures pass'],
+  [{status:'complete'}, {eligible:true,per_condition:[{condition:'exact_q',fresh:true},{condition:'double_dqn',fresh:false}]},'Exact targets pass'],
+  [{status:'complete'}, {eligible:true,per_condition:[{condition:'exact_q',fresh:false},{condition:'double_dqn',fresh:true}]},'Double DQN targets pass'],
+  [{status:'complete'}, {eligible:true,per_condition:[{condition:'exact_q',fresh:false},{condition:'double_dqn',fresh:false}]},'Neither target procedure'],
+  [{status:'complete',interpretation:'smoke_or_protocol_deviation_not_gate_evidence'}, {eligible:false},'Smoke or protocol-deviation'],
+  [{status:'incomplete',interpretation:'incomplete_not_gate_evidence'}, {eligible:false},'Incomplete comparison'],
+  [{status:'inconsistent_not_gate_evidence'}, {eligible:false},'Consistency check failed'],
+ ]){
+  debug.fixed.run=run;debug.fixed.gates=gates;debug.renderFixed();assert(get('fixed-gate-note').textContent.includes(phrase),'Fixed-data interpretation '+phrase);
+ }
+ debug.fixed.run=originalRun;debug.fixed.gates=originalGates;debug.renderFixed();
+ const originalAggregate=debug.fixed.aggregate,originalStates=debug.fixed.state_aggregate,originalLosses=debug.fixed.loss_aggregate;
+ debug.fixed.run={status:'incomplete_admission_cap',interpretation:'incomplete_not_gate_evidence'};debug.fixed.gates={eligible:false};
+ debug.fixed.aggregate=originalAggregate.filter(r=>r.condition==='exact_q');debug.fixed.state_aggregate=originalStates.filter(r=>r.condition==='exact_q');debug.fixed.loss_aggregate=originalLosses.filter(r=>r.condition==='exact_q');debug.renderFixed();
+ assert(get('fixed-gate-note').textContent.includes('Incomplete comparison'));
+ for(const id of chartIds)assert(!get(id).innerHTML.includes('Double DQN targets'),'Incomplete comparison does not invent a missing curve');
+ debug.fixed.aggregate=[];debug.renderFixed();assert.equal(get('fixed-content').hidden,true);for(const id of chartIds)assert.equal(get(id).innerHTML,'');
+ const originalProvenance=debug.fixed.provenance;
+ debug.fixed.provenance={stop_reason:'Archive mismatch <example> & paired check failed'};debug.fixed.run={status:'inconsistent_not_gate_evidence'};
+ debug.renderFixed();assert.equal(get('fixed-content').hidden,true);assert.equal(get('fixed-empty-title').textContent,'Consistency check failed.');assert(get('fixed-empty-message').textContent.includes('Archive mismatch <example> & paired check failed'),'Empty consistency state preserves literal reason through textContent');
+ debug.fixed.aggregate=originalAggregate;debug.renderFixed();assert(get('fixed-gate-note').textContent.includes('Consistency check failed'));assert(get('fixed-gate-note').textContent.includes('Archive mismatch <example> & paired check failed'),'Consistency banner preserves literal reason through textContent');
+ debug.fixed.provenance=originalProvenance;
+ debug.fixed.run=originalRun;debug.fixed.gates=originalGates;debug.fixed.aggregate=originalAggregate;debug.fixed.state_aggregate=originalStates;debug.fixed.loss_aggregate=originalLosses;debug.renderFixed();
+ const stableIds=['fixed-train-agreement','fixed-fresh-agreement','fixed-loss-chart','fixed-paired-table','fixed-gate-results','fixed-fit-metrics'];
+ const before=new Map(stableIds.map(id=>[id,get(id).innerHTML]));
+ get('fixed-epsilon').value='epsilon_0_1';get('fixed-epsilon').listeners.change();
+ for(const id of stableIds)assert.equal(get(id).innerHTML,before.get(id),'Exploration preserves '+id);
+ assert(get('fixed-fresh-chart').innerHTML.includes('Optimizer updates per seed'),'Fixed-data axis counts optimizer updates');
+ let recordings=0;
+ for(const row of debug.fixed.trajectories){
+  get('fixed-epsilon').value=row.policy==='learner'?row.mode:'greedy';get('fixed-epsilon').listeners.change();
+  get('fixed-replay-condition').value=row.condition;get('fixed-replay-condition').listeners.change();
+  get('fixed-replay-controller').value=row.policy;get('fixed-replay-controller').listeners.change();
+  get('fixed-replay-checkpoint').value=String(row.checkpoint);get('fixed-replay-checkpoint').listeners.change();
+  get('fixed-replay-panel').value=row.panel;get('fixed-replay-panel').listeners.change();
+  get('fixed-replay-seed').value=String(row.seed);get('fixed-replay-seed').listeners.change();
+  assert.equal(debug.fixedSelected,row,'Every fixed-data trajectory reachable');
+  if(row.steps.length){
+   assert(get('fixed-step-diagnostics').innerHTML.includes('Decision for step 1'));
+   if(row.policy==='learner'){assert(get('fixed-step-diagnostics').innerHTML.includes('Learned Q'));assert(get('fixed-step-diagnostics').innerHTML.includes('Optimal Q'));}
+   debug.fixedFrame=row.steps.length;debug.drawFixedWorld();
+   assert(get('fixed-step-diagnostics').innerHTML.includes('Decision for step '+row.steps.length));
+   assert(get('fixed-step-diagnostics').innerHTML.includes('the position after that step'));
+  }
+  assert(get('fixed-world-caption').textContent.startsWith('Rule A'),'Rule visible from initial frame onward');
+  recordings++;
+ }
+ // Verify each paired network sees its own mode-aligned curve and shared reference panel.
+ for(const condition of ['exact_q','double_dqn'])for(const mode of ['greedy','epsilon_0_1'])for(const panel of ['train','heldout']){
+  get('fixed-epsilon').value=mode;get('fixed-epsilon').listeners.change();
+  get('fixed-replay-condition').value=condition;get('fixed-replay-condition').listeners.change();
+  get('fixed-replay-controller').value='learner';get('fixed-replay-controller').listeners.change();
+  get('fixed-replay-panel').value=panel;get('fixed-replay-panel').listeners.change();
+  assert.equal(debug.fixedSelected.condition,condition);assert.equal(debug.fixedSelected.mode,mode);assert.equal(debug.fixedSelected.panel,panel);
+  assert(get('fixed-reference-bars').innerHTML.includes('Exact targets'));assert(get('fixed-reference-bars').innerHTML.includes('Double DQN targets'));
+  assert(!get('fixed-reference-bars').innerHTML.includes('Historical'),'No historical panel mixed into fixed comparison');
+ }
+ get('fixed-replay-reset').listeners.click();assert.equal(get('fixed-replay-step').textContent,`0 / ${debug.fixedSelected.steps.length}`);
+ get('fixed-replay-play').listeners.click();assert.equal(intervals.size,1);assert.equal(get('fixed-replay-play').textContent,'Ⅱ Pause');
+ intervals.values().next().value();assert.equal(get('fixed-replay-step').textContent,`1 / ${debug.fixedSelected.steps.length}`);
+ if(intervals.size)get('fixed-replay-play').listeners.click();assert.equal(intervals.size,0);
+ get('fixed-replay-scrub').listeners.input({target:{value:String(debug.fixedSelected.steps.length)}});
+ assert.equal(get('fixed-replay-step').textContent,`${debug.fixedSelected.steps.length} / ${debug.fixedSelected.steps.length}`);
+ get('fixed-replay-play').listeners.click();const tick=intervals.values().next().value;
+ for(let i=0;i<debug.fixedSelected.steps.length;i++)tick();
+ assert.equal(intervals.size,0);assert.equal(get('fixed-replay-play').textContent,'▶ Play');
+ get('fixed-replay-reset').listeners.click();get('fixed-replay-play').listeners.click();debug.activateTab('supervised');assert.equal(intervals.size,0);
+ await get('refresh').listeners.click();assert.equal(get('fixed-content').hidden,false);
+ assert(!get('fixed-rollout-table').innerHTML.includes('NaN'));assert(!get('fixed-paired-table').innerHTML.includes('NaN'));
+ console.log(`Fixed-data targets: ${debug.fixed.aggregate.length} rollout aggregates, ${debug.fixed.state_aggregate.length} state aggregates, ${debug.fixed.loss_aggregate.length} loss windows, all ${recordings} recordings, both conditions and action modes, seven gate interpretations, paired differences, Q labels, playback and refresh passed.`);
+}else{
+ assert.equal(get('fixed-content').hidden,true);assert.equal(get('fixed-empty').hidden,false);
+ for(const id of ['fixed-train-chart','fixed-fresh-chart','fixed-train-agreement','fixed-fresh-agreement','fixed-loss-chart'])assert.equal(get(id).innerHTML,'');
+ console.log('Missing fixed-data comparison stays empty; no fabricated measurements.');
+}
+
 if(debug.supervised?.aggregate?.length){
  assert.equal(get('supervised-content').hidden,false);
  for(const id of ['supervised-success-chart','supervised-agreement-chart','supervised-loss-chart'])assert(get(id).innerHTML.includes('<svg'));
@@ -203,6 +294,6 @@ if(debug.competence?.aggregate?.length){
  assert.equal(get('competence-content').hidden,true);assert.equal(get('competence-empty').hidden,false);assert.equal(get('competence-support-chart').innerHTML,'');
  console.log('Missing competence data stays empty; both historical tracks render without errors.');
 }
-for(const track of ['supervised','competence','adaptation','provenance']){debug.activateTab(track);for(const name of ['supervised','competence','adaptation','provenance'])assert.equal(get(name+'-panel').hidden,name!==track);}
+for(const track of ['fixed','supervised','competence','adaptation','provenance']){debug.activateTab(track);for(const name of ['fixed','supervised','competence','adaptation','provenance'])assert.equal(get(name+'-panel').hidden,name!==track);}
 assert.equal(get('refresh').disabled,false);
-console.log('Four-track activation and data refresh controls passed. DOM/canvas stubs validate code paths only, not visual layout.');
+console.log('Five-track activation and data refresh controls passed. DOM/canvas stubs validate code paths only, not visual layout.');

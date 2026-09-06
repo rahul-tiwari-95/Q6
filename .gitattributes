@@ -5,3 +5,4 @@ dashboard/data/adaptation.json linguist-generated=true
 dashboard/data/provenance.json linguist-generated=true
 dashboard/data/competence.json linguist-generated=true
 dashboard/data/supervised.json linguist-generated=true
+dashboard/data/fixed_targets.json linguist-generated=true
