@@ -1,0 +1,114 @@
+{
+  "collected_unique": {
+    "0": {
+      "updates": 30000,
+      "examples_seen": 1920000,
+      "unique_states_sampled": 59626,
+      "batch_index_sha256": "4dce4b72b851c875b03c0132b4fadfb2d4871ad2359d8b538832ce2ebe1c6817",
+      "global_batch_index_sha256": "4dce4b72b851c875b03c0132b4fadfb2d4871ad2359d8b538832ce2ebe1c6817",
+      "local_batch_index_sha256": "01dcf439d3298db3336aa621325c2cdb7d5703edff0b255f77f59eee7faaafbc",
+      "support_states": 59626,
+      "rng_seed_tuple": [
+        0,
+        66301
+      ],
+      "successor_queries": {
+        "nonterminal_queries": 7300666,
+        "outside_support_queries": 2542608,
+        "outside_support_fraction": 0.34827069201631744
+      }
+    },
+    "1": {
+      "updates": 30000,
+      "examples_seen": 1920000,
+      "unique_states_sampled": 59626,
+      "batch_index_sha256": "3452c6119f9090920107fd1abd6f7d9f503bc7c3a8de027513c05579a79b36e4",
+      "global_batch_index_sha256": "3452c6119f9090920107fd1abd6f7d9f503bc7c3a8de027513c05579a79b36e4",
+      "local_batch_index_sha256": "68567f4c42f7728758313c71859fb55e8ec6ff688eb2c5e1cb293548a6912ca9",
+      "support_states": 59626,
+      "rng_seed_tuple": [
+        1,
+        66301
+      ],
+      "successor_queries": {
+        "nonterminal_queries": 7299957,
+        "outside_support_queries": 2542037,
+        "outside_support_fraction": 0.34822629777134306
+      }
+    },
+    "2": {
+      "updates": 30000,
+      "examples_seen": 1920000,
+      "unique_states_sampled": 59626,
+      "batch_index_sha256": "af848908bb59f3a11b1edf1ab053102d6340c30656c5c6fe1f9cb674551dc755",
+      "global_batch_index_sha256": "af848908bb59f3a11b1edf1ab053102d6340c30656c5c6fe1f9cb674551dc755",
+      "local_batch_index_sha256": "876c046818805bb60e32ce2b49803f7e9747a3377ed044d472ebe6cc28b41689",
+      "support_states": 59626,
+      "rng_seed_tuple": [
+        2,
+        66301
+      ],
+      "successor_queries": {
+        "nonterminal_queries": 7301585,
+        "outside_support_queries": 2543481,
+        "outside_support_fraction": 0.34834642067441524
+      }
+    }
+  },
+  "uniform_subset": {
+    "0": {
+      "updates": 30000,
+      "examples_seen": 1920000,
+      "unique_states_sampled": 59626,
+      "batch_index_sha256": "1b035dcbf6598ab9a74cc5ef076cdaa9768d7d05c1327a5b70ba2233322e1321",
+      "global_batch_index_sha256": "1b035dcbf6598ab9a74cc5ef076cdaa9768d7d05c1327a5b70ba2233322e1321",
+      "local_batch_index_sha256": "01dcf439d3298db3336aa621325c2cdb7d5703edff0b255f77f59eee7faaafbc",
+      "support_states": 59626,
+      "rng_seed_tuple": [
+        0,
+        66301
+      ],
+      "successor_queries": {
+        "nonterminal_queries": 7193520,
+        "outside_support_queries": 4575313,
+        "outside_support_fraction": 0.6360325682002691
+      }
+    },
+    "1": {
+      "updates": 30000,
+      "examples_seen": 1920000,
+      "unique_states_sampled": 59626,
+      "batch_index_sha256": "b38bd9908c88681121cc1323e3798396b7c16abcaf83475ca1bb9672dffd4e60",
+      "global_batch_index_sha256": "b38bd9908c88681121cc1323e3798396b7c16abcaf83475ca1bb9672dffd4e60",
+      "local_batch_index_sha256": "68567f4c42f7728758313c71859fb55e8ec6ff688eb2c5e1cb293548a6912ca9",
+      "support_states": 59626,
+      "rng_seed_tuple": [
+        1,
+        66301
+      ],
+      "successor_queries": {
+        "nonterminal_queries": 7193844,
+        "outside_support_queries": 4579766,
+        "outside_support_fraction": 0.6366229237108839
+      }
+    },
+    "2": {
+      "updates": 30000,
+      "examples_seen": 1920000,
+      "unique_states_sampled": 59626,
+      "batch_index_sha256": "1bfd592241390682117d0cead4324185d8fd0e7e97d52be96330b98ff3619eb8",
+      "global_batch_index_sha256": "1bfd592241390682117d0cead4324185d8fd0e7e97d52be96330b98ff3619eb8",
+      "local_batch_index_sha256": "876c046818805bb60e32ce2b49803f7e9747a3377ed044d472ebe6cc28b41689",
+      "support_states": 59626,
+      "rng_seed_tuple": [
+        2,
+        66301
+      ],
+      "successor_queries": {
+        "nonterminal_queries": 7192696,
+        "outside_support_queries": 4576430,
+        "outside_support_fraction": 0.6362607289394686
+      }
+    }
+  }
+}

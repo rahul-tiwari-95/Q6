@@ -155,3 +155,5 @@ body.theater.research-lab main { max-width:1440px; padding:42px 44px 22px; }
 
 .coverage-study-toolbar { padding:14px 18px; border:1px solid #3b5748; background:#111e17; border-radius:6px; margin-bottom:22px; }.coverage-study-toolbar select { width:300px; max-width:100%; }.coverage-study-toolbar>.help-text { max-width:480px; margin:0; }.coverage-support-selector { max-width:300px; margin:18px 0 10px; }
 @media(max-width:760px) { .coverage-study-toolbar label { width:100%; }.coverage-study-toolbar select { width:100%; } }
+
+.coverage-panel-note { border-left:3px solid #98b8d1; background:#13202a66; color:var(--text); padding:13px 18px; margin:0 0 20px; font-size:12px; line-height:1.8; }

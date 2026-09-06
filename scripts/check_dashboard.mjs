@@ -57,7 +57,7 @@ const sandbox={document,location:{hash:''},history:{replaceState(){}},setInterva
  return {status:200,ok:true,json:async()=>JSON.parse(fs.readFileSync(target,'utf8'))};
 }};
 const context=vm.createContext(sandbox);
-await vm.runInContext(`(async()=>{${source}\n globalThis.labDebug={get coverage(){return coverage;},renderCoverage,get coverageSelected(){return coverageTrajectory;},set coverageFrame(value){coverageFrame=value;},drawCoverageWorld,get fixed(){return fixed;},renderFixed,get fixedSelected(){return fixedTrajectory;},set fixedFrame(value){fixedFrame=value;},drawFixedWorld,activateTab,renderCompetence,renderCompetenceComparison,selectCompetenceTrajectory,drawCompetenceWorld,loadData,renderSupervised,get supervised(){return supervised;},get supervisedSelected(){return supervisedTrajectory;},drawSupervisedWorld,set supervisedFrame(value){supervisedFrame=value;},get competence(){return competence;},get selected(){return competenceTrajectory;},get condition(){return competenceCondition;},set frame(value){competenceFrame=value;}};})()`,context);
+await vm.runInContext(`(async()=>{${source}\n globalThis.labDebug={get coverageStudies(){return coverageStudies;},get coverage(){return coverage;},renderCoverage,get coverageSelected(){return coverageTrajectory;},set coverageFrame(value){coverageFrame=value;},drawCoverageWorld,get fixed(){return fixed;},renderFixed,get fixedSelected(){return fixedTrajectory;},set fixedFrame(value){fixedFrame=value;},drawFixedWorld,activateTab,renderCompetence,renderCompetenceComparison,selectCompetenceTrajectory,drawCompetenceWorld,loadData,renderSupervised,get supervised(){return supervised;},get supervisedSelected(){return supervisedTrajectory;},drawSupervisedWorld,set supervisedFrame(value){supervisedFrame=value;},get competence(){return competence;},get selected(){return competenceTrajectory;},get condition(){return competenceCondition;},set frame(value){competenceFrame=value;}};})()`,context);
 const get=id=>elements.get(id),debug=sandbox.labDebug;
 assert.equal(get('adaptation-content').hidden,false,'Existing adaptation data render');
 assert.equal(get('provenance-content').hidden,false,'Existing provenance data render');
@@ -122,6 +122,19 @@ if(debug.coverage?.aggregate?.length){
  assert(get('coverage-successor-caption').textContent.includes('not optimizer samples'));
  assert(html.includes('does not add it to the training support'),'Current support and detached successor queries explicitly distinguished');
  if(equal){
+  const prior=debug.coverageStudies.coverage,provenance=debug.coverage.provenance;
+  const hasReplication=debug.coverage.gates.eligible===true && prior?.gates?.eligible===true && provenance.archive===prior?.artifacts?.directory && provenance.replication_required===true && provenance.collected_replication.every(r=>r.applicable && r.final_weights_identical && r.target_weights_identical && r.global_counts_identical);
+  const note=()=>get('coverage-panel-sensitivity').textContent;
+  if(hasReplication){
+   const final=study=>study.aggregate.find(r=>r.condition==='collected_unique' && r.panel==='heldout' && r.mode==='greedy' && r.checkpoint===study.protocol.budget.updates_per_seed).success_rate;
+   assert(note().includes((100*final(prior)).toFixed(1)+'%'));assert(note().includes((100*final(debug.coverage)).toFixed(1)+'%'));
+   assert(note().includes('identical saved weights'));assert(note().includes('not a learning gain'));
+  }else assert(!note().includes('%'),'Unverified or smoke run has no numeric cross-panel comparison');
+  const savedPrior=debug.coverageStudies.coverage;
+  debug.coverageStudies.coverage=null;debug.renderCoverage();assert(!note().includes('%'),'Missing prior study suppresses numeric panel comparison');debug.coverageStudies.coverage=savedPrior;
+  const savedArchive=provenance.archive;provenance.archive='experiments/coverage/unmatched';debug.renderCoverage();assert(!note().includes('%'),'Archive mismatch suppresses numeric panel comparison');provenance.archive=savedArchive;
+  if(provenance.collected_replication.length){const row=provenance.collected_replication[0],saved=row.final_weights_identical;row.final_weights_identical=false;debug.renderCoverage();assert(!note().includes('%'),'Failed replication suppresses numeric panel comparison');row.final_weights_identical=saved;}
+  const savedEligible=debug.coverage.gates.eligible;debug.coverage.gates.eligible=false;debug.renderCoverage();assert(!note().includes('%'),'Smoke or protocol-deviation eligibility suppresses numeric panel comparison');debug.coverage.gates.eligible=savedEligible;debug.renderCoverage();
   const membership=debug.coverage.coverage;
   assert(get('coverage-intersection-caption').textContent.includes(membership.support_size.toLocaleString()),'Equal bank size is visible');
   assert(get('coverage-intersection-caption').textContent.includes(membership.intersection.states.toLocaleString()),'Support intersection is visible');
@@ -162,7 +175,7 @@ if(debug.coverage?.aggregate?.length){
  debug.coverage.aggregate=originalAggregate;debug.renderCoverage();assert(get('coverage-gate-note').textContent.includes('Consistency check failed'));assert(get('coverage-gate-note').textContent.includes('Archive mismatch <example> & paired check failed'),'Consistency banner preserves literal reason through textContent');
  debug.coverage.provenance=originalProvenance;
  debug.coverage.run=originalRun;debug.coverage.gates=originalGates;debug.coverage.aggregate=originalAggregate;debug.coverage.state_aggregate=originalStates;debug.coverage.loss_aggregate=originalLosses;debug.renderCoverage();
- const stableIds=['coverage-bank-table','coverage-support-fit-table','coverage-map-heatmap','coverage-time-bars','coverage-support-table','coverage-support-stats','coverage-train-agreement','coverage-fresh-agreement','coverage-loss-chart','coverage-paired-table','coverage-gate-results','coverage-fit-metrics'];
+ const stableIds=['coverage-panel-sensitivity','coverage-bank-table','coverage-support-fit-table','coverage-map-heatmap','coverage-time-bars','coverage-support-table','coverage-support-stats','coverage-train-agreement','coverage-fresh-agreement','coverage-loss-chart','coverage-paired-table','coverage-gate-results','coverage-fit-metrics'];
  const before=new Map(stableIds.map(id=>[id,get(id).innerHTML]));
  get('coverage-epsilon').value='epsilon_0_1';get('coverage-epsilon').listeners.change();
  checkCoverageOutcomeCards('epsilon_0_1');assert(get('coverage-outcome-caption').textContent.includes('ε = 0.1'));

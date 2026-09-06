@@ -1,0 +1,2 @@
+python -m q6.equal_support --output experiments/equal_support/pilot_v1 --protocol-file docs/experiments/equal_support_protocol_v1.md --prior-dir experiments/coverage/pilot_v1 --supervised-dir experiments/supervised/pilot_v1 --collection-episodes-per-map 16 --seeds 0,1,2 --updates 30000 --train-maps 256 --fresh-maps 64 --train-seed-start 300000 --fresh-seed-start 960000 --max-seconds 1200 --max-rss-bytes 4294967296 --checkpoints 0,1000,3000,10000,30000 --fixed-dir experiments/fixed_targets/pilot_v1
+# Reproduction needs a new output path.

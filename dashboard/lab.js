@@ -88,6 +88,7 @@ function selectCoverageStudy(){
 $('coverage-study').addEventListener('change',selectCoverageStudy);
 function renderCoverage(){
   stopCoveragePlayback();
+  renderCoveragePanelSensitivity();
   const equal=coverageIsEqual();
   $('coverage-study-context').textContent=equal?'Same number of states; different bank composition. Fresh panel belongs only to this study.':'Earlier measured coverage comparison, with its own fresh panel and larger exhaustive bank.';
   $('coverage-intro-copy').textContent=equal?'Both conditions use the same Double DQN learner and the same number of training states. One reuses the archived bank of unique states reached by random collection; the other uses an equally sized uniform subset of the exhaustive state universe. This tests which states are included while holding bank size fixed. Both remain offline and receive all four action transitions.':'Both conditions use the same Double DQN target procedure, network, all four actions, and update budget. One samples every training state. The other samples unique states encountered during random collection on the same layouts. The support and sampling distribution change together; this is offline learning, with the movement rule visible initially.';
@@ -96,7 +97,7 @@ function renderCoverage(){
     ['Same state count','Archived collected bank / uniform subset'],['Different included states','Same exhaustive training universe'],['Same Double DQN','All actions, network, loss, updates'],['Separate fresh panel','Own rollouts; no oracle actions'],
   ]:[['Same training layouts','Every possible state / random trajectories'],['Two fixed state banks','Exhaustive / unique collected states'],['Same Double DQN','All actions, network, loss, update budget'],['New fresh layouts','Own rollouts; no oracle actions']]).map(([title,detail])=>`<li><strong>${title}</strong><small>${detail}</small></li>`).join('');
   $('coverage-flow-note').textContent=equal?'No new collection is performed. The collected bank is reused unchanged, and the uniform bank is sampled before training. Both banks are shared across learner seeds. Detached successor queries may reach states outside a bank without adding them to its direct training support.':'Random collection happens before learning and never adapts to either network. Collected states are sampled uniformly after duplicates are removed. Both conditions still receive all four action transitions at each training state, beyond ordinary trajectory-only experience.';
-  $('coverage-paired-caption').textContent=`Every difference is ${coverageDirection()}. Success, efficient-success, and no-op-rate differences are percentage points; a negative step difference means fewer steps. Failed episodes still count. These are descriptive paired measurements from this study's own final fresh panel.`;
+  $('coverage-paired-caption').textContent=`Every difference is ${coverageDirection()}. Success, efficient-success, and no-op-rate differences are percentage points; a negative step difference means fewer steps. Failed episodes still count. These are descriptive paired measurements from this study's own final training and fresh panels.`;
   $('coverage-layout-caption').textContent=`Per-layout success and efficient-success differences are −1, 0, or +1. No-op-rate differences are percentage points. Every difference is ${coverageDirection()}.`;
 
   const {run={},protocol={},gates={}}=coverage || {},dataset=protocol.dataset || {},latest=latestCoverageUpdate();
@@ -156,6 +157,24 @@ function renderCoverage(){
   renderCoverageSupportFit();
   renderCoverageComparison();
 }
+function renderCoveragePanelSensitivity(){
+  const note=$('coverage-panel-sensitivity');note.hidden=!coverageIsEqual();
+  note.textContent='This study uses a separate fresh panel. Scores and gates belong to the selected study; inspect the earlier coverage study separately.';
+  if(!coverageIsEqual() || !coverage)return;
+  const prior=coverageStudies.coverage,provenance=coverage.provenance || {},seeds=coverage.protocol?.seeds || [],priorSeeds=prior?.protocol?.seeds || [];
+  const checkpoint=coverage.protocol?.budget?.updates_per_seed,priorCheckpoint=prior?.protocol?.budget?.updates_per_seed;
+  const maps=coverage.protocol?.dataset?.heldout_map_seeds || [],priorMaps=prior?.protocol?.dataset?.heldout_map_seeds || [];
+  const checks=provenance.collected_replication || [],flags=['applicable','final_weights_identical','target_weights_identical','initial_weights_identical','batch_index_sha256_identical','global_counts_identical'];
+  const archiveMatch=typeof provenance.archive==='string' && provenance.archive===prior?.artifacts?.directory;
+  const replicated=seeds.length>0 && seeds.length===priorSeeds.length && seeds.every(seed=>priorSeeds.includes(seed)) && checks.length===seeds.length && seeds.every(seed=>{const rows=checks.filter(r=>r.seed===seed);return rows.length===1 && flags.every(key=>rows[0][key]===true) && rows[0].archive_model===`${provenance.archive}/models/collected_unique_seed${seed}_update${priorCheckpoint}.pt`;});
+  const eligible=coverage.run?.status==='complete' && coverage.gates?.eligible===true && prior?.run?.status==='complete' && prior?.gates?.eligible===true;
+  if(!eligible || !archiveMatch || !replicated || provenance.replication_required!==true || provenance.training_arrays_identical!==true || provenance.transition_arrays_identical!==true || checkpoint!==priorCheckpoint || !maps.length || !priorMaps.length || !maps.some(seed=>!priorMaps.includes(seed)))return;
+  const final=(study,update)=>study.aggregate?.find(r=>r.condition==='collected_unique' && r.panel==='heldout' && r.mode==='greedy' && r.checkpoint===update);
+  const current=final(coverage,checkpoint),previous=final(prior,priorCheckpoint);
+  if(!Number.isFinite(current?.success_rate) || !Number.isFinite(previous?.success_rate))return;
+  note.textContent=`The collected networks have identical saved weights in both studies. Their final greedy success is ${percent(previous.success_rate)} on the earlier panel (first map ${priorMaps[0]}) and ${percent(current.success_rate)} on this panel (first map ${maps[0]}). The evaluation maps changed; this is not a learning gain. Use the study selector to inspect either panel.`;
+}
+
 function renderCoverageSupport(){
   const equal=coverageIsEqual(),description=coverage?.coverage || {},records=equal?(description.per_condition || []):[{condition:'collected_unique',...description}];
   $('coverage-bank-comparison').hidden=!equal;$('coverage-support-selector-label').hidden=!equal;

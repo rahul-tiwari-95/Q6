@@ -1,0 +1,107 @@
+{
+  "archive": "experiments/coverage/pilot_v1",
+  "files": {
+    "dataset.npz": "3577064824ddc9b98c8ff98e5092ddb265dae97bbd0dec372bbc2bae9c99e61a",
+    "transitions.npz": "441129442a98667cc3a3a03060af9031d6f0148897c24fad5e77151706d10caa",
+    "dataset_metadata.json": "30710d56af070eb666367adbc4d8488b8d78c755b4f6ccd6e46a738c9ec1da99",
+    "sampling.json": "d0a7904f398328830b0bbb698f3f8ae99741c4b7d5cfd7bc716a28a60dfc3255",
+    "results.json": "37e901b2ad6aabd14174be65fb4ac022102a9105dd06f05897ca4e9469245245",
+    "protocol.json": "ca1ae5496abd3e7129e19abc30f78bcd16c2ba33f9cfa36146817d2cb587ea2b",
+    "manifest.json": "ad01dca5cbe1bcd520ac74de045789e5a6d2317ee1a5a93d75507b9357041c13",
+    "sample_counts.npz": "5ee861e7daf2b32e51c82a31e6411b1bb6418c47e3b6361903b828a9e7bba0bc"
+  },
+  "archive_initial_policy_hashes": {
+    "exhaustive": {
+      "0": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c",
+      "1": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b",
+      "2": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4"
+    },
+    "collected_unique": {
+      "0": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c",
+      "1": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b",
+      "2": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4"
+    }
+  },
+  "collected_replication": [
+    {
+      "seed": 0,
+      "applicable": true,
+      "final_weights_identical": true,
+      "batch_index_sha256_identical": true,
+      "initial_weights_identical": true,
+      "archive_model": "experiments/coverage/pilot_v1/models/collected_unique_seed0_update30000.pt",
+      "archive_model_sha256": "76df8416d90d1ef97a459e2da13fd6df19b8d789222f401729590db2f32178bd",
+      "target_weights_identical": true,
+      "global_counts_identical": true
+    },
+    {
+      "seed": 1,
+      "applicable": true,
+      "final_weights_identical": true,
+      "batch_index_sha256_identical": true,
+      "initial_weights_identical": true,
+      "archive_model": "experiments/coverage/pilot_v1/models/collected_unique_seed1_update30000.pt",
+      "archive_model_sha256": "ab8815d9818472656e237691ebe50a235140efcaa29a9557abdeb70d8ff4531d",
+      "target_weights_identical": true,
+      "global_counts_identical": true
+    },
+    {
+      "seed": 2,
+      "applicable": true,
+      "final_weights_identical": true,
+      "batch_index_sha256_identical": true,
+      "initial_weights_identical": true,
+      "archive_model": "experiments/coverage/pilot_v1/models/collected_unique_seed2_update30000.pt",
+      "archive_model_sha256": "1aa647b1dc24a1dac79d5216b44e81abc558b7219cefa67708120c84f9de2eaf",
+      "target_weights_identical": true,
+      "global_counts_identical": true
+    }
+  ],
+  "training_arrays_identical": true,
+  "transition_arrays_identical": true,
+  "earlier_supervised_archive": "experiments/supervised/pilot_v1",
+  "earlier_supervised_metadata_sha256": "1b58d07e9cfc15a93fb28bf06abb53175d3a7eec2e3d6230831be894dbecc553",
+  "replication_required": true,
+  "fixed_targets_archive": "experiments/fixed_targets/pilot_v1",
+  "fixed_targets_metadata_sha256": "91e5ea3af64156a97fb1ad45d3f8d56d8a8da60385e2bc7d84804c316e43b9a0",
+  "archived_collection_files": {
+    "collection.npz": "bb3c6240099c625e5bd9334dff7ff08bb3e40f55fd46cec87d940e4fd9753bf6",
+    "coverage.json": "932695aa577b56cc71e7c15865eb3994f13bdaab3535184caf585c6aedba1063",
+    "collection_steps.csv": "173a398ae3b2c3d9fa34bcf18026c97500470958fcdd5eda2bd3f9be626fad80",
+    "collection_episodes.csv": "d5dd20ccd9cb51ba130d716a9ab6387014cc1b89731f3ced616fbc91e85c4c67"
+  },
+  "new_collection_episodes": 0,
+  "new_collection_steps": 0,
+  "paired_consistency": [
+    {
+      "seed": 0,
+      "complete": true,
+      "initial_weights_identical": true,
+      "same_update_count": true,
+      "same_batch_indices_required": false,
+      "same_local_batch_indices_required": true,
+      "local_batch_index_sha256_identical": true,
+      "local_per_row_counts_identical": true
+    },
+    {
+      "seed": 1,
+      "complete": true,
+      "initial_weights_identical": true,
+      "same_update_count": true,
+      "same_batch_indices_required": false,
+      "same_local_batch_indices_required": true,
+      "local_batch_index_sha256_identical": true,
+      "local_per_row_counts_identical": true
+    },
+    {
+      "seed": 2,
+      "complete": true,
+      "initial_weights_identical": true,
+      "same_update_count": true,
+      "same_batch_indices_required": false,
+      "same_local_batch_indices_required": true,
+      "local_batch_index_sha256_identical": true,
+      "local_per_row_counts_identical": true
+    }
+  ]
+}
