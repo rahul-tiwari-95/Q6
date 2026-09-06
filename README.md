@@ -6,7 +6,7 @@ Q6 studies how a neural agent adapts when a task changes, and what it retains wh
 
 This is a public research preview; a license has not yet been selected. Its earlier Krishna–Hunter self-play work, failed experiments, and methodological corrections remain available as a research history.
 
-**Latest finding:** the [A-only competence study](docs/experiments/competence_results_v1.md) completed **1,080,000 training transitions**. All three learner seeds reached **100% greedy success on both selected fixed training sets** (one task and sixteen tasks). Fresh-world success remained **9.90%, 22.40%, and 19.79%** for one-task, sixteen-task, and stream training; none passed the 70%-in-every-seed gate. Q6 can learn these familiar tasks, but useful performance across new worlds is still missing. The next diagnosis separates learning reliable navigation targets from the online RL procedure before adding memory.
+**Latest finding:** with exact supervised action-value targets, the **unchanged 20,420-parameter network** reaches **85.42% greedy success on fresh layouts** (82.81–87.50% across three seeds). Every seed passes the declared supervised fresh-layout gate. The stricter training-fit diagnostic remains unmet, and routes still waste steps. This shows useful capacity under privileged targets and broad state coverage; it does not establish online-RL competence or isolate why earlier RL failed. Read the [result](docs/experiments/supervised_results_v1.md) and inspect its decisions in the dashboard. The next comparison holds data fixed to separate exact-target fitting from bootstrapped learning before adding memory.
 
 ## Start on CPU
 
@@ -19,8 +19,8 @@ python -m pip install --upgrade pip
 python -m pip install -e '.[dev]'
 
 # Short execution check; writes to a new temporary output directory.
-python -m q6.competence --output /tmp/q6-competence-smoke \
-  --protocol-file docs/experiments/competence_protocol_v1.md --smoke
+python -m q6.supervised --output /tmp/q6-supervised-smoke \
+  --protocol-file docs/experiments/supervised_protocol_v1.md --smoke
 ```
 
 Choose a fresh `--output` directory when repeating a run. A smoke run checks execution and artifacts; its small training budget does not establish adaptation or retention.
@@ -29,19 +29,19 @@ Choose a fresh `--output` directory when repeating a run. A smoke run checks exe
 
 | Track | Question | Start here |
 | --- | --- | --- |
-| **Competence → adaptation — primary** | Can the learner solve new A tasks reliably enough to study B and recovery of A? | [Current protocol](docs/experiments/competence_protocol_v1.md), [results](docs/experiments/competence_results_v1.md), [`q6/`](q6/) |
+| **Competence → adaptation — primary** | Can this network solve fresh layouts with exact targets before relying on online RL? | [Current protocol](docs/experiments/supervised_protocol_v1.md), [results](docs/experiments/supervised_results_v1.md), [`q6/`](q6/) |
 | **Provenance — bounded companion** | Does deduplicating message origins improve decisions compared with independently calibrated raw and decayed counts? | [Protocol](docs/experiments/provenance-protocol.md), [errata](docs/experiments/provenance-errata.md), [`no_way_home/`](no_way_home/) |
 
-Reproduce the current A-only comparison in a fresh directory:
+Reproduce the current exact-target comparison in a fresh directory:
 
 ```bash
 # Match the main run's core dependencies in Python 3.12.
 python -m pip install 'torch==2.8.0' 'numpy==2.0.2'
-python -m q6.competence --output experiments/competence/my-reproduction \
-  --protocol-file docs/experiments/competence_protocol_v1.md
+python -m q6.supervised --output experiments/supervised/my-reproduction \
+  --protocol-file docs/experiments/supervised_protocol_v1.md
 ```
 
-The [captured environment](experiments/competence/pilot_v1/environment.txt) records the remaining versions. To display a reproduction locally, add `--dashboard dashboard/data/competence.json`; this replaces the viewer's current data, so preserve the original artifact.
+The [captured environment](experiments/supervised/pilot_v1/environment.txt) records the remaining versions. The runner uses the shipped historical RL checkpoints as frozen references. To display a reproduction locally, add `--dashboard dashboard/data/supervised.json`; this replaces the viewer's current data, so preserve the original artifact.
 
 Run the fixed-budget provenance pilot:
 
@@ -50,7 +50,7 @@ python -m no_way_home.run_provenance_release \
   --out experiments/provenance/my-reproduction
 ```
 
-Stored studies: [competence v1](experiments/competence/pilot_v1/results.json), [adaptation v2](docs/experiments/adaptation_pilot_v2.md), [archived adaptation v1](docs/experiments/adaptation_pilot_v1.md), and [provenance](experiments/provenance/release-pilot-v1/RESULTS.md). Both adaptation pilots failed initial competence; their later A→B→A outcomes do not establish forgetting or recovery. The separate A-only diagnosis learned its fixed support but failed fresh-world competence. Each milestone stops at its declared budget. Runners refuse to overwrite an existing study directory; read the protocol before changing its seeds or budget.
+Stored studies: [exact supervision v1](experiments/supervised/pilot_v1/results.json), [A-only competence v1](docs/experiments/competence_results_v1.md), [adaptation v2](docs/experiments/adaptation_pilot_v2.md), [archived adaptation v1](docs/experiments/adaptation_pilot_v1.md), and [provenance](experiments/provenance/release-pilot-v1/RESULTS.md). Both adaptation pilots failed initial competence; their later A→B→A outcomes do not establish forgetting or recovery. The A-only RL diagnosis learned its selected fixed tasks but failed fresh-world competence. Exact supervision now demonstrates useful fresh-layout behavior with different data and target access. Each milestone stops at its declared budget. Runners refuse to overwrite an existing study directory; read the protocol before changing its seeds or budget.
 
 ## Inspect results
 
@@ -58,7 +58,9 @@ Stored studies: [competence v1](experiments/competence/pilot_v1/results.json), [
 python3 -m http.server 8080 --bind 127.0.0.1
 ```
 
-Open **[the current lab](http://127.0.0.1:8080/dashboard/lab.html)** and select **Learn one world** for familiar-versus-fresh learning curves. Choose **Sixteen repeated tasks** and **Seed 1**, switch the replay between **Probe maps** (the familiar training tasks) and **Fresh maps**, and compare the learned policy with **Shortest path**. Step through the recorded decisions to see learned and exact action values. The [historical registry](http://127.0.0.1:8080/dashboard/index.html) preserves earlier run summaries. To index legacy training runs available on your machine, run `python dashboard/scan.py` before starting the server.
+Open **[the current lab](http://127.0.0.1:8080/dashboard/lab.html#supervised)** and select **Exact targets**. Compare training/fresh success, exhaustive action agreement and value error, then inspect a replay with learned and exact action values. Choose **Fresh layouts**, the final **30,000** updates, and greedy actions; switch **Supervised network** to **Historical frozen RL**. On the first fresh layout, selected before outcomes, all three supervised seeds finish in two steps while all three historical policies time out at 32. The complete panel, not that illustration alone, supplies the reported scores. The historical policies score 21.35% on this panel but are not matched for data, targets or computation.
+
+**Learn one world** retains the preceding fixed-task/stream diagnosis; **Adaptation** and **Evidence** retain the earlier tracks. The [historical registry](http://127.0.0.1:8080/dashboard/index.html) preserves older run summaries. To index legacy training runs available on your machine, run `python dashboard/scan.py` before starting the server.
 
 Historical summaries are not a complete artifact archive: many referenced CSV files, checkpoints, and replays are absent from a fresh checkout. Claims from the earlier reports should be read with the [September 2026 review](research_review/2026-09-05/README.md), which documents confounds, bugs, and unsupported interpretations. The new pilots also need independent seeds and fair baselines before supporting general conclusions. No Way Home is a synthetic decision model, not empirical evidence about human institutions.
 
@@ -66,7 +68,7 @@ Historical summaries are not a complete artifact archive: many referenced CSV fi
 
 - [Contribution guide](CONTRIBUTING.md): fast and full test commands, experiment template, and reproducibility requirements.
 - [Documentation index](docs/README.md) and [roadmap](docs/roadmap.md): current scope and criteria for the next experiment.
-- [Competence validation](docs/validation/competence-v1.md) and [earlier preview validation](docs/validation/2026-09-06.md): test coverage, CI, artifact integrity, and runtime.
+- [Supervised validation](docs/validation/supervised-v1.md), [competence validation](docs/validation/competence-v1.md) and [earlier preview validation](docs/validation/2026-09-06.md): tests, CI, artifact audits and browser coverage.
 - [Training supervisor](orchestrator/README.md): local job logging, crash restart, and resume conventions.
 - [Citation metadata](CITATION.cff): cite the repository and the exact revision/artifact used.
 

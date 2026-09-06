@@ -1,0 +1,2 @@
+python -m q6.supervised --output experiments/supervised/pilot_v1 --protocol-file docs/experiments/supervised_protocol_v1.md --prior-dir experiments/competence/pilot_v1 --seeds 0,1,2 --updates 30000 --train-maps 256 --fresh-maps 64 --train-seed-start 300000 --fresh-seed-start 930000 --max-seconds 900 --checkpoints 0,1000,3000,10000,30000
+# Reproduction needs a new output path.

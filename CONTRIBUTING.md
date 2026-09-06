@@ -62,7 +62,7 @@ GitHub Actions runs the fast lane for pushes and pull requests on Python 3.10 an
 
 Run focused tests while developing. Run the relevant broader lane before submitting changes to dynamics, observations, rewards, learner updates, persistence, or statistical analysis. Add tests for a meaningful invariant or regression, not just a second copy of the implementation. Do not replace scientific evaluation with a passing smoke test.
 
-Check the shipped pilot source/protocol hashes, adaptation and competence CSV aggregates, competence training counts, and artifact manifests without retraining:
+Check the shipped pilot source/protocol hashes, CSV aggregates, training counts, supervised dataset split/predictions/gates, and artifact manifests without retraining:
 
 ```bash
 python scripts/verify_pilot_artifacts.py
@@ -70,6 +70,14 @@ node scripts/check_dashboard.mjs
 ```
 
 CI also runs these checks and checks the current dashboard JavaScript syntax. The dashboard harness exercises saved-data controls with DOM/canvas stubs; inspect the actual browser for layout and native interaction. Integrity does not establish independent replication or scientific validity.
+
+For a deeper read-only audit of the complete exact-target study, use its recorded Python 3.12, Torch 2.8.0 and NumPy 2.0.2 environment:
+
+```bash
+python scripts/audit_supervised_study.py
+```
+
+This separately checks every exact target, reconstructs the minibatch sampling schedule, reproduces final dense predictions from saved weights, and reconciles raw metrics and gates. It performs forward inference and isolated environment transitions, with no training or policy rollouts. Bit-exact predictions require the recorded environment; this stricter check is not part of the broader dependency-range CI. It accepts complete, undeviating v1 studies; smoke and incomplete artifacts use the general verifier above.
 
 ## Build a package
 

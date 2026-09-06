@@ -4,7 +4,7 @@ This checks internal integrity, not scientific validity or independent replicati
 Run from any directory: python /path/to/Q6/scripts/verify_pilot_artifacts.py
 """
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 import csv
 import gzip
 import hashlib
@@ -132,6 +132,21 @@ def verify_supervised(folder):
                 for r in result["aggregate"]}
     if groups.keys() != reported.keys():
         raise ValueError(f"Missing supervised aggregate groups: {folder.name}")
+    if result["run"]["status"] == "complete":
+        expected_groups = {("supervised_q", checkpoint, panel, mode)
+                           for checkpoint in protocol["checkpoints"] for panel in ("train", "heldout")
+                           for mode in ("greedy", "epsilon_0_1")}
+        if set(groups) != expected_groups:
+            raise ValueError("Complete supervised run is missing declared checkpoint groups")
+        for key, rows in groups.items():
+            _, _, panel, mode = key
+            map_seeds = protocol["dataset"][f"{panel}_map_seeds"]
+            repetitions = 1 if mode == "greedy" else protocol["evaluation"]["epsilon_0_1_repetitions"]
+            expected = Counter((seed, map_seed, rep) for seed in protocol["seeds"]
+                               for map_seed in map_seeds for rep in range(repetitions))
+            actual = Counter((int(r["seed"]), int(r["map_seed"]), int(r["repetition"])) for r in rows)
+            if actual != expected:
+                raise ValueError(f"Missing or duplicated supervised evaluation cells: {key}")
     for key, rows in groups.items():
         summary = reported[key]
         per_seed = defaultdict(list)
@@ -227,9 +242,16 @@ def verify_supervised(folder):
                     if not math.isclose(float(q95), row["q95_abs_q_error"], rel_tol=1e-10, abs_tol=1e-10):
                         raise ValueError("Final pooled state-error percentile mismatch")
     sampling = read_json(folder / "sampling.json")
+    if result["run"]["status"] == "complete":
+        if set(sampling) != {str(seed) for seed in protocol["seeds"]}:
+            raise ValueError("Completed supervised run is missing training seeds")
+        if any(row["updates"] != protocol["budget"]["updates_per_seed"] for row in sampling.values()):
+            raise ValueError("Completed supervised run did not reach its declared update budget")
     with np.load(folder / "sample_counts.npz", allow_pickle=False) as counts:
         for seed, row in sampling.items():
             array = counts[f"seed{seed}"]
+            if array.shape != (protocol["dataset"]["train_states"],):
+                raise ValueError("Supervised sample count array does not cover the training dataset")
             if int(array.sum()) != row["examples_seen"] or row["examples_seen"] != row["updates"] * 64:
                 raise ValueError("Supervised sample accounting mismatch")
             if np.count_nonzero(array) != row["unique_states_sampled"]:
@@ -252,6 +274,8 @@ def verify_supervised(folder):
         if not math.isclose(rate, reference["success_rate"], abs_tol=1e-12):
             raise ValueError("Supervised reference success mismatch")
     random_rate = sum(int(r["success"]) for r in random_rows) / len(random_rows) if random_rows else None
+    if Counter(gate["seed"] for gate in result["gates"]["per_seed"]) != Counter(protocol["seeds"]):
+        raise ValueError("Supervised gate rows omit or repeat a declared seed")
     for gate in result["gates"]["per_seed"]:
         seed = gate["seed"]
         scores = {}
@@ -260,6 +284,12 @@ def verify_supervised(folder):
                     if int(r["seed"]) == seed]
             scores[panel] = sum(int(r["success"]) for r in rows) / len(rows) if rows else None
         agreement = final_state_rates.get((seed, "train"))
+        for name, expected in (("train_success", scores["train"]), ("fresh_success", scores["heldout"]),
+                               ("train_state_optimal", agreement)):
+            actual = gate[name]
+            if (actual is None) != (expected is None) or (actual is not None and
+                    not math.isclose(actual, expected, rel_tol=1e-10, abs_tol=1e-10)):
+                raise ValueError(f"Supervised per-seed reported value mismatch: {seed} {name}")
         fit = bool(eligible and scores["train"] is not None and scores["train"] >= .9
                    and agreement is not None and agreement >= .9)
         fresh = bool(eligible and scores["heldout"] is not None and scores["heldout"] >= .7

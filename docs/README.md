@@ -4,6 +4,8 @@ The [root README](../README.md) is the entry point for installing and running Q6
 
 ## Current experiments
 
+- [Exact-target supervision protocol](experiments/supervised_protocol_v1.md) and [result](experiments/supervised_results_v1.md): the unchanged network reaches 85.42% fresh-layout success; every seed passes the supervised fresh gate, but full training fit and efficient routes remain unresolved. This is privileged supervision, not online-RL competence.
+- [Supervised validation](validation/supervised-v1.md): tests, independently recomputed labels/predictions, dataset and sampling audits, and dashboard coverage.
 - [A-only competence protocol](experiments/competence_protocol_v1.md) and [result](experiments/competence_results_v1.md): both fixed training sets reach 100% greedy success for every seed; fresh-map competence remains unmet.
 - [Competence validation](validation/competence-v1.md): software, artifacts, and dashboard checks.
 - [Prior adaptation protocol](experiments/adaptation_protocol_v2.md): the one follow-up with ten times v1's training budget and a fresh evaluation panel.

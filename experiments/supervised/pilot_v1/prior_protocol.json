@@ -1,0 +1,208 @@
+{
+  "id": "competence-v1",
+  "question": "Can the current DQN learn repeated tasks before a task stream?",
+  "hypothesis": "Repeated support may be learnable while transfer to fresh tasks remains weak.",
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "conditions": [
+    {
+      "id": "fixed_1",
+      "label": "One repeated task",
+      "probe_seeds": [
+        200000
+      ],
+      "description": "The same walls, spawn and pellet at every reset."
+    },
+    {
+      "id": "fixed_16",
+      "label": "Sixteen repeated tasks",
+      "probe_seeds": [
+        200000,
+        200001,
+        200002,
+        200003,
+        200004,
+        200005,
+        200006,
+        200007,
+        200008,
+        200009,
+        200010,
+        200011,
+        200012,
+        200013,
+        200014,
+        200015
+      ],
+      "description": "Balanced shuffled epochs of sixteen fixed task instances."
+    },
+    {
+      "id": "stream",
+      "label": "Task stream",
+      "probe_seeds": [
+        200000,
+        200001,
+        200002,
+        200003,
+        200004,
+        200005,
+        200006,
+        200007,
+        200008,
+        200009,
+        200010,
+        200011,
+        200012,
+        200013,
+        200014,
+        200015
+      ],
+      "description": "The sixteen probes once, then uniform task-ID draws with replacement. Probes are not a memorization ceiling."
+    }
+  ],
+  "checkpoints": [
+    0,
+    4000,
+    12000,
+    40000,
+    120000
+  ],
+  "heldout_seeds": [
+    920000,
+    920001,
+    920002,
+    920003,
+    920004,
+    920005,
+    920006,
+    920007,
+    920008,
+    920009,
+    920010,
+    920011,
+    920012,
+    920013,
+    920014,
+    920015,
+    920016,
+    920017,
+    920018,
+    920019,
+    920020,
+    920021,
+    920022,
+    920023,
+    920024,
+    920025,
+    920026,
+    920027,
+    920028,
+    920029,
+    920030,
+    920031,
+    920032,
+    920033,
+    920034,
+    920035,
+    920036,
+    920037,
+    920038,
+    920039,
+    920040,
+    920041,
+    920042,
+    920043,
+    920044,
+    920045,
+    920046,
+    920047,
+    920048,
+    920049,
+    920050,
+    920051,
+    920052,
+    920053,
+    920054,
+    920055,
+    920056,
+    920057,
+    920058,
+    920059,
+    920060,
+    920061,
+    920062,
+    920063
+  ],
+  "world": {
+    "size": 5,
+    "wall_count": 4,
+    "pellet_count": 1,
+    "horizon": 32,
+    "action_mapping": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "step_cost": -0.01,
+    "pellet_reward": 1.0,
+    "shaping_weight": 0.2,
+    "gamma": 0.97
+  },
+  "rule_visibility": "observed",
+  "gates": {
+    "memorization": 0.9,
+    "heldout": 0.7,
+    "scope": "each learner seed; greedy only; heldout must exceed random"
+  },
+  "budget": {
+    "steps_per_condition_seed": 120000,
+    "maximum_training_steps": 1080000,
+    "admission_seconds": 900,
+    "evaluation_included": true
+  },
+  "epsilon_evaluation_repetitions": {
+    "probe": 8,
+    "heldout": 2
+  },
+  "rng": {
+    "learner": "owned shared exploration/replay RNG",
+    "tasks": "owned SeedSequence([seed,77103])",
+    "evaluation": "SeedSequence([learnerseed,mapseed,repetition,55219]); common across conditions/checkpoints"
+  },
+  "source_sha256": {
+    "q6/__init__.py": "54f1cd94584f782985a0a69c7e12717905008a959b1604b49874894003b8737f",
+    "q6/adaptation.py": "a2a9e4b189b72872ff0e4c8f522fb829f721ef369088fd4469d9236ec2194916",
+    "q6/competence.py": "c7453f66f8f92027e4c0285af1329397e63239a8dfa5ad07a598e067674766fd",
+    "q6/diagnostics.py": "229f604a62c1f899fc7e07740430c6fcd1dbd5bfddac93b76faa6b4f62214e79",
+    "q6/learning.py": "ef1272d170b4eaa6b2efa731f851e58bf39bdd19af8e4d16dbe575cae1991a9c",
+    "q6/optimal.py": "01e9fb1909953f872aa32beff9aa2f88c5cba1a188d34e84be1901d7f9ce60a7",
+    "q6/world.py": "478cf48343af888ddd6087ea7bc1ac6f311abb10327ac11937b799b685f8156f"
+  },
+  "protocol_sha256": "8490d794806f842e501bb19a5978198fc03469961b2a4bafe05a70cfaec93a38",
+  "git": {
+    "revision": "88fb9d227ecfad12cda7699e74781bfd1d1bf46b",
+    "dirty": false
+  },
+  "runtime": {
+    "python": "3.12.13",
+    "torch": "2.8.0",
+    "numpy": "2.0.2",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "machine": "arm64",
+    "torch_threads": 1,
+    "device": "cpu"
+  },
+  "smoke": false,
+  "deviations": [],
+  "created_at": "2026-09-06T04:44:44.193471+00:00",
+  "metric_definitions": {
+    "optimal_action_rate": "optimal selections / winnable visited states only",
+    "mean_action_regret": "unconditional trajectory-step average of Q*max - Q*chosen",
+    "mean_abs_q_error": "unconditional visited-step average of four-action absolute Q error",
+    "moved_revisit_rate": "moves returning to any previously visited position / moves, excluding no-ops"
+  }
+}
