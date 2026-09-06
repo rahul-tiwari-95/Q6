@@ -46,6 +46,16 @@ harness and documentation; they do not change captured training sources or
 historical artifacts. The late gate-footnote color adjustment makes unmet
 results gray instead of green.
 
+## Separate agent review
+
+A second agent independently recomputed the gates and metrics from raw artifacts,
+reconciled all training episode spans and task exposure, regenerated the declared
+task-sampling schedules, checked all 45 model tensor hashes and matched initial
+weights across conditions, and confirmed no canonical train/fresh-task overlap.
+It also checked the result report's numbers and shortest final fixed-bank routes.
+No blocking discrepancy was found. This was read-only artifact review, not an
+independent training replication or external peer review.
+
 ## Dashboard checks
 
 `node scripts/check_dashboard.mjs` runs from any directory and passed on the
