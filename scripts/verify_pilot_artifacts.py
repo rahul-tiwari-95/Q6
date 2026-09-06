@@ -1,4 +1,4 @@
-"""Verify shipped pilot hashes and adaptation aggregates without retraining.
+"""Verify shipped pilot hashes and reported aggregates without retraining.
 
 This checks internal integrity, not scientific validity or independent replication.
 Run from any directory: python /path/to/Q6/scripts/verify_pilot_artifacts.py
@@ -106,6 +106,172 @@ def verify_competence(folder):
     print(f"{folder.name}: {len(groups)} competence CSV aggregates and {logged_steps} training transitions verified")
 
 
+def verify_supervised(folder):
+    """Reconcile exact-supervision reports with their captured inputs and rows."""
+    protocol = read_json(folder / "protocol.json")
+    result = read_json(folder / "results.json")
+    check_hash(folder / "protocol.md", protocol["protocol_sha256"])
+    for name, digest in protocol["source_sha256"].items():
+        check_hash(folder / "source" / name, digest)
+    if result["protocol"] != protocol:
+        raise ValueError(f"Supervised results/protocol mismatch: {folder.name}")
+    preceding = read_json(ROOT / "experiments/competence/pilot_v1/protocol.json")
+    for source in ("q6/learning.py", "q6/world.py"):
+        if protocol["source_sha256"][source] != preceding["source_sha256"][source]:
+            raise ValueError(f"Same-network/world diagnostic changed {source}")
+    previous_initial = read_json(ROOT / "experiments/competence/pilot_v1/results.json")["run"]["initial_policy_hashes"]
+    for seed, digest in result["run"]["initial_policy_hashes"].items():
+        if seed in previous_initial and digest != previous_initial[seed]:
+            raise ValueError(f"Network initialization changed for seed {seed}")
+    groups = defaultdict(list)
+    with (folder / "evaluations.csv").open(newline="") as handle:
+        for row in csv.DictReader(handle):
+            if int(row["checkpoint_complete"]):
+                groups[row["condition"], int(row["checkpoint"]), row["panel"], row["mode"]].append(row)
+    reported = {(r["condition"], r["checkpoint"], r["panel"], r["mode"]): r
+                for r in result["aggregate"]}
+    if groups.keys() != reported.keys():
+        raise ValueError(f"Missing supervised aggregate groups: {folder.name}")
+    for key, rows in groups.items():
+        summary = reported[key]
+        per_seed = defaultdict(list)
+        for row in rows:
+            per_seed[int(row["seed"])].append(int(row["success"]))
+        rates = [sum(values) / len(values) for values in per_seed.values()]
+        expected = {
+            "episodes": len(rows), "seeds": len(per_seed),
+            "success_rate": math.fsum(float(r["success"]) for r in rows) / len(rows),
+            "mean_steps": math.fsum(float(r["steps"]) for r in rows) / len(rows),
+            "mean_return": math.fsum(float(r["base_return"]) for r in rows) / len(rows),
+            "mean_shaped_return": math.fsum(float(r["shaped_return"]) for r in rows) / len(rows),
+            "seed_success_min": min(rates), "seed_success_max": max(rates),
+            "winnable_steps": sum(int(r["winnable_steps"]) for r in rows),
+        }
+        for metric, value in expected.items():
+            if not math.isclose(value, summary[metric], rel_tol=1e-12, abs_tol=1e-12):
+                raise ValueError(f"Supervised aggregate mismatch: {key} {metric}")
+    import numpy as np
+
+    metadata = read_json(folder / "dataset_metadata.json")
+    final_state_rates = {}
+    if metadata["status"] == "complete":
+        with np.load(folder / "dataset.npz", allow_pickle=False) as data:
+            for name, expected in metadata["arrays"].items():
+                array = data[name]
+                if list(array.shape) != expected["shape"] or str(array.dtype) != expected["dtype"]:
+                    raise ValueError(f"Dataset array metadata mismatch: {name}")
+                if hashlib.sha256(array.tobytes()).hexdigest() != expected["sha256"]:
+                    raise ValueError(f"Dataset array hash mismatch: {name}")
+            train_layouts = {r["layout_hash"] for r in metadata["train"]}
+            fresh_layouts = {r["layout_hash"] for r in metadata["heldout"]}
+            if train_layouts & fresh_layouts or len(fresh_layouts) != len(metadata["heldout"]):
+                raise ValueError("Supervised split contains repeated or training fresh layouts")
+            # Byte-level observation identity catches position/clock split mistakes.
+            observation_hashes = {}
+            for panel in ("train", "heldout"):
+                observation_hashes[panel] = {hashlib.sha256(row.tobytes()).digest()
+                                           for row in data[f"{panel}_observations"]}
+            if observation_hashes["train"] & observation_hashes["heldout"]:
+                raise ValueError("Supervised train/fresh observation overlap")
+            with (folder / "state_metrics.csv").open(newline="") as handle:
+                state_rows = list(csv.DictReader(handle))
+            last = protocol["budget"]["updates_per_seed"]
+            final_errors = defaultdict(list)
+            for seed in protocol["seeds"]:
+                prediction_file = folder / f"predictions_seed{seed}.npz"
+                if not prediction_file.exists():
+                    if result["run"]["status"] == "complete":
+                        raise ValueError(f"Missing final predictions for seed {seed}")
+                    continue
+                with np.load(prediction_file, allow_pickle=False) as predictions:
+                    for panel in ("train", "heldout"):
+                        target, prediction = data[f"{panel}_targets"], predictions[panel]
+                        if prediction.shape != target.shape or not np.isfinite(prediction).all():
+                            raise ValueError("Invalid final prediction array")
+                        error = prediction.astype(np.float64) - target
+                        chosen = prediction.argmax(axis=1)
+                        regret = np.maximum(0, target.max(axis=1) - target[np.arange(len(target)), chosen])
+                        win = data[f"{panel}_winnable"]
+                        optimal = regret <= protocol["evaluation"]["tie_atol"]
+                        final_state_rates[seed, panel] = float(optimal[win].mean()) if win.any() else None
+                        rows = [r for r in state_rows if int(r["seed"]) == seed and int(r["checkpoint"]) == last
+                                and r["panel"] == panel and r["time_bucket"] == "all"]
+                        expected = {"states": len(target), "action_values": target.size,
+                                    "winnable_states": int(win.sum()), "impossible_states": int((~win).sum()),
+                                    "optimal_winnable_actions": int((optimal & win).sum()),
+                                    "abs_error_sum": float(np.abs(error).sum()),
+                                    "squared_error_sum": float(np.square(error).sum()),
+                                    "signed_error_sum": float(error.sum()),
+                                    "action_regret_sum": float(regret.sum()),
+                                    "winnable_regret_sum": float(regret[win].sum()),
+                                    "impossible_regret_sum": float(regret[~win].sum())}
+                        for metric, value in expected.items():
+                            actual = math.fsum(float(r[metric]) for r in rows)
+                            if not math.isclose(actual, value, rel_tol=1e-10, abs_tol=1e-8):
+                                raise ValueError(f"Final state metrics mismatch: {seed} {panel} {metric}")
+                        remaining = data[f"{panel}_remaining"]
+                        for bucket, low, high in (("all", 1, 32), ("1-8", 1, 8), ("9-16", 9, 16),
+                                                  ("17-24", 17, 24), ("25-32", 25, 32)):
+                            mask = (remaining >= low) & (remaining <= high)
+                            final_errors[panel, bucket].append(np.abs(error[mask]).mean(axis=1))
+            for row in result["state_aggregate"]:
+                selected = [r for r in state_rows if int(r["checkpoint"]) == row["checkpoint"]
+                            and r["panel"] == row["panel"] and r["time_bucket"] == row["time_bucket"]]
+                for metric in ("states", "winnable_states", "optimal_winnable_actions", "abs_error_sum",
+                               "squared_error_sum", "signed_error_sum", "action_regret_sum"):
+                    if not math.isclose(math.fsum(float(r[metric]) for r in selected), row[metric],
+                                        rel_tol=1e-10, abs_tol=1e-8):
+                        raise ValueError(f"State aggregate mismatch: {row['checkpoint']} {metric}")
+                if row["checkpoint"] == last:
+                    q95 = np.quantile(np.concatenate(final_errors[row["panel"], row["time_bucket"]]), .95)
+                    if not math.isclose(float(q95), row["q95_abs_q_error"], rel_tol=1e-10, abs_tol=1e-10):
+                        raise ValueError("Final pooled state-error percentile mismatch")
+    sampling = read_json(folder / "sampling.json")
+    with np.load(folder / "sample_counts.npz", allow_pickle=False) as counts:
+        for seed, row in sampling.items():
+            array = counts[f"seed{seed}"]
+            if int(array.sum()) != row["examples_seen"] or row["examples_seen"] != row["updates"] * 64:
+                raise ValueError("Supervised sample accounting mismatch")
+            if np.count_nonzero(array) != row["unique_states_sampled"]:
+                raise ValueError("Supervised unique sample count mismatch")
+    if sum(row["updates"] for row in sampling.values()) != result["run"]["train_updates"]:
+        raise ValueError("Supervised update accounting mismatch")
+    if sum(row["examples_seen"] for row in sampling.values()) != result["run"]["training_examples"]:
+        raise ValueError("Supervised training example accounting mismatch")
+    eligible = result["run"]["status"] == "complete" and not protocol["smoke"] and not protocol["deviations"]
+    if result["gates"]["eligible"] != eligible:
+        raise ValueError("Incorrect supervised gate eligibility")
+    with (folder / "references.csv").open(newline="") as handle:
+        reference_rows = list(csv.DictReader(handle))
+    random_rows = [r for r in reference_rows if r["policy"] == "random_actions" and r["panel"] == "heldout"]
+    for reference in result["references"]:
+        selected = [r for r in reference_rows if all(r[key] == reference[key] for key in ("policy", "panel", "mode"))]
+        if reference["episodes"] != len(selected):
+            raise ValueError("Supervised reference episode-count mismatch")
+        rate = sum(int(r["success"]) for r in selected) / len(selected)
+        if not math.isclose(rate, reference["success_rate"], abs_tol=1e-12):
+            raise ValueError("Supervised reference success mismatch")
+    random_rate = sum(int(r["success"]) for r in random_rows) / len(random_rows) if random_rows else None
+    for gate in result["gates"]["per_seed"]:
+        seed = gate["seed"]
+        scores = {}
+        for panel in ("train", "heldout"):
+            rows = [r for r in groups.get(("supervised_q", protocol["budget"]["updates_per_seed"], panel, "greedy"), [])
+                    if int(r["seed"]) == seed]
+            scores[panel] = sum(int(r["success"]) for r in rows) / len(rows) if rows else None
+        agreement = final_state_rates.get((seed, "train"))
+        fit = bool(eligible and scores["train"] is not None and scores["train"] >= .9
+                   and agreement is not None and agreement >= .9)
+        fresh = bool(eligible and scores["heldout"] is not None and scores["heldout"] >= .7
+                     and random_rate is not None and scores["heldout"] > random_rate)
+        if gate["training_fit"] != fit or gate["fresh"] != fresh:
+            raise ValueError(f"Supervised seed gate mismatch: {seed}")
+    for key in ("training_fit", "fresh"):
+        if result["gates"][key] != all(r[key] for r in result["gates"]["per_seed"]):
+            raise ValueError(f"Supervised pooled gate mismatch: {key}")
+    print(f"{folder.name}: {len(groups)} supervised rollout groups, dataset split, final predictions, exposure and gates verified")
+
+
 def main():
     for version in ("v1", "v2"):
         verify_adaptation(ROOT / "experiments/adaptation" / f"pilot_{version}")
@@ -115,6 +281,9 @@ def main():
         verify_manifest(manifest.parent)
         if (manifest.parent / "protocol.json").exists():
             verify_competence(manifest.parent)
+    for manifest in sorted((ROOT / "experiments/supervised").glob("*/manifest.json")):
+        verify_manifest(manifest.parent)
+        verify_supervised(manifest.parent)
 
 
 if __name__ == "__main__":

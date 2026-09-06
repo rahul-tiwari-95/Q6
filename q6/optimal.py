@@ -1,6 +1,7 @@
 """Exact visible-state reference for the single-pellet finite-horizon task.
 
-This is an engineered diagnostic, never a training signal in the pilot. It
+This is an engineered reference: evaluation-only in the competence pilots,
+and an explicitly privileged target source in the supervised diagnostic. It
 uses an independent transition table and dynamic programming over position
 and remaining time. All map, goal, agent, clock and action-rule inputs come
 from the observation. Only public reward/horizon parameters come from config.

@@ -174,7 +174,8 @@ def evaluation_draws(seed: int, map_seed: int, repetition: int, horizon: int):
 
 
 def evaluate_episode(agent, config, oracle, *, condition, seed, checkpoint, mode, panel,
-                     map_seed, repetition=0, policy="learner", deadline=float("inf")):
+                     map_seed, repetition=0, policy="learner", deadline=float("inf"),
+                     optimal_tolerance=1e-8):
     check_budget(deadline)
     env = CollectionWorld(config)
     state, _ = env.reset(seed=map_seed)
@@ -222,7 +223,7 @@ def evaluate_episode(agent, config, oracle, *, condition, seed, checkpoint, mode
         row["action_regret_sum"] += regret
         if winnable:
             row["winnable_steps"] += 1
-            row["optimal_winnable_actions"] += int(np.isclose(optimal_q[action], optimal_q.max(), atol=1e-8, rtol=0))
+            row["optimal_winnable_actions"] += int(np.isclose(optimal_q[action], optimal_q.max(), atol=optimal_tolerance, rtol=0))
             row["avoidable_failure_actions"] += int(not can_finish_action[action])
         before = env.position
         state, reward, terminated, truncated, info = env.step(action)

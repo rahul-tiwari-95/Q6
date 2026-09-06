@@ -22,24 +22,56 @@
     <header class="lab-hero">
       <div>
         <p class="eyebrow"><span class="signal-dot"></span> SMALL WORLDS. OBSERVABLE LEARNING.</p>
-        <h1>Learn one world.<br><em>Then test what changes.</em></h1>
-        <p class="hero-copy">Start with a task an agent can demonstrably learn. Compare familiar and fresh maps before asking what survives a changing world. Every curve comes from a saved experiment.</p>
+        <h1>Give it exact targets.<br><em>Then inspect what it learns.</em></h1>
+        <p class="hero-copy">Can the same small network learn useful action values when the answers are supplied? Compare fitting known layouts with solving fresh ones, then inspect the recorded decisions.</p>
       </div>
       <aside class="research-note">
         <span class="eyebrow">THE CURRENT QUESTION</span>
-        <p>Can the learner solve A<br>before we change the rules?</p>
+        <p>Does an exact answer<br>become a useful policy?</p>
         <div class="note-footer"><span class="status-badge">Exploratory pilots</span><button id="refresh" class="text-button">Refresh data ↻</button></div>
         <small id="load-status" role="status">Loading saved experiments…</small>
       </aside>
     </header>
 
     <div class="experiment-tabs" role="tablist" aria-label="Experiment tracks">
-      <button id="tab-competence" role="tab" aria-selected="true" aria-controls="competence-panel" tabindex="0"><span>01</span> Learn one world</button>
-      <button id="tab-adaptation" role="tab" aria-selected="false" aria-controls="adaptation-panel" tabindex="-1"><span>02</span> Adaptation & retention</button>
-      <button id="tab-provenance" role="tab" aria-selected="false" aria-controls="provenance-panel" tabindex="-1"><span>03</span> Evidence & decisions</button>
+      <button id="tab-supervised" role="tab" aria-selected="true" aria-controls="supervised-panel" tabindex="0"><span>01</span> Exact targets</button>
+      <button id="tab-competence" role="tab" aria-selected="false" aria-controls="competence-panel" tabindex="-1"><span>02</span> Learn one world</button>
+      <button id="tab-adaptation" role="tab" aria-selected="false" aria-controls="adaptation-panel" tabindex="-1"><span>03</span> Adaptation & retention</button>
+      <button id="tab-provenance" role="tab" aria-selected="false" aria-controls="provenance-panel" tabindex="-1"><span>04</span> Evidence & decisions</button>
     </div>
 
-    <section id="competence-panel" role="tabpanel" aria-labelledby="tab-competence">
+    <section id="supervised-panel" role="tabpanel" aria-labelledby="tab-supervised">
+      <div class="competence-intro"><div><p class="eyebrow">OFFLINE SUPERVISION / PRIVILEGED EXACT TARGETS</p><h2>Fit the values. Test the behavior.</h2><p>An exact solver supplies the optimal discounted return for all four actions at each training state. The existing network fits those answers offline. This is supervised learning with privileged targets; it does not establish learning from interaction or RL competence.</p></div><div class="support-preview"><span>Same network</span><span>Four exact targets</span></div></div>
+      <ol class="supervision-flow" aria-label="How this experiment works"><li><strong>Visible state</strong><small>Walls, goal, position, clock</small></li><li><strong>Exact action targets</strong><small>Q* for ↑ ↓ ← →</small></li><li><strong>Same network</strong><small>Fit the supplied values</small></li><li><strong>Its own rollout</strong><small>Choose actions on fresh layouts</small></li></ol><p class="help-text supervision-flow-note">Exact answers supervise training. During a fresh rollout, the network chooses its own actions; the solver supplies no actions to it. Small value errors can still flip which direction ranks first.</p>
+      <div id="supervised-empty" class="empty-panel"><h2>No saved exact-target result yet.</h2><p>Refresh after the declared study finishes to inspect measured fit, fresh-layout success, and recorded decisions. The earlier experiments remain available in the other tabs.</p></div>
+      <div id="supervised-content" hidden>
+        <div class="study-toolbar"><span id="supervised-study-label" class="eyebrow">SAVED SUPERVISED STUDY</span><label class="competence-mode-label">Rollout actions<select id="supervised-epsilon"><option value="greedy">Greedy · ε = 0</option><option value="epsilon_0_1">Exploring · ε = 0.1</option></select></label></div>
+        <div id="supervised-gate-note" class="interpretation-note" role="status"></div>
+        <div id="supervised-stats" class="stat-grid"></div>
+        <div class="competence-charts">
+          <article class="lab-panel"><div class="panel-heading"><div><p class="eyebrow">ACTUAL EPISODES</p><h2>Does the fitted network solve the task?</h2></div></div><div id="supervised-success-chart" class="success-chart" role="img" aria-label="Training and fresh layout rollout success by optimizer update"></div><p id="supervised-success-caption" class="help-text"></p></article>
+          <article class="lab-panel"><div class="panel-heading"><div><p class="eyebrow">EXHAUSTIVE STATE CHECK</p><h2>Does it choose an optimal action?</h2></div></div><div id="supervised-agreement-chart" class="success-chart" role="img" aria-label="Optimal action agreement on training and fresh states by optimizer update"></div><p class="help-text">Greedy action agreement among still-winnable states, across positions and remaining times. A low value error can still misrank close actions. State agreement and rollout success answer different questions.</p></article>
+        </div>
+        <div id="supervised-curve-legend" class="curve-legend competence-legend"></div><p id="supervised-mode-note" class="help-text competence-mode-note"></p>
+        <article class="lab-panel supervised-fit-panel"><div><p class="eyebrow">VALUE FIT / NOT A SUCCESS SCORE</p><h2>How close are the predicted answers?</h2><p class="help-text">Mean absolute Q error uses the exhaustive state panel. It is distinct from the optimizer’s batch loss and from the decisions made during an episode.</p><div id="supervised-fit-metrics" class="policy-diagnostics"></div></div><div><div id="supervised-loss-chart" class="success-chart" role="img" aria-label="Recorded minibatch loss by optimizer update"></div><p id="supervised-loss-caption" class="help-text"></p></div></article>
+        <div class="observation-grid competence-observation-grid">
+          <article class="lab-panel replay-panel"><div class="panel-heading"><div><p class="eyebrow">WATCH THE DECISION</p><h2>Inspect a saved episode</h2></div><span id="supervised-replay-outcome" class="status-badge">No trajectory selected</span></div>
+            <div class="replay-selectors"><label>Controller<select id="supervised-replay-controller"></select></label><label>Optimizer updates<select id="supervised-replay-checkpoint"></select></label><label>Layout panel<select id="supervised-replay-panel"></select></label><label>Seed<select id="supervised-replay-seed"></select></label></div>
+            <div class="world-stage"><canvas id="supervised-world-canvas" width="560" height="560" role="img" aria-label="Recorded exact-target study trajectory"></canvas><div id="supervised-world-caption" class="world-caption"></div></div>
+            <div class="replay-controls"><button id="supervised-replay-play" class="primary-button" aria-label="Play saved supervised trajectory">▶ Play</button><button id="supervised-replay-reset" class="icon-button" aria-label="Restart saved supervised trajectory">↺</button><label class="scrub-label"><span class="sr-only">Saved supervised trajectory step</span><input id="supervised-replay-scrub" type="range" min="0" max="0" value="0"></label><output id="supervised-replay-step">—</output></div>
+            <div class="world-legend"><span><i class="legend-dot agent-dot"></i> Agent</span><span><i class="legend-dot pellet-dot"></i> Pellet</span><span><i class="legend-dot wall-dot"></i> Wall</span><span>··· Visited path</span></div><p id="supervised-replay-explanation" class="help-text"></p><div id="supervised-step-diagnostics" class="step-diagnostics"></div>
+          </article>
+          <div class="chart-column">
+            <article class="lab-panel"><p class="eyebrow">SAME EVALUATION PANEL</p><h2 id="supervised-reference-title">Inspect the reference policies</h2><div id="supervised-reference-bars" class="diagnostic-bars"></div><p id="supervised-reference-caption" class="help-text"></p><div class="finding-note">“Fresh” means unseen by the supervised training bank. Historical RL layout overlap is audited separately. That frozen network used different training data and computation, and no exact targets. This comparison does not isolate why a policy succeeds or fails.</div></article>
+            <article class="lab-panel reading-panel"><p class="eyebrow">HYPOTHESIS & DECLARED GATES</p><h3>Useful predictions require useful behavior.</h3><p id="supervised-hypothesis"></p><div id="supervised-gates" class="finding-note"></div><div id="supervised-gate-results" class="gate-results"></div></article>
+          </div>
+        </div>
+        <article class="lab-panel"><details class="data-details"><summary>Inspect rollout measurements</summary><div class="table-scroll"><table id="supervised-rollout-table" class="evidence-table"></table></div></details><details class="data-details"><summary>Inspect exhaustive state measurements and time buckets</summary><p class="help-text">Optimal-action agreement includes only still-winnable states; the denominator is reported. State errors are measured independently of the states visited by the policy.</p><div class="table-scroll"><table id="supervised-state-table" class="evidence-table"></table></div></details></article>
+        <article class="lab-panel evidence-panel"><div><p class="eyebrow">REPRODUCE & INSPECT</p><h2>Keep the source of supervision visible</h2><p id="supervised-method" class="help-text"></p></div><div id="supervised-evidence-links" class="evidence-links"><a href="data/supervised.json" download>Download displayed data ↓</a></div><details><summary>Scope and limitations</summary><ul id="supervised-limitations"></ul></details></article>
+      </div>
+    </section>
+
+    <section id="competence-panel" role="tabpanel" aria-labelledby="tab-competence" hidden>
       <div class="competence-intro"><div><p class="eyebrow">A-ONLY / COMPETENCE CHECK</p><h2>How much of the world can it learn?</h2><p>Keep the movement rule fixed. Vary the maps seen during training, then compare familiar and fresh maps under the same evaluation action mode.</p></div><div class="support-preview" aria-label="Three training conditions"><span>1 map</span><span>16 maps</span><span>Streaming maps</span></div></div>
       <div id="competence-empty" class="empty-panel"><h2>No saved one-world result yet.</h2><p>The study is being prepared. Refresh after it finishes to see measured learning curves, evaluation comparisons, and recorded behavior. Adaptation and provenance results remain available in the other tabs.</p></div>
       <div id="competence-content" hidden>

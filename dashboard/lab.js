@@ -18,6 +18,11 @@ const stepLabel = value => value >= 1000 ? `${value / 1000}k` : number(value);
 const competenceMode = () => $('competence-epsilon').value;
 const supportLabel = id => competence?.protocol?.conditions?.find(c=>c.id===id)?.label || id;
 const latestCompetenceStep = () => Math.max(0,...(competence?.aggregate || []).map(r=>r.checkpoint).filter(Number.isFinite));
+let supervised=null, supervisedTrajectory=null, supervisedFrame=0, supervisedTimer=null;
+const supervisedMode=()=>$('supervised-epsilon').value;
+const supervisedPanelLabel=panel=>panel==='train'?'Training layouts':'Fresh layouts';
+const supervisedPolicyLabel=policy=>({learner:'Supervised network',prior_stream:'Historical frozen RL',random_actions:'Random actions',shortest_path:'Shortest path'}[policy] || policy);
+const latestSupervisedUpdate=()=>Math.max(0,...(supervised?.aggregate || []).map(r=>r.checkpoint).filter(Number.isFinite));
 let loadInProgress = false;
 const replayRows = () => [...(adaptation?.trajectories || []),...(diagnostics?.trajectories || [])];
 
@@ -30,7 +35,7 @@ function selectOptions(id, options, preferred) {
   el.value = values.includes(previous) ? previous : values.includes(preferred) ? preferred : values[0] || '';
 }
 function listItems(id, values) { $(id).innerHTML = (values || []).map(v => `<li>${escape(v)}</li>`).join(''); }
-const tracks = ['competence','adaptation','provenance'];
+const tracks = ['supervised','competence','adaptation','provenance'];
 function activateTab(name) {
   for (const track of tracks) {
     const active = track === name;
@@ -40,6 +45,7 @@ function activateTab(name) {
   }
   stopPlayback();
   stopCompetencePlayback();
+  stopSupervisedPlayback();
   history.replaceState(null,'',`#${name}`);
 }
 for (const [index,name] of tracks.entries()) {
@@ -53,6 +59,125 @@ for (const [index,name] of tracks.entries()) {
   });
 }
 if (tracks.includes(location.hash.slice(1))) activateTab(location.hash.slice(1));
+
+function renderSupervised() {
+  stopSupervisedPlayback();
+  const ready=Boolean(supervised?.aggregate?.length);
+  $('supervised-empty').hidden=ready;$('supervised-content').hidden=!ready;if(!ready)return;
+  const {protocol={},run={},gates={}}=supervised, dataset=protocol.dataset || {}, latest=latestSupervisedUpdate();
+  $('supervised-study-label').textContent=`${run.id || protocol.id || 'Saved study'} · ${(run.status || 'exploratory').replaceAll('_',' ')}`;
+  const interpretations={
+    fresh_competence_gate_met:'Fresh-layout supervised gate met. Every seed reaches the declared fresh rollout threshold and exceeds random. Exact privileged supervision produced useful behavior on this panel; this does not establish RL competence or identify the cause of the earlier RL gap.',
+    fresh_pass_fit_unresolved:'Fresh-layout rollout gate met; training fit remains unresolved. Every seed passes the fresh success gate, but the two-part training-fit gate is not met in every seed. Inspect rollout and full-state measurements separately. This remains supervised evidence, not RL competence.',
+    training_fit_only:'Training fit established; the fresh-layout gate remains unmet. The network learns the supplied training answers well enough to pass both fit criteria. Useful transfer remains limited under this design.',
+    training_fit_not_established:'Training fit was not established. The declared training rollout and state-action agreement criteria were not both met in every seed. Fitting this supervised dataset needs diagnosis before interpreting transfer.',
+    smoke_or_protocol_deviation_not_gate_evidence:'Smoke or protocol-deviation run. These measurements check execution and cannot pass the declared supervised research gates.',
+    incomplete_not_gate_evidence:'Incomplete study. The declared comparison did not finish within its admission budget. Partial measurements cannot pass a supervised gate.',
+  };
+  $('supervised-gate-note').textContent=interpretations[run.interpretation] || 'Gate interpretation is unavailable. Inspect the saved protocol and per-seed results before drawing a learning conclusion.';
+  $('supervised-gate-note').classList.toggle('passed',run.interpretation==='fresh_competence_gate_met');
+  $('supervised-stats').innerHTML=[
+    [number(protocol.seeds?.length),'Training seeds','Same compact network architecture'],
+    [number(latest),'Latest optimizer checkpoint','Updates, not environment transitions'],
+    [number(dataset.train_states),'Training states','Four exact action targets per state'],
+    [number(dataset.heldout_map_seeds?.length),'Fresh wall-and-goal layouts','Unseen layout keys, fixed evaluation panel'],
+  ].map(([value,label,detail])=>`<div class="stat-card"><span>${label}</span><strong>${value}</strong><small>${detail}</small></div>`).join('');
+  $('supervised-hypothesis').textContent=protocol.hypothesis || '';
+  $('supervised-gates').textContent=`Each seed must reach ${percent(protocol.gates?.training_success)} greedy training-layout rollout success and ${percent(protocol.gates?.training_state_optimal)} optimal-action agreement on still-winnable training states for the training-fit gate. The fresh gate requires ${percent(protocol.gates?.heldout_success)} greedy fresh-layout success in each seed and a score above random. These are supervised feasibility gates, not RL competence.`;
+  const status=value=>gates.eligible!==true?'Not eligible':value===true?'Met':value===false?'Not met':'Not measured';
+  $('supervised-gate-results').innerHTML=(gates.per_seed || []).map(r=>`<div class="gate-row"><strong>Seed ${number(r.seed)}</strong><p>Training rollout: ${percent(r.train_success)} · Training action agreement: ${percent(r.train_state_optimal)}</p><p>Fresh rollout: ${percent(r.fresh_success)}</p><small>Training fit: ${status(r.training_fit)} · Fresh gate: ${status(r.fresh)}</small></div>`).join('')+`<div class="gate-row"><strong>All-seed gates</strong><p>Training fit: ${status(gates.training_fit)} · Fresh: ${status(gates.fresh)}</p></div>`;
+  $('supervised-method').textContent=`Offline optimizer updates: ${number(run.train_updates)} across all seeds · batch examples consumed: ${number(run.training_examples)} · batch size: ${number(protocol.budget?.batch_size)} · ${number(run.wall_seconds)} seconds elapsed. Exact targets cover all four actions. Dataset construction, optimization and evaluation are separate costs; consult the saved accounting. No RL replay or bootstrapped targets are used for this supervised fit.`;
+  listItems('supervised-limitations',run.limitations);
+  $('supervised-evidence-links').innerHTML='<a href="data/supervised.json" download>Download displayed data ↓</a>'+[['protocol_document','Study design'],['protocol','Saved protocol'],['report','Measured findings'],['training','Recorded optimization loss'],['evaluations','Raw rollout evaluations'],['state_metrics','Raw state measurements'],['dataset_metadata','Dataset provenance'],['sampling','Sampling summary'],['prior_reference_metadata','Historical reference provenance'],['manifest','Artifact checksums']].flatMap(([key,label])=>{
+    const path=supervised.artifacts?.[key];return typeof path==='string' && /^(docs|experiments)\/[a-zA-Z0-9_./-]+$/.test(path) && !path.split('/').includes('..')?[`<a href="../${escape(path)}">${label} ↗</a>`]:[];
+  }).join('');
+  renderSupervisedComparison();
+}
+
+function renderSupervisedComparison() {
+  if(!supervised?.aggregate?.length)return;
+  const latest=latestSupervisedUpdate(),protocol=supervised.protocol || {},stateRows=supervised.state_aggregate || [];
+  const panels=['train','heldout'],panelColors={train:'#a6e5c1',heldout:'#98b8d1'};
+  const rolloutRows=supervised.aggregate.filter(r=>r.mode===supervisedMode());
+  const stateAll=stateRows.filter(r=>r.time_bucket==='all');
+  const series=(rows,value,low,high)=>panels.map(panel=>({label:supervisedPanelLabel(panel),color:panelColors[panel],rows:rows.filter(r=>r.panel===panel).map(r=>({checkpoint:r.checkpoint,value:r[value],low:r[low],high:r[high]}))}));
+  renderUpdateChart('supervised-success-chart',series(rolloutRows,'success_rate','seed_success_min','seed_success_max'),protocol.checkpoints,true,'Episode success');
+  renderUpdateChart('supervised-agreement-chart',series(stateAll,'optimal_action_rate','seed_optimal_action_min','seed_optimal_action_max'),protocol.checkpoints,true,'Winnable-state optimal-action agreement');
+  const losses=supervised.loss_aggregate || [];
+  renderUpdateChart('supervised-loss-chart',[{label:'Mean minibatch loss',color:'#e7b985',rows:losses.map(r=>({checkpoint:r.checkpoint,value:r.mean_loss,low:r.seed_loss_min,high:r.seed_loss_max}))}],losses.map(r=>r.checkpoint),false,'All-action SmoothL1 minibatch loss');
+  $('supervised-loss-caption').textContent='Recorded pre-update minibatch SmoothL1 loss, averaged over each preceding logged window (normally 100 updates; the last window may be shorter). This is not exhaustive dataset loss. Shading is the range across seed means.';
+  const metric=panel=>stateAll.find(r=>r.panel===panel && r.checkpoint===latest);
+  $('supervised-fit-metrics').innerHTML=panels.flatMap(panel=>[[decimal(metric(panel)?.mean_abs_q_error),`${supervisedPanelLabel(panel)} MAE`],[decimal(metric(panel)?.rmse_q_error),`${supervisedPanelLabel(panel)} RMSE`]]).map(([value,label])=>`<div><span>${label}</span><strong>${value}</strong><small>At ${number(latest)} updates</small></div>`).join('');
+  $('supervised-success-caption').textContent=`${supervisedMode()==='greedy'?'Greedy':'ε = 0.1'} episodes from each layout’s declared start and full time horizon. Curves use optimizer updates on a linear axis. Shading is the seed minimum–maximum, not a confidence interval.`;
+  $('supervised-curve-legend').innerHTML=panels.map(panel=>`<span><i style="background:${panelColors[panel]}"></i>${supervisedPanelLabel(panel)}</span>`).join('');
+  $('supervised-mode-note').textContent=supervisedMode()==='greedy'?'Rollouts and learned-policy replays use greedy actions. Exhaustive state agreement always tests greedy ranking; optimization loss and state-value errors do not change with this rollout toggle.':'Rollouts and neural-policy replays use ε = 0.1: occasional uniform random actions. Exhaustive state agreement remains greedy; the declared gates also remain greedy. Random and planner references keep their own policies.';
+  $('supervised-rollout-table').innerHTML='<thead><tr><th>Updates</th><th>Layout panel</th><th>Success</th><th>Seed range</th><th>Episodes</th><th>No-op rate</th><th>Optimal actions</th><th>Winnable visited states</th><th>Visited-state |Q error|</th></tr></thead><tbody>'+rolloutRows.map(r=>`<tr><td>${number(r.checkpoint)}</td><td>${supervisedPanelLabel(r.panel)}</td><td>${percent(r.success_rate)}</td><td>${percent(r.seed_success_min)}–${percent(r.seed_success_max)}</td><td>${number(r.episodes)}</td><td>${percent(r.noop_rate)}</td><td>${percent(r.optimal_action_rate)}</td><td>${number(r.winnable_steps)}</td><td>${decimal(r.mean_abs_q_error)}</td></tr>`).join('')+'</tbody>';
+  $('supervised-state-table').innerHTML='<thead><tr><th>Updates</th><th>Layout panel</th><th>Remaining time</th><th>States</th><th>Winnable states</th><th>Q MAE</th><th>Q RMSE</th><th>95th percentile |error|</th><th>Signed Q bias</th><th>Optimal actions</th><th>Winnable regret</th></tr></thead><tbody>'+stateRows.map(r=>`<tr><td>${number(r.checkpoint)}</td><td>${supervisedPanelLabel(r.panel)}</td><td>${escape(r.time_bucket)}</td><td>${number(r.states)}</td><td>${number(r.winnable_states)}</td><td>${decimal(r.mean_abs_q_error)}</td><td>${decimal(r.rmse_q_error)}</td><td>${decimal(r.q95_abs_q_error)}</td><td>${decimal(r.mean_signed_q_bias)}</td><td>${percent(r.optimal_action_rate)}</td><td>${decimal(r.winnable_mean_action_regret)}</td></tr>`).join('')+'</tbody>';
+  selectSupervisedTrajectory();
+}
+
+function renderUpdateChart(id,series,checkpoints,rates,title) {
+  const steps=[...new Set(checkpoints || [])].filter(Number.isFinite).sort((a,b)=>a-b);
+  const maximum=Math.max(1,...steps),values=series.flatMap(s=>s.rows.flatMap(r=>[r.value,r.high])).filter(Number.isFinite);
+  const ceiling=rates?1:Math.max(.001,...values)*1.05,w=500,h=265,p={l:48,r:17,t:18,b:45};
+  const x=step=>p.l+step/maximum*(w-p.l-p.r),y=value=>p.t+(1-value/ceiling)*(h-p.t-p.b),fmt=rates?percent:decimal;
+  let svg=`<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><title>${escape(title)} by optimizer update</title>`;
+  for(let i=0;i<=4;i++){const value=i*ceiling/4;svg+=`<line x1="${p.l}" y1="${y(value)}" x2="${w-p.r}" y2="${y(value)}" stroke="#26302a"/><text x="${p.l-8}" y="${y(value)+4}" text-anchor="end" fill="#8a978f" font-size="10">${fmt(value)}</text>`;}
+  for(let i=0;i<=3;i++){const step=i*maximum/3;svg+=`<text x="${x(step)}" y="${h-25}" text-anchor="${i===0?'start':i===3?'end':'middle'}" fill="#8a978f" font-size="10">${escape(stepLabel(Math.round(step)))}</text>`;}
+  svg+=`<text x="${w/2}" y="${h-6}" text-anchor="middle" fill="#8a978f" font-size="10">Optimizer updates per seed · linear scale</text>`;
+  for(const s of series){
+    const segments=[];let segment=[];
+    for(const step of steps){const row=s.rows.find(r=>r.checkpoint===step);if(Number.isFinite(row?.value))segment.push(row);else if(segment.length){segments.push(segment);segment=[];}}if(segment.length)segments.push(segment);
+    for(const points of segments){
+      if(points.every(r=>Number.isFinite(r.low)&&Number.isFinite(r.high)))svg+=`<polygon points="${[...points.map(r=>`${x(r.checkpoint)},${y(r.high)}`),...points.slice().reverse().map(r=>`${x(r.checkpoint)},${y(r.low)}`)].join(' ')}" fill="${s.color}" opacity=".08"/>`;
+      svg+=`<path d="${points.map((r,i)=>`${i?'L':'M'}${x(r.checkpoint)},${y(r.value)}`).join(' ')}" stroke="${s.color}" stroke-width="2" fill="none"/>`;
+      for(const r of points)svg+=`<circle cx="${x(r.checkpoint)}" cy="${y(r.value)}" r="${steps.length>30?1.5:3.5}" fill="${s.color}"><title>${escape(s.label)}, ${number(r.checkpoint)} updates: ${fmt(r.value)}</title></circle>`;
+    }
+  }
+  if(!values.length)svg+=`<text x="${w/2}" y="${h/2}" text-anchor="middle" fill="#8a978f" font-size="12">No saved measurements</text>`;
+  $(id).innerHTML=svg+'</svg>';
+}
+
+function stopSupervisedPlayback(){if(supervisedTimer)clearInterval(supervisedTimer);supervisedTimer=null;$('supervised-replay-play').textContent='▶ Play';$('supervised-replay-play').setAttribute('aria-label','Play saved supervised trajectory');}
+function selectSupervisedTrajectory(){
+  stopSupervisedPlayback();
+  const rows=(supervised?.trajectories || []).filter(r=>!['learner','prior_stream'].includes(r.policy) || r.mode===supervisedMode());
+  selectOptions('supervised-replay-controller',[...new Set(rows.map(r=>r.policy))].map(p=>[p,supervisedPolicyLabel(p)]),'learner');
+  const policy=$('supervised-replay-controller').value,available=rows.filter(r=>r.policy===policy);
+  const checkpoints=[...new Set(available.map(r=>r.checkpoint))].sort((a,b)=>a-b);
+  selectOptions('supervised-replay-checkpoint',checkpoints.map(c=>[String(c),policy==='learner'?number(c):'Frozen reference']),String(latestSupervisedUpdate()));
+  $('supervised-replay-checkpoint').disabled=policy!=='learner' || checkpoints.length<2;
+  const atStep=available.filter(r=>r.checkpoint===Number($('supervised-replay-checkpoint').value));
+  selectOptions('supervised-replay-panel',[...new Set(atStep.map(r=>r.panel))].map(p=>[p,supervisedPanelLabel(p)]),'heldout');
+  const atPanel=atStep.filter(r=>r.panel===$('supervised-replay-panel').value);
+  selectOptions('supervised-replay-seed',[...new Set(atPanel.map(r=>r.seed))].sort((a,b)=>a-b).map(s=>[String(s),String(s)]),'0');
+  supervisedTrajectory=atPanel.find(r=>r.seed===Number($('supervised-replay-seed').value)) || null;supervisedFrame=0;
+  $('supervised-replay-scrub').max=supervisedTrajectory?.steps.length || 0;$('supervised-replay-scrub').value='0';
+  for(const id of ['supervised-replay-play','supervised-replay-reset','supervised-replay-scrub'])$(id).disabled=!supervisedTrajectory;
+  drawSupervisedWorld();renderSupervisedReferences();
+}
+function drawSupervisedWorld(){
+  const t=supervisedTrajectory;
+  const context=t?.policy==='learner'?`${number(t.checkpoint)} offline optimizer updates`:t?.policy==='prior_stream'?'Historical frozen RL checkpoint; different training budget and data':'Reference policy; no learning';
+  const mode=['learner','prior_stream'].includes(t?.policy)?(t.mode==='greedy'?'greedy':'ε = 0.1'):'own reference policy';
+  const description=t?`${supervisedPolicyLabel(t.policy)} · ${context} · ${mode}. ${supervisedPanelLabel(t.panel)} · seed ${t.seed} · map ${t.map_seed}. Saved episode selected by the protocol, not its outcome.`:'';
+  drawRecordedWorld('supervised',t,supervisedFrame,description,t?supervisedPolicyLabel(t.policy):'');
+}
+function renderSupervisedReferences(){
+  if(!supervised)return;
+  const panel=$('supervised-replay-panel').value || 'heldout',update=$('supervised-replay-controller').value==='learner'?Number($('supervised-replay-checkpoint').value):latestSupervisedUpdate();
+  const learner=supervised.aggregate.find(r=>r.panel===panel && r.checkpoint===update && r.mode===supervisedMode());
+  const reference=policy=>supervised.references?.find(r=>r.panel===panel && r.policy===policy && (policy!=='prior_stream' || r.mode===supervisedMode()));
+  const rows=[[learner,`Supervised at ${stepLabel(update)}`,'#a6e5c1'],[reference('prior_stream'),'Historical frozen RL','#b5a7d2'],[reference('random_actions'),'Random actions','#e7b985'],[reference('shortest_path'),'Shortest path','#98b8d1']];
+  $('supervised-reference-title').textContent=supervisedPanelLabel(panel);
+  $('supervised-reference-bars').innerHTML=rows.filter(([r,,])=>r).map(([r,label,color])=>`<div class="diagnostic-row"><span>${escape(label)}</span><div class="diagnostic-track">${Number.isFinite(r.success_rate)?`<div class="diagnostic-fill" style="width:${100*r.success_rate}%;background:${color}"></div>`:''}</div><strong>${percent(r.success_rate)}</strong></div>`).join('');
+  $('supervised-reference-caption').textContent=`Same rollout panel and visible state. Neural policies use ${supervisedMode()==='greedy'?'greedy actions':'ε = 0.1'}; random and planner retain their own policies. ${panel==='train'?'The historical RL reference is only evaluated on fresh layouts. ':''}Episode counts: ${rows.filter(([r])=>r).map(([r,label])=>`${label}: ${number(r.episodes)}`).join(' · ')}.`;
+}
+$('supervised-epsilon').addEventListener('change',renderSupervisedComparison);
+for(const id of ['supervised-replay-controller','supervised-replay-checkpoint','supervised-replay-panel','supervised-replay-seed'])$(id).addEventListener('change',selectSupervisedTrajectory);
+$('supervised-replay-play').addEventListener('click',()=>{if(supervisedTimer){stopSupervisedPlayback();return;}if(!supervisedTrajectory)return;if(supervisedFrame>=supervisedTrajectory.steps.length)supervisedFrame=0;$('supervised-replay-play').textContent='Ⅱ Pause';$('supervised-replay-play').setAttribute('aria-label','Pause saved supervised trajectory');supervisedTimer=setInterval(()=>{supervisedFrame=Math.min(supervisedFrame+1,supervisedTrajectory.steps.length);$('supervised-replay-scrub').value=String(supervisedFrame);drawSupervisedWorld();if(supervisedFrame>=supervisedTrajectory.steps.length)stopSupervisedPlayback();},160);});
+$('supervised-replay-reset').addEventListener('click',()=>{stopSupervisedPlayback();supervisedFrame=0;$('supervised-replay-scrub').value='0';drawSupervisedWorld();});
+$('supervised-replay-scrub').addEventListener('input',event=>{stopSupervisedPlayback();supervisedFrame=Number(event.target.value);drawSupervisedWorld();});
 
 function renderCompetence() {
   stopCompetencePlayback();
@@ -201,41 +326,47 @@ function renderCompetenceReferences() {
 }
 
 function drawCompetenceWorld() {
-  const canvas=$('competence-world-canvas'),ctx=canvas.getContext('2d'),size=canvas.width,t=competenceTrajectory;
+  const t=competenceTrajectory;
+  const mode=t?.policy==='learner'?`${t.mode==='greedy'?'greedy':'ε = 0.1'} · ${number(t.checkpoint)} training steps`:'reference policy';
+  const description=t?`${supportLabel(t.condition)} · ${policyLabel(t.policy)} · ${mode}. ${panelLabel(t.panel)} · seed ${t.seed} · map ${t.map_seed}. This saved episode illustrates behavior; the panel-wide evaluation measures success.`:'';
+  drawRecordedWorld('competence',t,competenceFrame,description,t?`${supportLabel(t.condition)}, ${policyLabel(t.policy)}`:'');
+}
+
+function drawRecordedWorld(prefix,t,replayFrame,description,label) {
+  const canvas=$(`${prefix}-world-canvas`),ctx=canvas.getContext('2d'),size=canvas.width;
   ctx.clearRect(0,0,size,size);ctx.fillStyle='#0a100c';ctx.fillRect(0,0,size,size);
-  $('competence-step-diagnostics').innerHTML='';
+  $(`${prefix}-step-diagnostics`).innerHTML='';
   if(!t) {
     ctx.fillStyle='#89988e';ctx.font='17px sans-serif';ctx.textAlign='center';ctx.fillText('No saved replay for this selection',size/2,size/2);
-    $('competence-world-caption').textContent='No episode is substituted for a missing recording.';
-    $('competence-replay-step').textContent='—';$('competence-replay-outcome').textContent='No trajectory';$('competence-replay-explanation').textContent='';return;
+    $(`${prefix}-world-caption`).textContent='No episode is substituted for a missing recording.';
+    $(`${prefix}-replay-step`).textContent='—';$(`${prefix}-replay-outcome`).textContent='No trajectory';$(`${prefix}-replay-explanation`).textContent='';return;
   }
-  const n=t.grid_size,cell=size/n,step=competenceFrame?t.steps[competenceFrame-1]:null;
+  const n=t.grid_size,cell=size/n,step=replayFrame?t.steps[replayFrame-1]:null;
   const pos=step?.position || t.start,pellets=step?.pellets || t.pellets_initial;
   for(let r=0;r<n;r++)for(let c=0;c<n;c++){ctx.strokeStyle='#1b2a20';ctx.lineWidth=1;ctx.strokeRect(c*cell+.5,r*cell+.5,cell-1,cell-1);}
   for(const [r,c] of t.walls){ctx.fillStyle='#2c3b31';ctx.fillRect(c*cell+2,r*cell+2,cell-4,cell-4);}
   ctx.strokeStyle='#6e9c7c';ctx.lineWidth=2;ctx.setLineDash([3,5]);ctx.beginPath();
-  [t.start,...t.steps.slice(0,competenceFrame).map(s=>s.position)].forEach(([r,c],i)=>{if(i===0)ctx.moveTo((c+.5)*cell,(r+.5)*cell);else ctx.lineTo((c+.5)*cell,(r+.5)*cell);});
+  [t.start,...t.steps.slice(0,replayFrame).map(s=>s.position)].forEach(([r,c],i)=>{if(i===0)ctx.moveTo((c+.5)*cell,(r+.5)*cell);else ctx.lineTo((c+.5)*cell,(r+.5)*cell);});
   ctx.stroke();ctx.setLineDash([]);
   for(const [r,c] of pellets){ctx.beginPath();ctx.arc((c+.5)*cell,(r+.5)*cell,cell*.105,0,Math.PI*2);ctx.fillStyle='#e7b985';ctx.fill();}
   ctx.beginPath();ctx.arc((pos[1]+.5)*cell,(pos[0]+.5)*cell,cell*.23,0,Math.PI*2);ctx.fillStyle='#a6e5c1';ctx.fill();ctx.strokeStyle='#d8fce7';ctx.lineWidth=2;ctx.stroke();
   const arrows=['↑','↓','←','→'];
-  $('competence-world-caption').textContent=`Rule A · key→move: ${(t.action_mapping || [0,1,2,3]).map((move,action)=>`${arrows[action]}→${arrows[move]}`).join('  ')}`;
-  $('competence-replay-step').textContent=`${competenceFrame} / ${t.steps.length}`;
-  $('competence-replay-outcome').textContent=competenceFrame===t.steps.length?(t.success?'Collected all pellets':'Episode ended without success'):`${pellets.length} pellet${pellets.length===1?'':'s'} left`;
-  const mode=t.policy==='learner'?`${t.mode==='greedy'?'greedy':'ε = 0.1'} · ${number(t.checkpoint)} training steps`:'reference policy';
-  $('competence-replay-explanation').textContent=`${supportLabel(t.condition)} · ${policyLabel(t.policy)} · ${mode}. ${panelLabel(t.panel)} · seed ${t.seed} · map ${t.map_seed}. This saved episode illustrates behavior; the panel-wide evaluation measures success.`;
-  const decision=step || t.steps[0], decisionNumber=competenceFrame || 1;
+  $(`${prefix}-world-caption`).textContent=`Rule A · key→move: ${(t.action_mapping || [0,1,2,3]).map((move,action)=>`${arrows[action]}→${arrows[move]}`).join('  ')}`;
+  $(`${prefix}-replay-step`).textContent=`${replayFrame} / ${t.steps.length}`;
+  $(`${prefix}-replay-outcome`).textContent=replayFrame===t.steps.length?(t.success?'Collected all pellets':'Episode ended without success'):`${pellets.length} pellet${pellets.length===1?'':'s'} left`;
+  $(`${prefix}-replay-explanation`).textContent=description;
+  const decision=step || t.steps[0], decisionNumber=replayFrame || 1;
   if(decision) {
     const metric=[];
     if(Number.isFinite(decision.action))metric.push(`Chosen action ${arrows[decision.action] || decision.action}`);
     if(step && Number.isFinite(step.reward))metric.push(`Reward ${decimal(step.reward)}`);
     if(Number.isFinite(decision.action_regret))metric.push(`Action regret ${decimal(decision.action_regret)}`);
-    $('competence-step-diagnostics').innerHTML=`<p><strong>Decision for step ${number(decisionNumber)}</strong> · ${metric.map(escape).join(' · ')}</p>`;
+    $(`${prefix}-step-diagnostics`).innerHTML=`<p><strong>Decision for step ${number(decisionNumber)}</strong> · ${metric.map(escape).join(' · ')}</p>`;
     if(decision.q_values?.length || decision.optimal_q_values?.length) {
-      $('competence-step-diagnostics').innerHTML+=`<div class="table-scroll"><table class="evidence-table"><thead><tr><th>Pre-action values</th>${arrows.map((a,i)=>`<th${i===decision.action?' class="chosen-action"':''}>${a}${i===decision.action?' · chosen':''}</th>`).join('')}</tr></thead><tbody>${[['Learned Q',decision.q_values],['Optimal Q',decision.optimal_q_values]].filter(([,values])=>values?.length).map(([label,values])=>`<tr><td>${label}</td>${values.map((v,i)=>`<td${i===decision.action?' class="chosen-action"':''}>${decimal(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p>Values are from before step ${number(decisionNumber)}; the grid shows ${competenceFrame?'the position after that step':'the starting position'}. Q is discounted return. Regret compares the chosen action with the optimal choice for that state.</p>`;
+      $(`${prefix}-step-diagnostics`).innerHTML+=`<div class="table-scroll"><table class="evidence-table"><thead><tr><th>Pre-action values</th>${arrows.map((a,i)=>`<th${i===decision.action?' class="chosen-action"':''}>${a}${i===decision.action?' · chosen':''}</th>`).join('')}</tr></thead><tbody>${[['Learned Q',decision.q_values],['Optimal Q',decision.optimal_q_values]].filter(([,values])=>values?.length).map(([label,values])=>`<tr><td>${label}</td>${values.map((v,i)=>`<td${i===decision.action?' class="chosen-action"':''}>${decimal(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p>Values are from before step ${number(decisionNumber)}; the grid shows ${replayFrame?'the position after that step':'the starting position'}. Q is discounted return. Regret compares the chosen action with the optimal choice for that state.</p>`;
     }
   }
-  canvas.setAttribute('aria-label',`${supportLabel(t.condition)}, ${policyLabel(t.policy)}, step ${competenceFrame} of ${t.steps.length}, agent at row ${pos[0]}, column ${pos[1]}, ${pellets.length} pellets remaining.`);
+  canvas.setAttribute('aria-label',`${label}, step ${replayFrame} of ${t.steps.length}, agent at row ${pos[0]}, column ${pos[1]}, ${pellets.length} pellets remaining.`);
 }
 
 $('competence-epsilon').addEventListener('change',renderCompetenceComparison);
@@ -448,9 +579,9 @@ async function getData(path) {
 }
 async function loadData() {
   if(loadInProgress)return;loadInProgress=true;$('refresh').disabled=true;$('study-run').disabled=true;
-  stopPlayback();stopCompetencePlayback();
+  stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();
   const adaptationPath=$('study-run').value==='pilot_v1'?'../experiments/adaptation/pilot_v1/results.json':'data/adaptation.json';
-  const results=await Promise.allSettled([getData(adaptationPath),getData('data/provenance.json'),getData('data/competence.json')]);
+  const results=await Promise.allSettled([getData(adaptationPath),getData('data/provenance.json'),getData('data/competence.json'),getData('data/supervised.json')]);
   const errors=[];
   diagnostics=null;
   if(results[0].status==='fulfilled') {
@@ -466,14 +597,16 @@ async function loadData() {
   if(results[1].status==='fulfilled') { provenance=results[1].value;renderProvenance(); } else errors.push(results[1].reason.message);
   if(results[2].status==='fulfilled') competence=results[2].value; else {competence=null;errors.push(results[2].reason.message);}
   renderCompetence();
+  if(results[3].status==='fulfilled')supervised=results[3].value;else {supervised=null;errors.push(results[3].reason.message);}
+  renderSupervised();
   if(errors.length) $('load-status').textContent=errors.join(' · ');
   else {
-    const loaded=[competence&&'Competence',adaptation&&'Adaptation',provenance&&'Provenance'].filter(Boolean);
+    const loaded=[supervised&&'Exact targets',competence&&'Competence',adaptation&&'Adaptation',provenance&&'Provenance'].filter(Boolean);
     $('load-status').textContent=`${loaded.join(' + ') || 'No'} saved ${loaded.length===1?'study':'studies'} loaded · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
   }
   $('refresh').disabled=false;$('study-run').disabled=false;loadInProgress=false;
 }
 $('refresh').addEventListener('click',loadData);
 $('study-run').addEventListener('change',loadData);
-document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlayback();stopCompetencePlayback();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();}});
 await loadData();
