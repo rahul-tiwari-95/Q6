@@ -140,3 +140,15 @@ body.theater.research-lab main { max-width:1440px; padding:42px 44px 22px; }
 .fixed-outcome-heading { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 20px; margin:24px 0 12px; }.fixed-outcome-heading .eyebrow,.fixed-outcome-heading .help-text { margin:0; }
 .fixed-outcomes { grid-template-columns:repeat(3,minmax(0,1fr)); }.fixed-outcome-pair { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:15px 0 10px; }.fixed-outcome-pair strong { font-size:23px; }.fixed-outcome-pair small { display:block; font-size:9px; line-height:1.5; }.fixed-outcomes .stat-card>small { display:block; line-height:1.6; }
 @media(max-width:760px) { .fixed-outcomes { grid-template-columns:1fr; gap:10px; }.fixed-outcome-pair { margin:10px 0 6px; }.fixed-outcome-heading { margin-top:20px; } }
+
+/* Experience support uses the same comparison and replay primitives. */
+#coverage-world-canvas { display:block; width:min(100%,390px); height:auto; aspect-ratio:1; margin:auto; }
+#coverage-replay-step { font:10px var(--mono); color:var(--muted); min-width:55px; text-align:right; }
+.coverage-support-grid { display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-top:24px; }.coverage-small-heading { font-size:13px!important; margin-bottom:15px; }
+#coverage-map-heatmap { max-width:350px; margin:0 auto; }#coverage-map-heatmap svg { display:block; width:100%; height:auto; }
+#coverage-time-bars .diagnostic-row small { display:block; color:var(--muted); font-size:9px; margin-top:5px; }
+.coverage-query-note { border:1px solid #354b40; background:#111e1766; border-radius:6px; padding:17px 20px; margin-top:24px; color:var(--muted); font-size:11px; line-height:1.8; }.coverage-query-note strong { color:var(--green); font-weight:500; }.coverage-query-note p { margin:8px 0 0; }
+@media(max-width:760px) { .coverage-support-grid { grid-template-columns:1fr; gap:22px; } }
+
+.coverage-query-flow { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:15px; margin:15px 0; }.coverage-query-flow>div { border:1px solid #3b5748; padding:12px 14px; border-radius:4px; }.coverage-query-flow>div:last-child { border-color:#45586a; }.coverage-query-flow>div:last-child strong { color:#98b8d1; }.coverage-query-flow small { display:block; margin-top:5px; font-size:10px; line-height:1.6; }
+@media(max-width:760px) { .coverage-query-flow { grid-template-columns:1fr; gap:8px; }.coverage-query-flow>span { text-align:center; transform:rotate(90deg); } }

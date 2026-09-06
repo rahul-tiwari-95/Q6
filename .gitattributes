@@ -6,3 +6,4 @@ dashboard/data/provenance.json linguist-generated=true
 dashboard/data/competence.json linguist-generated=true
 dashboard/data/supervised.json linguist-generated=true
 dashboard/data/fixed_targets.json linguist-generated=true
+dashboard/data/coverage.json linguist-generated=true

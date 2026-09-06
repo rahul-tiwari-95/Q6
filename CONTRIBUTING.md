@@ -76,11 +76,14 @@ For deeper read-only audits of the completed target studies, use their recorded 
 ```bash
 python scripts/audit_supervised_study.py
 python scripts/audit_fixed_targets_study.py
+python scripts/audit_coverage_study.py
 ```
 
 These separately check exact targets, reconstruct minibatch sampling schedules, reproduce final dense predictions from saved weights, and reconcile raw metrics and gates. They perform forward inference and isolated environment transitions, with no training or policy rollouts. Bit-exact predictions require the recorded environment and are excluded from broader dependency-range CI. The supervised audit accepts complete, undeviating v1 studies; its smoke and incomplete artifacts can use the general verifier's `verify_supervised` function.
 
 The fixed-target audit additionally checks the compact transition table, paired sampling and initialization, exact-arm identity with the preceding study, paired outcomes and efficient-success denominators. Its `--skip-forward-inference` mode is included in general artifact verification and CI: it retains saved-model hashes and all dataset/metric checks while omitting bit-exact forward reproduction. Use `--study <directory> --allow-smoke` to audit a completed smoke structurally; this never makes it eligible for research gates. Incomplete or inconsistent fixed-target artifacts require inspection of their saved stop reason and partial evidence and are not accepted as complete studies by this audit.
+
+The coverage audit also reconstructs the recorded exploratory collection, checks deduplicated current-state support, sampling/exposure membership, successor-query access and coverage denominators. Collection reconstruction is a read-only check of a fixed collector history; it does not train a network or add learner-policy evaluation episodes. It provides the same explicit smoke and skip-forward modes. The exhaustive arm's archived DDQN identity check distinguishes a changed coverage condition from an accidentally changed control implementation.
 
 ## Build a package
 

@@ -4,6 +4,7 @@ The [root README](../README.md) is the entry point for installing and running Q6
 
 ## Current experiments
 
+- [Experience-coverage protocol](experiments/coverage_protocol_v1.md): the same offline DDQN update with exhaustive current states versus unique states visited by a fixed exploratory collector, retaining four-action access per sampled state.
 - [Fixed-data target protocol](experiments/fixed_targets_protocol_v1.md), [result](experiments/fixed_targets_results_v1.md) and [validation](validation/fixed-targets-v1.md): exact and Double DQN targets both pass fresh success under matched coverage; DDQN improves efficient success, but both miss the stricter efficiency and every-seed fit diagnostics. State coverage and online collection/replay are next.
 - [Exact-target supervision protocol](experiments/supervised_protocol_v1.md) and [result](experiments/supervised_results_v1.md): the unchanged network reaches 85.42% fresh-layout success; every seed passes the supervised fresh gate, but full training fit and efficient routes remain unresolved. This is privileged supervision, not online-RL competence.
 - [Supervised validation](validation/supervised-v1.md): tests, independently recomputed labels/predictions, dataset and sampling audits, and dashboard coverage.

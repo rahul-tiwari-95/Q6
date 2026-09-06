@@ -323,6 +323,10 @@ def main():
         # belongs to the separately documented, pinned-runtime audit.
         subprocess.run([sys.executable, str(ROOT / "scripts/audit_fixed_targets_study.py"),
                         "--study", str(manifest.parent), "--skip-forward-inference"], check=True)
+    for manifest in sorted((ROOT / "experiments/coverage").glob("*/manifest.json")):
+        verify_manifest(manifest.parent)
+        subprocess.run([sys.executable, str(ROOT / "scripts/audit_coverage_study.py"),
+                        "--study", str(manifest.parent), "--skip-forward-inference"], check=True)
 
 
 if __name__ == "__main__":

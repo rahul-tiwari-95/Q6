@@ -29,6 +29,12 @@ const fixedColors={exact_q:'#a6e5c1',double_dqn:'#98b8d1'};
 const fixedLabel=condition=>({exact_q:'Exact targets',double_dqn:'Double DQN targets',shared:'Shared references'}[condition] || condition);
 const fixedMode=()=>$('fixed-epsilon').value;
 const latestFixedUpdate=()=>Math.max(0,...(fixed?.aggregate || []).map(r=>r.checkpoint).filter(Number.isFinite));
+let coverage=null, coverageTrajectory=null, coverageFrame=0, coverageTimer=null;
+const coverageConditions=['exhaustive','collected_unique'];
+const coverageColors={exhaustive:'#a6e5c1',collected_unique:'#98b8d1'};
+const coverageLabel=condition=>({exhaustive:'Exhaustive states',collected_unique:'Collected unique states',shared:'Shared references'}[condition] || condition);
+const coverageMode=()=>$('coverage-epsilon').value;
+const latestCoverageUpdate=()=>Math.max(0,...(coverage?.aggregate || []).map(r=>r.checkpoint).filter(Number.isFinite));
 const signed=(value,scale=1,suffix='')=>Number.isFinite(value)?`${value>0?'+':''}${(value*scale).toFixed(1)}${suffix}`:'—';
 
 let loadInProgress = false;
@@ -43,7 +49,7 @@ function selectOptions(id, options, preferred) {
   el.value = values.includes(previous) ? previous : values.includes(preferred) ? preferred : values[0] || '';
 }
 function listItems(id, values) { $(id).innerHTML = (values || []).map(v => `<li>${escape(v)}</li>`).join(''); }
-const tracks = ['fixed','supervised','competence','adaptation','provenance'];
+const tracks = ['coverage','fixed','supervised','competence','adaptation','provenance'];
 function activateTab(name) {
   for (const track of tracks) {
     const active = track === name;
@@ -55,6 +61,7 @@ function activateTab(name) {
   stopCompetencePlayback();
   stopSupervisedPlayback();
   stopFixedPlayback();
+  stopCoveragePlayback();
   history.replaceState(null,'',`#${name}`);
 }
 for (const [index,name] of tracks.entries()) {
@@ -68,6 +75,137 @@ for (const [index,name] of tracks.entries()) {
   });
 }
 if (tracks.includes(location.hash.slice(1))) activateTab(location.hash.slice(1));
+
+function renderCoverage(){
+  stopCoveragePlayback();
+  const {run={},protocol={},gates={}}=coverage || {},dataset=protocol.dataset || {},latest=latestCoverageUpdate();
+  const inconsistent=run.status==='inconsistent_not_gate_evidence',stopReason=coverage?.provenance?.stop_reason;
+  const consistencyNotice=`Consistency check failed. This run is ineligible for the declared gates.${typeof stopReason==='string' && stopReason?` Reason: ${stopReason}`:''}`;
+  const ready=Boolean(coverage?.aggregate?.length);$('coverage-empty').hidden=ready;$('coverage-content').hidden=!ready;
+  if(!ready){
+    $('coverage-empty-title').textContent=inconsistent?'Consistency check failed.':coverage?'No completed comparison checkpoint.':'No saved experience-coverage comparison yet.';
+    $('coverage-empty-message').textContent=inconsistent?consistencyNotice:coverage?`The saved run has no complete rollout aggregates to display. Status: ${(run.status || 'unavailable').replaceAll('_',' ')}.${typeof stopReason==='string' && stopReason?` Reason: ${stopReason}`:''} No gate can be established.`:'Refresh after the declared study finishes. Earlier measured experiments remain available in the other tabs.';
+    for(const id of ['coverage-train-chart','coverage-fresh-chart','coverage-train-agreement','coverage-fresh-agreement','coverage-loss-chart','coverage-outcome-success','coverage-outcome-efficient','coverage-outcome-steps'])$(id).innerHTML='';$('coverage-outcome-caption').textContent='';return;
+  }
+  $('coverage-study-label').textContent=`${run.id || protocol.id || 'Saved comparison'} · ${(run.status || 'exploratory').replaceAll('_',' ')}`;
+  const eligible=gates.eligible===true && !inconsistent,conditionGates=gates.per_condition || [];
+  const status=value=>!eligible?'Not eligible':value===true?'Met':value===false?'Not met':'Not measured';
+  let interpretation;
+  if(inconsistent)interpretation=consistencyNotice;
+  else if(run.interpretation==='incomplete_not_gate_evidence' || (run.status && run.status!=='complete')) interpretation='Incomplete comparison. Partial measurements cannot pass the declared gates or establish a difference between coverage conditions.';
+  else if(!eligible)interpretation='Smoke or protocol-deviation run. These measurements check execution and cannot pass the declared research gates.';
+  else {
+    const exact=conditionGates.find(r=>r.condition==='exhaustive'),boot=conditionGates.find(r=>r.condition==='collected_unique');
+    if(exact?.fresh && boot?.fresh)interpretation='Both coverage conditions pass the fresh-success gate. Inspect the paired gap and efficiency before deciding how much offline state coverage was sufficient under this collector and budget.';
+    else if(exact?.fresh && boot?.fresh===false)interpretation='Exhaustive states pass the fresh-success gate; collected unique states do not. The collected support and its uniform sampling distribution limit this fixed offline learner. This does not isolate the effect of any one missing state or establish that every collector fails.';
+    else if(exact?.fresh===false && boot?.fresh)interpretation='Collected unique states pass the fresh-success gate; exhaustive states do not. Inspect fitting, paired outcomes, and sampling distributions before drawing a broader conclusion.';
+    else interpretation='Neither coverage condition establishes the declared fresh-success gate. Inspect the exhaustive control and fitting diagnostics before interpreting the collected bank.';
+    const unresolved=conditionGates.filter(r=>r.training_fit===false).map(r=>coverageLabel(r.condition));
+    if(unresolved.length)interpretation+=` Training fit remains unresolved for ${unresolved.join(' and ')}.`;
+    const inefficient=conditionGates.filter(r=>r.efficient===false).map(r=>coverageLabel(r.condition));
+    if(inefficient.length)interpretation+=` The separate efficiency gate is unmet for ${inefficient.join(' and ')}.`;
+    interpretation+=' Both conditions retain privileged all-action transitions. This is offline learning, not online RL competence.';
+  }
+  $('coverage-gate-note').textContent=interpretation;$('coverage-gate-note').classList.toggle('passed',eligible && conditionGates.length===2 && conditionGates.every(r=>r.fresh===true && r.training_fit===true && r.efficient===true));
+  $('coverage-stats').innerHTML=[
+    [number(protocol.seeds?.length),'Paired initialization seeds','Same initial weights within each pair'],
+    [number(latest),'Latest optimizer checkpoint','Matched updates per condition and seed'],
+    [number(dataset.train_states),'Exhaustive reference states','Collected current-state coverage is measured below'],
+    [number(dataset.heldout_map_seeds?.length),'New fresh layouts',`First map ${number(dataset.heldout_map_seeds?.[0])} · shared by both conditions`],
+  ].map(([value,label,detail])=>`<div class="stat-card"><span>${label}</span><strong>${value}</strong><small>${detail}</small></div>`).join('');
+  $('coverage-gates').textContent=`Training fit requires ${percent(protocol.gates?.training_success)} greedy training success and ${percent(protocol.gates?.training_state_optimal)} optimal-action agreement over the exhaustive still-winnable training-state panel, including uncollected states, in every seed. Fresh success requires ${percent(protocol.gates?.heldout_success)} in every seed and a score above random. Efficient success means collecting within twice the shortest-path length, with all episodes in the denominator; its separate threshold is ${percent(protocol.gates?.efficient_success ?? protocol.gates?.heldout_efficient_success)} per seed. The exploration toggle does not change these greedy gates.`;
+  $('coverage-gate-results').innerHTML=conditionGates.map(c=>`<div class="gate-row"><strong>${coverageLabel(c.condition)}</strong><p>All-seed gates · Training fit: ${status(c.training_fit)} · Fresh: ${status(c.fresh)} · Efficient: ${status(c.efficient)}</p>${(c.per_seed || []).map(r=>`<p>Seed ${number(r.seed)} · Train success ${percent(r.train_success)} / agreement ${percent(r.train_state_optimal)} · Fresh success ${percent(r.fresh_success)} / efficient ${percent(r.fresh_efficient_success)}</p><small>Training fit: ${status(r.training_fit)} · Fresh: ${status(r.fresh)} · Efficient: ${status(r.efficient)}</small>`).join('')}</div>`).join('');
+  const paired=coverage.paired_differences || {};
+  $('coverage-paired-table').innerHTML='<thead><tr><th>Panel</th><th>Paired seed</th><th>Success Δ</th><th>Efficient success Δ</th><th>Mean steps Δ</th><th>No-op rate Δ</th></tr></thead><tbody>'+(paired.per_seed || []).map(r=>`<tr><td>${supervisedPanelLabel(r.panel)}</td><td>${number(r.seed)}</td><td>${signed(r.success_rate_delta,100,' pp')}</td><td>${signed(r.efficient_success_rate_delta,100,' pp')}</td><td>${signed(r.mean_steps_delta)}</td><td>${signed(r.noop_rate_delta,100,' pp')}</td></tr>`).join('')+(paired.aggregate || []).map(r=>`<tr class="paired-total"><td>${supervisedPanelLabel(r.panel)}</td><td>Mean across seeds</td><td>${signed(r.mean_seed_success_rate_delta,100,' pp')}</td><td>${signed(r.mean_seed_efficient_success_rate_delta,100,' pp')}</td><td>${signed(r.mean_seed_mean_steps_delta)}</td><td>${signed(r.mean_seed_noop_rate_delta,100,' pp')}</td></tr>`).join('')+'</tbody>';
+  $('coverage-layout-table').innerHTML='<thead><tr><th>Panel</th><th>Seed</th><th>Map</th><th>Success Δ</th><th>Steps Δ</th><th>No-op steps Δ</th></tr></thead><tbody>'+(paired.per_layout || []).map(r=>`<tr><td>${supervisedPanelLabel(r.panel)}</td><td>${number(r.seed)}</td><td>${number(r.map_seed)}</td><td>${signed(r.success_delta)}</td><td>${signed(r.steps_delta)}</td><td>${signed(r.noop_steps_delta)}</td></tr>`).join('')+'</tbody>';
+  $('coverage-method').textContent=`${number(run.train_updates)} optimizer updates and ${number(run.training_examples)} state presentations across both conditions and all seeds · batch size ${number(protocol.budget?.batch_size)} · ${number(run.wall_seconds)} seconds elapsed. Both conditions share the network, Double DQN targets, all four actions, loss reduction, optimizer, and update budget. Their fixed current-state supports and uniform sampling distributions intentionally differ. Random collection happens before optimization. The collected bank contains unique pre-action states; detached successor queries do not expand it.`;
+  const trainingCosts=coverageConditions.map(condition=>{const rows=Object.entries(run.per_condition_seed_timing || {}).filter(([key])=>key.startsWith(condition+':')).map(([,value])=>value);return rows.length?`${coverageLabel(condition)} optimization: ${rows.reduce((sum,r)=>sum+(r.training_wall_seconds || 0),0).toFixed(1)} s`:null;}).filter(Boolean);
+  if(trainingCosts.length)$('coverage-method').textContent+=` ${trainingCosts.join(' · ')}. Equal update counts do not mean equal compute.`;
+  if(Number.isFinite(run.peak_rss_bytes))$('coverage-method').textContent+=` Peak process memory: ${(run.peak_rss_bytes/1024**3).toFixed(2)} GiB; one CPU thread.`;
+  listItems('coverage-limitations',run.limitations);
+  $('coverage-evidence-links').innerHTML='<a href="data/coverage.json" download>Download displayed data ↓</a>'+[['protocol_document','Study design'],['protocol','Saved protocol'],['report','Measured findings'],['training','Optimization loss'],['evaluations','Raw rollouts'],['state_metrics','Raw state measurements'],['dataset_metadata','Dataset provenance'],['sampling','Sampling provenance'],['paired_differences','Paired outcomes'],['coverage','Coverage counts'],['collection_steps','Raw collection steps'],['collection_episodes','Raw collection episodes'],['manifest','Artifact checksums']].flatMap(([key,label])=>{const path=coverage.artifacts?.[key];return typeof path==='string' && /^(docs|experiments)\/[a-zA-Z0-9_./-]+$/.test(path) && !path.split('/').includes('..')?[`<a href="../${escape(path)}">${label} ↗</a>`]:[];}).join('');
+  renderCoverageSupport();
+  renderCoverageComparison();
+}
+function renderCoverageSupport(){
+  const support=coverage?.coverage || {},maps=support.by_map || [],buckets=support.by_time_bucket || [],queries=support.successor_queries || {};
+  $('coverage-support-caption').textContent=`Before learning, a uniform-random collector produced ${number(support.collection_episodes)} episodes and ${number(support.collection_steps)} action steps on the training layouts. Its fixed bank contains ${number(support.unique_current_states)} unique pre-action states out of ${number(support.total_training_states)} exhaustive states. The bank is shared by all collected-condition learner seeds.`;
+  $('coverage-support-stats').innerHTML=[
+    [percent(support.current_state_fraction),'Unique current-state coverage',`${number(support.unique_current_states)} / ${number(support.total_training_states)} states`],
+    [number(support.collection_episodes),'Collection episodes','Uniform random; completed before optimization'],
+    [number(support.collection_steps),'Collection action steps','Repeated visits are deduplicated for training'],
+  ].map(([value,label,detail])=>`<div><span>${label}</span><strong>${value}</strong><small>${detail}</small></div>`).join('');
+  if(maps.length){
+    const cols=Math.min(16,maps.length),cell=24,gap=3,w=cols*cell,h=Math.ceil(maps.length/cols)*cell;
+    $('coverage-map-heatmap').innerHTML=`<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><title>Collected unique current-state coverage across ${number(maps.length)} training layouts</title>${maps.map((row,i)=>{const x=(i%cols)*cell,y=Math.floor(i/cols)*cell,ratio=Number.isFinite(row.coverage_rate)?Math.max(0,Math.min(1,row.coverage_rate)):0;return `<rect x="${x}" y="${y}" width="${cell-gap}" height="${cell-gap}" rx="2" fill="#98b8d1" fill-opacity="${.08+.92*ratio}"><title>Map ${number(row.map_seed)}: ${number(row.visited_states)} / ${number(row.states)} unique current states (${percent(row.coverage_rate)})</title></rect>`;}).join('')}</svg>`;
+  }else $('coverage-map-heatmap').innerHTML='<p class="help-text">No saved per-layout coverage measurements.</p>';
+  $('coverage-time-bars').innerHTML=buckets.map(row=>`<div class="diagnostic-row"><span>${row.time_bucket==='all'?'All remaining times':`${escape(row.time_bucket)} steps left`}<small>${number(row.visited_states)} / ${number(row.states)} states</small></span><div class="diagnostic-track">${Number.isFinite(row.coverage_rate)?`<div class="diagnostic-fill" style="width:${100*Math.max(0,Math.min(1,row.coverage_rate))}%;background:#98b8d1"></div>`:''}</div><strong>${percent(row.coverage_rate)}</strong></div>`).join('') || '<p class="help-text">No saved remaining-time coverage measurements.</p>';
+  $('coverage-successor-caption').textContent=`Across all four transitions from each unique collected current state, ${number(queries.outside_support_nonterminal_transitions)} of ${number(queries.nonterminal_transitions)} nonterminal successors (${percent(queries.outside_support_fraction)}) lie outside its current-state support. These are static bank counts, not optimizer samples or newly collected experience. Terminal transitions use their reward directly.`;
+  $('coverage-support-table').innerHTML='<thead><tr><th>Scope</th><th>Layout / remaining time</th><th>Collected states</th><th>Exhaustive states</th><th>Coverage</th><th>Collected winnable states</th><th>Exhaustive winnable states</th><th>Winnable coverage</th></tr></thead><tbody>'+[[maps,'Layout','map_seed'],[buckets,'Time bucket','time_bucket']].flatMap(([rows,label,key])=>rows.map(row=>`<tr><td>${label}</td><td>${escape(row[key])}</td><td>${number(row.visited_states)}</td><td>${number(row.states)}</td><td>${percent(row.coverage_rate)}</td><td>${number(row.visited_winnable_states)}</td><td>${number(row.winnable_states)}</td><td>${percent(row.winnable_coverage_rate)}</td></tr>`)).join('')+'</tbody>';
+}
+
+function renderCoverageComparison(){
+  if(!coverage?.aggregate?.length)return;
+  const latest=latestCoverageUpdate(),states=coverage.state_aggregate || [],stateAll=states.filter(r=>r.time_bucket==='all'),rollouts=coverage.aggregate.filter(r=>r.mode===coverageMode());
+  const finalUpdate=coverage.protocol?.budget?.updates_per_seed ?? Math.max(0,...(coverage.protocol?.checkpoints || []).filter(Number.isFinite));
+  const finalRows=condition=>rollouts.find(r=>r.condition===condition && r.panel==='heldout' && r.checkpoint===finalUpdate);
+  const outcomes=[
+    ['success','Primary · Success','success_rate',percent,'All fresh episodes in the denominator'],
+    ['efficient','Secondary · Efficient success','efficient_success_rate',percent,`Success within ${number(coverage.protocol?.gates?.planner_step_multiplier)} × the shortest-path length`],
+    ['steps','Diagnostic · Mean steps','mean_steps',value=>Number.isFinite(value)?value.toFixed(1):'—','Includes failed episodes; fewer steps is better'],
+  ];
+  for(const [id,label,key,format,detail] of outcomes)$(`coverage-outcome-${id}`).innerHTML=`<span>${label}</span><div class="fixed-outcome-pair">${coverageConditions.map(condition=>`<div><small>${coverageLabel(condition)}</small><strong style="color:${coverageColors[condition]}">${format(finalRows(condition)?.[key])}</strong></div>`).join('')}</div><small>${detail}</small>`;
+  $('coverage-outcome-caption').textContent=`${number(finalUpdate)} updates per condition and seed · ${coverageMode()==='greedy'?'greedy actions':'ε = 0.1 exploration'}. Outcomes follow the rollout mode; declared gates stay greedy. Missing final measurements appear as —.`;
+  const series=(rows,panel,key,low,high)=>coverageConditions.map(condition=>({label:coverageLabel(condition),color:coverageColors[condition],rows:rows.filter(r=>r.condition===condition && r.panel===panel).map(r=>({checkpoint:r.checkpoint,value:r[key],low:r[low],high:r[high]}))}));
+  for(const [panel,id] of [['train','train'],['heldout','fresh']]){
+    renderUpdateChart(`coverage-${id}-chart`,series(rollouts,panel,'success_rate','seed_success_min','seed_success_max'),coverage.protocol?.checkpoints,true,`${supervisedPanelLabel(panel)} episode success`);
+    renderUpdateChart(`coverage-${id}-agreement`,series(stateAll,panel,'optimal_action_rate','seed_optimal_action_min','seed_optimal_action_max'),coverage.protocol?.checkpoints,true,`${supervisedPanelLabel(panel)} optimal-action agreement`);
+  }
+  const losses=coverage.loss_aggregate || [];
+  renderUpdateChart('coverage-loss-chart',coverageConditions.map(condition=>({label:coverageLabel(condition),color:coverageColors[condition],rows:losses.filter(r=>r.condition===condition).map(r=>({checkpoint:r.checkpoint,value:r.mean_loss,low:r.seed_loss_min,high:r.seed_loss_max}))})),losses.map(r=>r.checkpoint),false,'Within-condition minibatch loss');
+  $('coverage-curve-legend').innerHTML=coverageConditions.map(c=>`<span><i style="background:${coverageColors[c]}"></i>${coverageLabel(c)}</span>`).join('');
+  $('coverage-mode-note').textContent=`Rollouts and network replays use ${coverageMode()==='greedy'?'greedy actions':'ε = 0.1 exploration'}. Curves use optimizer updates; shading is the seed range. Exhaustive greedy agreement, loss, paired final differences, and declared gates stay unchanged when this mode changes.`;
+  $('coverage-fit-metrics').innerHTML=coverageConditions.flatMap(condition=>{const row=stateAll.find(r=>r.condition===condition && r.panel==='heldout' && r.checkpoint===latest);return [['MAE',row?.mean_abs_q_error],['RMSE',row?.rmse_q_error],['95th pct. state MAE',row?.q95_abs_q_error]].map(([label,value])=>`<div><span>${coverageLabel(condition)} · ${label}</span><strong>${decimal(value)}</strong><small>Fresh states at ${number(latest)} updates</small></div>`);}).join('');
+  $('coverage-rollout-table').innerHTML='<thead><tr><th>Condition</th><th>Updates</th><th>Panel</th><th>Success</th><th>Seed range</th><th>Efficient success</th><th>Episodes</th><th>Mean steps</th><th>No-op rate</th></tr></thead><tbody>'+rollouts.map(r=>`<tr><td>${coverageLabel(r.condition)}</td><td>${number(r.checkpoint)}</td><td>${supervisedPanelLabel(r.panel)}</td><td>${percent(r.success_rate)}</td><td>${percent(r.seed_success_min)}–${percent(r.seed_success_max)}</td><td>${percent(r.efficient_success_rate)}</td><td>${number(r.episodes)}</td><td>${decimal(r.mean_steps)}</td><td>${percent(r.noop_rate)}</td></tr>`).join('')+'</tbody>';
+  $('coverage-state-table').innerHTML='<thead><tr><th>Condition</th><th>Updates</th><th>Panel</th><th>Remaining time</th><th>States</th><th>Winnable states</th><th>Q MAE</th><th>Q RMSE</th><th>95th pct. state MAE</th><th>Signed Q bias</th><th>Optimal actions</th></tr></thead><tbody>'+states.map(r=>`<tr><td>${coverageLabel(r.condition)}</td><td>${number(r.checkpoint)}</td><td>${supervisedPanelLabel(r.panel)}</td><td>${escape(r.time_bucket)}</td><td>${number(r.states)}</td><td>${number(r.winnable_states)}</td><td>${decimal(r.mean_abs_q_error)}</td><td>${decimal(r.rmse_q_error)}</td><td>${decimal(r.q95_abs_q_error)}</td><td>${decimal(r.mean_signed_q_bias)}</td><td>${percent(r.optimal_action_rate)}</td></tr>`).join('')+'</tbody>';
+  selectCoverageTrajectory();
+}
+function stopCoveragePlayback(){if(coverageTimer)clearInterval(coverageTimer);coverageTimer=null;$('coverage-replay-play').textContent='▶ Play';$('coverage-replay-play').setAttribute('aria-label','Play saved experience-coverage trajectory');}
+function selectCoverageTrajectory(){
+  stopCoveragePlayback();
+  const rows=(coverage?.trajectories || []).filter(r=>r.policy!=='learner' || r.mode===coverageMode());
+  selectOptions('coverage-replay-condition',[...new Set(rows.map(r=>r.condition))].map(c=>[c,coverageLabel(c)]),'exhaustive');
+  const atCondition=rows.filter(r=>r.condition===$('coverage-replay-condition').value);
+  selectOptions('coverage-replay-controller',[...new Set(atCondition.map(r=>r.policy))].map(p=>[p,p==='learner'?'Trained network':policyLabel(p)]),'learner');
+  const policy=$('coverage-replay-controller').value,available=atCondition.filter(r=>r.policy===policy),updates=[...new Set(available.map(r=>r.checkpoint))].sort((a,b)=>a-b);
+  selectOptions('coverage-replay-checkpoint',updates.map(c=>[String(c),policy==='learner'?number(c):'Reference']),String(latestCoverageUpdate()));$('coverage-replay-checkpoint').disabled=policy!=='learner' || updates.length<2;
+  const atStep=available.filter(r=>r.checkpoint===Number($('coverage-replay-checkpoint').value));
+  selectOptions('coverage-replay-panel',[...new Set(atStep.map(r=>r.panel))].map(p=>[p,supervisedPanelLabel(p)]),'heldout');
+  const atPanel=atStep.filter(r=>r.panel===$('coverage-replay-panel').value);
+  selectOptions('coverage-replay-seed',[...new Set(atPanel.map(r=>r.seed))].sort((a,b)=>a-b).map(s=>[String(s),String(s)]),'0');
+  coverageTrajectory=atPanel.find(r=>r.seed===Number($('coverage-replay-seed').value)) || null;coverageFrame=0;
+  $('coverage-replay-scrub').max=coverageTrajectory?.steps.length || 0;$('coverage-replay-scrub').value='0';
+  for(const id of ['coverage-replay-play','coverage-replay-reset','coverage-replay-scrub'])$(id).disabled=!coverageTrajectory;
+  drawCoverageWorld();renderCoverageReferences();
+}
+function drawCoverageWorld(){
+  const t=coverageTrajectory,description=t?`${coverageLabel(t.condition)} · ${t.policy==='learner'?`${number(t.checkpoint)} offline optimizer updates · ${t.mode==='greedy'?'greedy':'ε = 0.1'}`:policyLabel(t.policy)}. ${supervisedPanelLabel(t.panel)} · seed ${t.seed} · map ${t.map_seed}. Recorded on the first panel layout, selected before outcomes. No new learning occurs during replay.`:'';
+  drawRecordedWorld('coverage',t,coverageFrame,description,t?`${coverageLabel(t.condition)}, ${policyLabel(t.policy)}`:'');
+}
+function renderCoverageReferences(){
+  if(!coverage)return;
+  const panel=$('coverage-replay-panel').value || 'heldout',update=$('coverage-replay-controller').value==='learner'?Number($('coverage-replay-checkpoint').value):latestCoverageUpdate();
+  const rows=coverageConditions.map(condition=>[coverage.aggregate.find(r=>r.condition===condition && r.panel===panel && r.checkpoint===update && r.mode===coverageMode()),`${coverageLabel(condition)} at ${stepLabel(update)}`,coverageColors[condition]]);
+  for(const [policy,color] of [['random_actions','#e7b985'],['shortest_path','#b5a7d2']])rows.push([coverage.references?.find(r=>r.policy===policy && r.panel===panel),policyLabel(policy),color]);
+  $('coverage-reference-title').textContent=supervisedPanelLabel(panel);
+  $('coverage-reference-bars').innerHTML=rows.filter(([r])=>r).map(([r,label,color])=>`<div class="diagnostic-row"><span>${escape(label)}</span><div class="diagnostic-track">${Number.isFinite(r.success_rate)?`<div class="diagnostic-fill" style="width:${100*r.success_rate}%;background:${color}"></div>`:''}</div><strong>${percent(r.success_rate)}</strong></div>`).join('');
+  $('coverage-reference-caption').textContent=`Networks use ${coverageMode()==='greedy'?'greedy actions':'ε = 0.1'} on the same panel. Random and planner use their own policies. Episodes: ${rows.filter(([r])=>r).map(([r,label])=>`${label}: ${number(r.episodes)}`).join(' · ')}.`;
+}
+$('coverage-epsilon').addEventListener('change',renderCoverageComparison);
+for(const id of ['coverage-replay-condition','coverage-replay-controller','coverage-replay-checkpoint','coverage-replay-panel','coverage-replay-seed'])$(id).addEventListener('change',selectCoverageTrajectory);
+$('coverage-replay-play').addEventListener('click',()=>{if(coverageTimer){stopCoveragePlayback();return;}if(!coverageTrajectory)return;if(coverageFrame>=coverageTrajectory.steps.length)coverageFrame=0;$('coverage-replay-play').textContent='Ⅱ Pause';$('coverage-replay-play').setAttribute('aria-label','Pause saved experience-coverage trajectory');coverageTimer=setInterval(()=>{coverageFrame=Math.min(coverageFrame+1,coverageTrajectory.steps.length);$('coverage-replay-scrub').value=String(coverageFrame);drawCoverageWorld();if(coverageFrame>=coverageTrajectory.steps.length)stopCoveragePlayback();},160);});
+$('coverage-replay-reset').addEventListener('click',()=>{stopCoveragePlayback();coverageFrame=0;$('coverage-replay-scrub').value='0';drawCoverageWorld();});
+$('coverage-replay-scrub').addEventListener('input',event=>{stopCoveragePlayback();coverageFrame=Number(event.target.value);drawCoverageWorld();});
 
 function renderFixed(){
   stopFixedPlayback();
@@ -701,9 +839,9 @@ async function getData(path) {
 }
 async function loadData() {
   if(loadInProgress)return;loadInProgress=true;$('refresh').disabled=true;$('study-run').disabled=true;
-  stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();
+  stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();stopCoveragePlayback();
   const adaptationPath=$('study-run').value==='pilot_v1'?'../experiments/adaptation/pilot_v1/results.json':'data/adaptation.json';
-  const results=await Promise.allSettled([getData(adaptationPath),getData('data/provenance.json'),getData('data/competence.json'),getData('data/supervised.json'),getData('data/fixed_targets.json')]);
+  const results=await Promise.allSettled([getData(adaptationPath),getData('data/provenance.json'),getData('data/competence.json'),getData('data/supervised.json'),getData('data/fixed_targets.json'),getData('data/coverage.json')]);
   const errors=[];
   diagnostics=null;
   if(results[0].status==='fulfilled') {
@@ -723,14 +861,16 @@ async function loadData() {
   renderSupervised();
   if(results[4].status==='fulfilled')fixed=results[4].value;else {fixed=null;errors.push(results[4].reason.message);}
   renderFixed();
+  if(results[5].status==='fulfilled')coverage=results[5].value;else {coverage=null;errors.push(results[5].reason.message);}
+  renderCoverage();
   if(errors.length) $('load-status').textContent=errors.join(' · ');
   else {
-    const loaded=[fixed&&'Fixed-data targets',supervised&&'Exact targets',competence&&'Competence',adaptation&&'Adaptation',provenance&&'Provenance'].filter(Boolean);
+    const loaded=[coverage&&'Experience coverage',fixed&&'Fixed-data targets',supervised&&'Exact targets',competence&&'Competence',adaptation&&'Adaptation',provenance&&'Provenance'].filter(Boolean);
     $('load-status').textContent=`${loaded.join(' + ') || 'No'} saved ${loaded.length===1?'study':'studies'} loaded · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
   }
   $('refresh').disabled=false;$('study-run').disabled=false;loadInProgress=false;
 }
 $('refresh').addEventListener('click',loadData);
 $('study-run').addEventListener('change',loadData);
-document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();stopCoveragePlayback();}});
 await loadData();
