@@ -1,54 +1,26 @@
 # No Way Home
 
-A deterministic multi-agent gridworld testing whether a system built from simple, checkable
-parts (noisy voting, raw message counting, tabular Q-learning) can make good collective
-decisions under a hidden regime shift — and precisely diagnosing what breaks when it doesn't.
-Second parallel research thread in Q6, alongside the original self-play work on `main`/`v7`/`v8`.
+A small synthetic decision laboratory: four locality sickness counts, shared food/medicine/wealth, copied outbreak reports, a hidden regime shift and one collective mitigation action. It is an inspectable aggregate stochastic-control model; the broader multi-agent society remains an earlier design target.
 
-Branch: `no-way-home`. This file is the folder's front door — start here, then follow the links
-below to whichever depth you actually need.
+## Current release (2026-09-06)
 
-## Start here
+The [bounded provenance pilot](../docs/experiments/provenance-results.md) compares equally calibrated raw-count, unique-origin-count and bounded-decay controllers on fresh seeds and two parameter shifts. A decayed raw counter wins on default shortfall; unique counting performs better under the selected shifts. No universal winner or novel learned provenance mechanism is claimed.
 
-| If you want... | Read |
-|---|---|
-| A plain-language walkthrough with examples, no formal notation | [`README_FOR_DUMMIES.md`](README_FOR_DUMMIES.md) |
-| What's currently being worked on, right now | [`ENGINEERING_NWH_PHASE_PLAN.md`](ENGINEERING_NWH_PHASE_PLAN.md) |
-| The formal spec and invariants (I-1 through I-12) | [`PREREGISTRATION.md`](PREREGISTRATION.md) |
-| The environment redesign proposal (channels, manipulability, the β-sweep experiment) | [`ENVIRONMENT_REDESIGN.md`](ENVIRONMENT_REDESIGN.md) |
-| The full experiment history, what broke and what fixed it, increment by increment | [`results/README.md`](results/README.md) |
-| Sources used and why each one mattered | [`../CITATIONS.md`](../CITATIONS.md) |
-
-## Current status (2026-08-09)
-
-Five increments of the base simulation are built and tested (physical economy → message/lineage
-layer → ballot/election/institution → learning citizen), each with real bugs found and fixed
-along the way, documented honestly rather than smoothed over. A research-backed redesign
-(`ENVIRONMENT_REDESIGN.md`) was approved and its migration path is underway: Increments 1-2 are
-complete (schema tags, the β-mixing instrument, both required control arms), and Increment 3 —
-the actual pre-registered dose-response experiment — is in its pre-registration stage. See
-`ENGINEERING_NWH_PHASE_PLAN.md` for the live TODO list (capped at 3 items) and exact current
-state; this README won't be kept in lockstep with it on every commit, that file is the source of
-truth for "what's happening right now."
-
-## Running things
+**Read the [errata](../docs/experiments/provenance-errata.md) before citing older results.** The historical beta monotonicity is supplied by the score/outcome design, and its permutation analysis originally ignored seed pairing. The learner receives a deduplicated feature. Those original reports remain unchanged as records of what was run. New code fixes run-local message IDs and terminal learner updates; new artifacts preserve source snapshots and raw evaluation histories.
 
 ```bash
-python3 -m pytest tests/test_no_way_home_smoke.py tests/test_stats.py -q   # the suite
-python3 -m no_way_home.run_smoke_test          # base policy comparison
-python3 -m no_way_home.run_election_test       # ballot/election/institution test
-python3 -m no_way_home.run_learning_citizen    # the Q-learning citizen
-python3 -m no_way_home.run_pilot_beta_sweep    # non-confirmatory pilot for Increment 3
-python3 -m no_way_home.run_power_calculation   # power/precision calc feeding Increment 3's N
+python3 -m pytest tests/test_no_way_home_smoke.py tests/test_stats.py tests/test_nwh_release.py -q
+python3 -m no_way_home.run_provenance_release --out experiments/provenance/my-reproduction
+python3 -m no_way_home.run_beta_sweep_v1 --out experiments/provenance/my-beta-reanalysis.md
 ```
 
-Each writes its own report to `results/`. `results/README.md` is the hand-maintained narrative
-index — read that first if you want the story, not just the numbers.
+Run directories/reanalysis reports must be new. The provenance pilot uses NumPy and runs504,000 ticks without training; existing stats tests also require SciPy. Full checks include the older, slower learner regressions.
 
-## Layout
+## Where to read next
 
-`world.py` (kernel) → `messages.py` (report/forward lineage) → `channels.py` (manipulability
-tags) → `policies.py` (scripted decision rules) → `institutions.py` (ballot/election/executor)
-→ `learning.py` (the Q-learning citizen) → `stats.py` (Jonckheere-Terpstra trend test) →
-`metrics.py` (pure functions over the event log). `tests/` (one level up, in the repo root)
-holds `test_no_way_home_smoke.py` and `test_stats.py`.
+- [Pilot protocol](../docs/experiments/provenance-protocol.md), [results and interpretation](../docs/experiments/provenance-results.md), [complete machine-readable artifact](../experiments/provenance/release-pilot-v1/results.json).
+- [Historical results narrative](results/README.md), including non-degenerate economy fixes, report lineage and the mandate-commitment ablation.
+- [Earlier specification](PREREGISTRATION.md), [locked historical beta protocol](PREREGISTRATION_INCREMENT3.md), [environment redesign](ENVIRONMENT_REDESIGN.md), and [historical phase plan](ENGINEERING_NWH_PHASE_PLAN.md).
+- `world.py` (kernel), `messages.py` (report/forward lineage), `policies.py` (scripts), `institutions.py` (supplied voting/mandate rules), `learning.py` (tabular action learner), `stats.py` (independent or seed-paired permutation), `run_provenance_release.py` (bounded calibration/evaluation).
+
+No new neural architecture, corroboration mechanism or institutional layer is needed to reproduce this release.

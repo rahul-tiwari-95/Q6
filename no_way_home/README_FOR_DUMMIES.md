@@ -1,5 +1,7 @@
 # No Way Home — For Dummies
 
+> **2026-09-06 release update:** This document records the earlier project state. Read the [errata](../docs/experiments/provenance-errata.md) before using its research claims: beta monotonicity is structurally supplied, the old test ignored seed pairing, and the learner receives deduplication as a feature. The [new calibrated-control pilot](../docs/experiments/provenance-results.md) supersedes the old next-step plan. Original as-run result reports are preserved.
+
 *A living document. This explains the project in plain language with concrete examples,
 not formal notation. It will be updated as we run more experiments and the world grows.
 For the formal spec, see [`PREREGISTRATION.md`](PREREGISTRATION.md). For the full redesign

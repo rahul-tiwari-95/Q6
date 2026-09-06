@@ -1,5 +1,7 @@
 # No Way Home — Engineering Phase Plan
 
+> **2026-09-06 release update:** This document records the earlier project state. Read the [errata](../docs/experiments/provenance-errata.md) before using its research claims: beta monotonicity is structurally supplied, the old test ignored seed pairing, and the learner receives deduplication as a feature. The [new calibrated-control pilot](../docs/experiments/provenance-results.md) supersedes the old next-step plan. Original as-run result reports are preserved.
+
 *This is the handoff document. If you're a fresh Claude session with no prior context on
 this project, read this file top to bottom before touching code — it's written so you can
 pick up work cold. Keep it current: whoever completes a TODO item updates this file in the

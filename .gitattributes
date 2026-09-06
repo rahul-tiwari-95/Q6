@@ -1,0 +1,5 @@
+# Preserve captured artifact bytes, including standard CSV CRLF, for hash checks.
+experiments/** -text linguist-generated=true
+experiments/**/*.csv whitespace=cr-at-eol
+dashboard/data/adaptation.json linguist-generated=true
+dashboard/data/provenance.json linguist-generated=true

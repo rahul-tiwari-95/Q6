@@ -1,0 +1,31 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "RESULTS.md": "891359faac72ca8cad30481c7ab388ad671409adf840a26aaacdf5cc8e0bc345",
+    "calibration.csv": "f8a07b9a79853d21051f4c6d53c520eaa205d8281d0beaf29d97f3c986bd93b1",
+    "calibration.json": "40fb543673afe67d5c6947c496ed2761f72783f02f4d6434735a4b97074e1de8",
+    "evaluation-traces.jsonl.gz": "3d9e4d6f54c0eb826ef2860b1fd7bb2e69732dd0e296efe25882d5c1c38b34d8",
+    "evaluation.csv": "60b4bd054d0c115a9c147f13894ece95399ba7b89e2347acfaf03c8e496acc23",
+    "evaluation.json": "87ebce64a9aab58b21de2ca0ffe874d745a7d478d41c84fb401d8b03a6151a28",
+    "metadata.json": "36d3fe6ae6b6f7672be51e76721cedc5c1d083105ceeef113f60ff3908f6ab26",
+    "results.json": "6ec6bda939f51b14e8571f14466f247db831c1683f8777f6c54212d2d262b5c7",
+    "source/docs/experiments/provenance-protocol.md": "e5fb9075343b87e618831b659b6ffa60f664d4c0ab6ea6ba0062f1b8a4a78b18",
+    "source/no_way_home/__init__.py": "5c6121eebc35ed2011bfcd5eed6be55de590fb64265f4634230cbba5d6400792",
+    "source/no_way_home/channels.py": "107e9bfca5b1420a14a42f8c20985d1fa61ca52f18314f34c077f45a25ddc309",
+    "source/no_way_home/institutions.py": "9ba92fde0a669e5bc5ea5d8f044df9489d689395ebd0e93a38fe475be9628d01",
+    "source/no_way_home/learning.py": "04126efaa1c6b7f9db547821f6523776eb8207ec37f451819056a61354f421a1",
+    "source/no_way_home/messages.py": "054c1fb4f0d40223ea10b8a5e09269529bfdea35c7908f94941ffe56afbaa88e",
+    "source/no_way_home/metrics.py": "26171a5606eaa5f85b47745dc4886615d9c022185fb0ecafd8cf2142e489ed66",
+    "source/no_way_home/policies.py": "7294b7ec77d65b9328ea973e8e21c4f88e1a81fc93cd4e89be868b1acc607a4f",
+    "source/no_way_home/run_beta_sweep_v1.py": "3ab85cbe75953f00225ed5120d46d522eb1c55f80d0f3b9c7977f62ebaf057d6",
+    "source/no_way_home/run_election_test.py": "fbb4e66c41ce8d9bdfc04546f186844b652d99e682b34f2d1210f095e5a34e92",
+    "source/no_way_home/run_learning_citizen.py": "1ad870bc59fff2d3f89c3a47569ab0ced6bc47ecb4c1cecc11753be7c44788fb",
+    "source/no_way_home/run_pilot_beta_sweep.py": "f0101523bbbb210a90596e98f437cb9cbfe8eea7208c23fd98e56dae2d3b4d56",
+    "source/no_way_home/run_power_calculation.py": "d744157b139d70880914efab64d7c7eef96aca0e980cd2d59ef5377fb458345b",
+    "source/no_way_home/run_provenance_release.py": "f37f0f7d5189a2c6036ef50292975ba7785c653014b327603f41d85fd40d383a",
+    "source/no_way_home/run_smoke_test.py": "e112d26cb10ea09e9e339654866617c93010cdd4e354a051f6aa99d789b7c471",
+    "source/no_way_home/stats.py": "9bd12a18a0b76637cdf3661a09ae38dd5fbc662f39fc5bef7bbd824d2c585e90",
+    "source/no_way_home/world.py": "9fd4499c68d3a6466a1fdd5904bcaaed077c1624e326503be937cc2bc0ab3af1",
+    "summary.json": "1fc0d7357723a29496c9640907e495d6544952e31e93cad1ef7898bdb9db2906"
+  }
+}
