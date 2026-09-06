@@ -67,6 +67,10 @@ jobs:
               "--deselect=tests/test_no_way_home_smoke.py::test_floored_decay_learner_outcome_is_stable_across_training_amounts",
           ]))
           PY
+      - name: Verify saved evidence and dashboard syntax
+        run: |
+          python scripts/verify_pilot_artifacts.py
+          node --check --input-type=module < dashboard/lab.js
       - name: Build and install wheel away from source
         if: matrix.python == '3.12'
         run: |

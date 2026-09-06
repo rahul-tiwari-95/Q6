@@ -13,7 +13,7 @@ This is a public research preview; a license has not yet been selected. Its earl
 Use Python 3.10 or later; Python 3.12 is a practical starting point. Run commands from the repository root.
 
 ```bash
-python3 -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e '.[dev]'

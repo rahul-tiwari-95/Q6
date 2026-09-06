@@ -7,7 +7,7 @@ Useful contributions make an experiment easier to reproduce or its interpretatio
 Use Python 3.10+ in a virtual environment and work from the repository root:
 
 ```bash
-python3 -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e '.[dev]'
@@ -61,6 +61,14 @@ PY
 GitHub Actions runs the fast lane for pushes and pull requests on Python 3.10 and 3.12. The full lane runs weekly or through **Actions → tests → Run workflow → full_suite**. The workflow describes intended checks; consult the actual run for their status. Seeding makes this CPU check repeatable within an environment, not a promise of identical results across hardware and library versions.
 
 Run focused tests while developing. Run the relevant broader lane before submitting changes to dynamics, observations, rewards, learner updates, persistence, or statistical analysis. Add tests for a meaningful invariant or regression, not just a second copy of the implementation. Do not replace scientific evaluation with a passing smoke test.
+
+Check the shipped pilot source/protocol hashes, adaptation CSV aggregates, and provenance artifact manifest without retraining:
+
+```bash
+python scripts/verify_pilot_artifacts.py
+```
+
+CI also runs this integrity check and checks the current dashboard JavaScript syntax. Integrity does not establish independent replication or scientific validity.
 
 ## Build a package
 

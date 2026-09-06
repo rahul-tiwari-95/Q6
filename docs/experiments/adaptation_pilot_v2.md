@@ -28,7 +28,7 @@ boundaries. The continued policy changes, but initial competence is too low to
 interpret the changes as the desired adaptation/retention experiment.
 
 V2 used **1,080,000 training transitions**, **36,399 evaluation transitions**, and
-a **20,420-parameter** MLP. Recorded CPU time was **132.88 seconds training**,
+a **20,420-parameter** MLP. Elapsed time on CPU was **132.88 seconds training**,
 **1.64 seconds evaluation**, and **134.88 seconds total** on this machine. These
 are local timings, not a comparative simulator benchmark.
 

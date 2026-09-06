@@ -1,0 +1,16 @@
+{
+  "captured_after_pilots": true,
+  "purpose": "Relevant installed versions at validation time; not a complete environment lock. Null means no installed distribution metadata. Original per-run runtime records remain in each pilot.",
+  "python": "3.9.6",
+  "system": "Darwin",
+  "system_release": "27.0.0",
+  "machine": "arm64",
+  "packages": {
+    "torch": "2.8.0",
+    "numpy": "2.0.2",
+    "scipy": "1.13.1",
+    "gymnasium": "1.1.1",
+    "matplotlib": null,
+    "pytest": "8.4.2"
+  }
+}
