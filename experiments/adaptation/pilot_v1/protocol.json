@@ -1,0 +1,118 @@
+{
+  "id": "adaptation-v1",
+  "status": "exploratory_pilot",
+  "question": "Adaptation and retention under an observed movement-rule change",
+  "scenario": "movement_rule",
+  "rule_visibility": "observed",
+  "world": {
+    "size": 5,
+    "wall_count": 4,
+    "pellet_count": 1,
+    "horizon": 32,
+    "action_mapping": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "step_cost": -0.01,
+    "pellet_reward": 1.0,
+    "shaping_weight": 0.2,
+    "gamma": 0.97
+  },
+  "rules": [
+    {
+      "world": "A",
+      "label": "Normal controls",
+      "mapping": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "world": "B",
+      "label": "Clockwise-rotated controls",
+      "mapping": [
+        3,
+        2,
+        0,
+        1
+      ]
+    }
+  ],
+  "sequence": [
+    "A",
+    "B",
+    "A"
+  ],
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "phase_steps": 12000,
+  "eval_panel": [
+    900000,
+    900001,
+    900002,
+    900003,
+    900004,
+    900005,
+    900006,
+    900007,
+    900008,
+    900009,
+    900010,
+    900011,
+    900012,
+    900013,
+    900014,
+    900015
+  ],
+  "max_seconds": 300,
+  "primary_metric": "greedy evaluation success rate",
+  "competence_gate": {
+    "metric": "mean A success after first A phase",
+    "minimum": 0.7,
+    "failure_label": "baseline_underlearned",
+    "statistical_test": false
+  },
+  "algorithm": {
+    "name": "Compact Double DQN",
+    "hidden_sizes": [
+      128,
+      64
+    ],
+    "learning_rate": 0.001,
+    "batch_size": 64,
+    "replay_capacity": 12000,
+    "update_every": 4,
+    "warmup_transitions": 256,
+    "target_tau": 0.01
+  },
+  "evaluation_return": "base reward; shaping reported separately",
+  "continued_state": "retain weights, Adam, target, replay and RNG; reset episode only",
+  "frozen_state": "clone after A; no further training or RNG draws",
+  "missing_comparisons": [
+    "recurrent memory",
+    "memory-reset ablation",
+    "multiple movement changes"
+  ],
+  "protocol_sha256": "6d13144aa9368b45714af410dff0099bee1dc2c8f08cc893e0b0cf07aa0f4b18",
+  "source_sha256": {
+    "q6/__init__.py": "54f1cd94584f782985a0a69c7e12717905008a959b1604b49874894003b8737f",
+    "q6/adaptation.py": "3f06b55778f233b31f47b6ee8c60944cebe5697c4ca303f642407c7f9a4be736",
+    "q6/learning.py": "a83ef1d4a222cbfb2210239f598ac4441f4fb22175b495e030dec039fccb377d",
+    "q6/world.py": "478cf48343af888ddd6087ea7bc1ac6f311abb10327ac11937b799b685f8156f"
+  },
+  "runtime": {
+    "python": "3.9.6",
+    "torch": "2.8.0",
+    "numpy": "2.0.2",
+    "device": "cpu",
+    "torch_threads": 1
+  },
+  "created_at": "2026-09-06T04:06:05.718201+00:00"
+}

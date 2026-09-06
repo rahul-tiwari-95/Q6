@@ -1,0 +1,2 @@
+python3 -m q6.adaptation --output experiments/adaptation/pilot_v2 --seeds 0,1,2 --phase-steps 120000 --eval-episodes 32 --max-seconds 900.0 --eval-seed-start 910000 --protocol-file docs/experiments/adaptation_protocol_v2.md
+# Use a NEW output path when reproducing.
