@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Watch Q6 agents learn, adapt, and return to earlier worlds. Explore reproducible adaptation and provenance experiments.">
+  <title>Q6 — Changing Worlds Lab</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="lab.css">
+</head>
+<body class="research-lab">
+  <a class="skip-link" href="#content">Skip to experiments</a>
+  <nav class="topbar" aria-label="Main navigation">
+    <a class="brand" href="lab.html"><span class="brand-symbol" aria-hidden="true">Q6</span> Research Lab</a>
+    <div class="spacer"></div>
+    <a href="index.html">Run archive</a>
+    <a href="versions.html">Research history</a>
+    <a href="../docs/roadmap.md">Roadmap</a>
+    <button id="mode-toggle" class="mode-toggle">lab mode</button>
+  </nav>
+  <main id="content">
+    <header class="lab-hero">
+      <div>
+        <p class="eyebrow"><span class="signal-dot"></span> SMALL WORLDS. OBSERVABLE LEARNING.</p>
+        <h1>What survives a<br><em>change of world?</em></h1>
+        <p class="hero-copy">Watch an agent learn a rule, adapt when it changes, and return to what it knew. Every curve here comes from a saved experiment.</p>
+      </div>
+      <aside class="research-note">
+        <span class="eyebrow">THE CURRENT QUESTION</span>
+        <p>Can an agent adapt to B<br>without losing competence in A?</p>
+        <div class="note-footer"><span class="status-badge">Exploratory pilots</span><button id="refresh" class="text-button">Refresh data ↻</button></div>
+        <small id="load-status" role="status">Loading saved experiments…</small>
+      </aside>
+    </header>
+
+    <div class="experiment-tabs" role="tablist" aria-label="Experiment tracks">
+      <button id="tab-adaptation" role="tab" aria-selected="true" aria-controls="adaptation-panel" tabindex="0"><span>01</span> Adaptation & retention</button>
+      <button id="tab-provenance" role="tab" aria-selected="false" aria-controls="provenance-panel" tabindex="-1"><span>02</span> Evidence & decisions</button>
+    </div>
+
+    <section id="adaptation-panel" role="tabpanel" aria-labelledby="tab-adaptation">
+      <div class="study-toolbar"><span id="study-label" class="eyebrow">SAVED EXPERIMENT</span><label>Study<select id="study-run"><option value="latest">Latest saved pilot</option><option value="pilot_v1">Pilot v1 · initial budget</option></select></label></div>
+      <div class="phase-strip" aria-label="Training sequence">
+        <button class="phase-card active" data-phase="after_a"><span class="phase-number">A</span><span><strong>Learn the first world</strong><small>Establish collection competence</small></span><span class="phase-arrow">→</span></button>
+        <button class="phase-card" data-phase="after_b"><span class="phase-number phase-b">B</span><span><strong>Change one rule</strong><small>Adapt, then test the old world</small></span><span class="phase-arrow">→</span></button>
+        <button class="phase-card" data-phase="after_return_a"><span class="phase-number">A′</span><span><strong>Return & measure</strong><small>See what was retained or recovered</small></span></button>
+      </div>
+      <div id="adaptation-empty" class="empty-panel" hidden><h2>The first pilot is being prepared.</h2><p>The viewer is ready. Once the runner saves its results, refresh this page to inspect actual learning and trajectories.</p><code>python -m q6.adaptation --output experiments/adaptation/my-pilot --dashboard dashboard/data/adaptation.json</code></div>
+      <div id="adaptation-content" hidden>
+        <div id="interpretation-note" class="interpretation-note" role="status"></div>
+        <div class="stat-grid" id="adaptation-stats"></div>
+        <div class="observation-grid">
+          <article class="lab-panel replay-panel">
+            <div class="panel-heading"><div><p class="eyebrow">WATCH THE BEHAVIOR</p><h2>One world, one trajectory</h2></div><span id="replay-outcome" class="status-badge">Ready</span></div>
+            <div class="replay-selectors">
+              <label>Agent<select id="replay-condition"></select></label>
+              <label>Checkpoint<select id="replay-checkpoint"></select></label>
+              <label>Test world<select id="replay-world"></select></label>
+              <label>Training seed<select id="replay-seed"></select></label>
+            </div>
+            <div class="world-stage"><canvas id="world-canvas" width="560" height="560" role="img" aria-label="Gridworld replay showing walls, remaining pellets, and the agent's path"></canvas><div id="world-caption" class="world-caption"></div></div>
+            <div class="replay-controls"><button id="replay-play" class="primary-button" aria-label="Play trajectory">▶ Play</button><button id="replay-reset" class="icon-button" aria-label="Restart trajectory">↺</button><label class="scrub-label"><span class="sr-only">Trajectory step</span><input id="replay-scrub" type="range" min="0" max="1" value="0"></label><output id="replay-step">0 / 0</output></div>
+            <div class="world-legend"><span><i class="legend-dot agent-dot"></i> Agent</span><span><i class="legend-dot pellet-dot"></i> Pellet</span><span><i class="legend-dot wall-dot"></i> Wall</span><span class="legend-trail">··· Visited path</span></div>
+            <p id="replay-explanation" class="help-text">A trajectory illustrates behavior; the evaluation panel below measures performance across maps.</p>
+          </article>
+          <div class="chart-column">
+            <article class="lab-panel">
+              <div class="panel-heading"><div><p class="eyebrow">MEASURE THE CHANGE</p><h2 id="chart-title">Can it still solve A?</h2></div><label class="compact-label">Evaluate<select id="evaluation-world"><option value="A">World A</option><option value="B">World B</option></select></label></div>
+              <div id="success-chart" class="success-chart" role="img" aria-label="Evaluation success by checkpoint"></div>
+              <div id="curve-legend" class="curve-legend"></div>
+              <p id="chart-caption" class="help-text"></p>
+              <details class="data-details"><summary>View the numbers</summary><div class="table-scroll"><table id="evaluation-table" class="evidence-table"></table></div></details>
+            </article>
+            <article id="diagnostic-panel" class="lab-panel" hidden><p class="eyebrow">CHECK THE FOUNDATION</p><h2 id="diagnostic-title">Can this task be solved?</h2><div id="diagnostic-bars" class="diagnostic-bars"></div><p id="diagnostic-note" class="help-text"></p><div class="diagnostic-actions"><button class="text-button" data-reference="shortest_path">Watch shortest path ↗</button><button class="text-button" data-reference="random_actions">Watch random actions ↗</button><a id="diagnostics-link" href="#" class="text-button">Inspect diagnostic data ↗</a></div></article>
+            <article class="lab-panel reading-panel"><p class="eyebrow">HOW TO READ THIS</p><h3>Adaptation and retention are different measurements.</h3><p>Improvement in B measures adaptation. Performance on the same A test maps after learning B measures retention. Returning to A shows recovery.</p><p>The frozen agent keeps its A-trained weights. The continuing learner keeps updating. The active rule is visible to both.</p><div id="competence-note" class="finding-note"></div></article>
+          </div>
+        </div>
+        <article class="lab-panel evidence-panel"><div><p class="eyebrow">REPRODUCE & INSPECT</p><h2>Follow the evidence</h2><p id="adaptation-method" class="help-text"></p></div><div class="evidence-links"><a id="adaptation-protocol-link" href="../docs/experiments/adaptation_protocol_v1.md">Experiment protocol ↗</a><a id="adaptation-data-link" href="data/adaptation.json" download>Download displayed data ↓</a><a href="../research_review/2026-09-05/README.md">Read the foundation audit ↗</a></div><details><summary>Scope and limitations</summary><ul id="adaptation-limitations"></ul></details></article>
+      </div>
+    </section>
+
+    <section id="provenance-panel" role="tabpanel" aria-labelledby="tab-provenance" hidden>
+      <div class="track-intro"><div><p class="eyebrow">NO WAY HOME / CONTROL STUDY</p><h2>Many messages. How much evidence?</h2><p>A forwarded report can appear many times without becoming independent evidence. Compare equally calibrated decision rules, then inspect the cost of their choices.</p></div><div class="lineage-demo" aria-label="One original report forwarded three times"><span class="origin-node">1 source</span><span aria-hidden="true">→</span><div><span>report</span><span>forward</span><span>forward</span></div><small>3 messages ≠ 3 sources</small></div></div>
+      <div id="provenance-empty" class="empty-panel" hidden><h2>The calibrated comparison is being prepared.</h2><p>This panel will show saved held-out results. No result is assumed in advance.</p></div>
+      <div id="provenance-content" hidden>
+        <article class="lab-panel"><div class="panel-heading"><div><p class="eyebrow">COMPARE DECISION RULES</p><h2>Which choices reduce shortfall?</h2></div><label class="scenario-label">Test scenario<select id="provenance-scenario"></select></label></div><p class="help-text">Lower resource shortfall is better. Avoiding every action can eliminate false alarms while leaving a crisis untreated.</p><div id="provenance-bars" class="provenance-bars"></div><p id="provenance-caption" class="help-text"></p></article>
+        <div class="provenance-bottom"><article class="lab-panel"><p class="eyebrow">LOOK BEYOND FALSE ALARMS</p><h2>The decision trade-offs</h2><div class="table-scroll"><table id="provenance-table" class="evidence-table"></table></div><p class="help-text">Zero observed events means 0 of 24 seeds, not zero risk. Delays include missed crises as the remaining post-shift window. Negative loss vs unique favors that controller; the range is a paired 95% seed-bootstrap interval.</p></article><article class="lab-panel reading-panel"><p class="eyebrow">FAIR COMPARISON</p><h3>Tune first. Freeze. Then evaluate.</h3><p>Every tunable counter gets the same calibration budget. Its selected setting is fixed before evaluation on new seeds.</p><p id="provenance-method"></p><details><summary>Selected settings</summary><div id="selected-settings"></div></details></article></div>
+        <article class="lab-panel evidence-panel"><div><p class="eyebrow">REPRODUCE & INSPECT</p><h2>A small, testable claim</h2><p class="help-text">These synthetic pilot results describe this generator and this comparison. They do not establish a universal advantage for any decision rule.</p></div><div class="evidence-links"><a href="../docs/experiments/provenance-protocol.md">Experiment protocol ↗</a><a href="data/provenance.json" download>Download dashboard data ↓</a><a href="../no_way_home/README.md">Explore No Way Home ↗</a></div><details><summary>Scope and limitations</summary><ul id="provenance-limitations"></ul></details></article>
+      </div>
+    </section>
+    <footer class="lab-footer"><span>Q6 / Small experiments, inspectable evidence.</span><a href="https://github.com/rahul-tiwari-95/Q6">Code & contribution guide ↗</a></footer>
+  </main>
+  <script type="module" src="lab.js"></script>
+</body>
+</html>
