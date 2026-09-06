@@ -1,0 +1,2 @@
+python -m q6.competence --output experiments/competence/pilot_v1 --protocol-file docs/experiments/competence_protocol_v1.md --seeds 0,1,2 --phase-steps 120000 --eval-episodes 64 --max-seconds 900
+# Reproduction needs a new output path.

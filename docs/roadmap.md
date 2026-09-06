@@ -2,29 +2,21 @@
 
 Q6's primary question is: **when a task changes from A to B and back to A, what does a small neural learner retain, and what must it relearn?** Efficient simulation serves this experiment. The companion provenance study has a smaller, separate release boundary.
 
-## Current result: initial competence is still missing
+## Current result: fixed tasks learned, fresh-world competence missing
 
-[Pilot v2](experiments/adaptation_pilot_v2.md) completed **1,080,000 training transitions** with the same compact Double DQN learner and task as [archived v1](experiments/adaptation_pilot_v1.md), at ten times the interaction budget. Mean success on A after initial A training was **31.25%**, below the locally predeclared **70% competence gate**. The study therefore remains `baseline_underlearned`: subsequent boundary changes do not support a forgetting, adaptation, or recovery claim.
+The [A-only comparison](experiments/competence_results_v1.md) completed 1,080,000 training transitions under its [separate protocol](experiments/competence_protocol_v1.md). The existing Double DQN reached **100% greedy success on the one-task and sixteen-task training sets for every learner seed**. All seeds also followed shortest paths on those probes at the final checkpoint.
 
-[Post-hoc diagnostics](../experiments/adaptation/pilot_v2/diagnostics.json) on the same A evaluation panel gave **41.67%** success for seeded random actions and **100%** for the shortest-path controller. These are descriptive references: the planner demonstrates that the tested maps are solvable within the horizon, while the neural learner has not established useful initial competence. They are not predeclared outcomes or evidence of a statistically established random-versus-neural effect.
+Fresh-map success was **9.90%**, **22.40%**, and **19.79%** after one-task, sixteen-task, and stream training. The common random reference scored 42.45%; the shortest-path reference solved all maps. No neural condition met the gate of 70% fresh-map success in every seed and above random. These are descriptive outcomes on one shared task bank, not a causal diagnosis or a general random-versus-neural effect.
 
-Training success is not fixed-policy evaluation success. For the first A phase:
+The earlier [adaptation v2](experiments/adaptation_pilot_v2.md) and [v1](experiments/adaptation_pilot_v1.md) remain unchanged. Both failed initial competence, so later boundary changes do not establish forgetting or recovery. The new diagnosis establishes that selected repeated tasks are learnable; it does not yet supply a competent cross-world baseline. This milestone ends with the declared comparison and no extra tuning run.
 
-| Training seed | Last 100 completed training episodes | Greedy evaluation on 32 fixed A maps |
-| --- | ---: | ---: |
-| 0 | 49% | 31.25% |
-| 1 | 47% | 34.375% |
-| 2 | 29% | 28.125% |
+## 1. Next bounded milestone: separate target learning from online RL
 
-The training and evaluation columns differ in map samples and exploration, so their gap does not isolate generalization. Raw episode results and settings are preserved with the pilot.
+Use the exact finite-horizon reference already built for evaluation to ask whether the **existing network and observations can learn navigation across tasks with reliable supervised targets**. Declare a new fixed task/state dataset, training budget, untouched evaluation panel, and per-seed decision criterion before running it. Keep demonstrations explicitly separate from online RL evidence.
 
-The [v2 protocol](experiments/adaptation_protocol_v2.md) changed the evaluation panel because v1's maps had informed diagnosis; the larger training budget also stretched the existing epsilon schedule. The v1→v2 comparison therefore does not isolate the causal effect of extra gradient steps. **This milestone ends with these two runs; there is no third tuning run.**
+Why this comes next: repeated-task learning works, while stream training produces inaccurate action values and frequent blocked actions on fresh maps. Those observations do not distinguish limitations of the representation from difficulties in exploration or bootstrapped learning. Supervised targets remove those two online complications for a focused diagnostic. Good fresh-map performance would direct attention toward the RL procedure; weak performance would motivate a controlled spatial-representation comparison, with optimization and coverage still possible explanations.
 
-## 1. Next bounded milestone: establish competence on A
-
-Write a separate A-only diagnostic protocol before further training. Check observations, rewards, learner targets, and greedy trajectories on small, inspectable cases; compare with the existing random and shortest-path references under the same horizon. State one diagnosis to test, a fixed interaction/time budget, fresh evaluation seeds, and a stopping rule. If task simplification is necessary, record it as a new condition instead of comparing its score directly with these pilots.
-
-**Decision to proceed:** a learner reliably meets the initial-task competence criterion on evaluation maps across independent seeds, with preserved artifacts and reproducible execution. Only then resume A → B → A and compare retained, reset, and simple memory baselines under stated data and compute budgets. Increasing architecture complexity before that point would make the current failure harder to diagnose.
+This follow-up has not run. Do not add memory or nested networks based on the current scores. **Decision to resume A → B → A:** first reproduce a neural learner meeting the fresh-world competence criterion across independent seeds, then compare retained, reset, and simple memory baselines under stated interaction and compute budgets.
 
 ## 2. Measure the cost of more worlds
 

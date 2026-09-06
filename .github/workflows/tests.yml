@@ -71,6 +71,7 @@ jobs:
         run: |
           python scripts/verify_pilot_artifacts.py
           node --check --input-type=module < dashboard/lab.js
+          node scripts/check_dashboard.mjs
       - name: Build and install wheel away from source
         if: matrix.python == '3.12'
         run: |

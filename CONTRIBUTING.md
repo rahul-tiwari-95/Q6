@@ -62,13 +62,14 @@ GitHub Actions runs the fast lane for pushes and pull requests on Python 3.10 an
 
 Run focused tests while developing. Run the relevant broader lane before submitting changes to dynamics, observations, rewards, learner updates, persistence, or statistical analysis. Add tests for a meaningful invariant or regression, not just a second copy of the implementation. Do not replace scientific evaluation with a passing smoke test.
 
-Check the shipped pilot source/protocol hashes, adaptation CSV aggregates, and provenance artifact manifest without retraining:
+Check the shipped pilot source/protocol hashes, adaptation and competence CSV aggregates, competence training counts, and artifact manifests without retraining:
 
 ```bash
 python scripts/verify_pilot_artifacts.py
+node scripts/check_dashboard.mjs
 ```
 
-CI also runs this integrity check and checks the current dashboard JavaScript syntax. Integrity does not establish independent replication or scientific validity.
+CI also runs these checks and checks the current dashboard JavaScript syntax. The dashboard harness exercises saved-data controls with DOM/canvas stubs; inspect the actual browser for layout and native interaction. Integrity does not establish independent replication or scientific validity.
 
 ## Build a package
 

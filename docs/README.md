@@ -4,7 +4,9 @@ The [root README](../README.md) is the entry point for installing and running Q6
 
 ## Current experiments
 
-- [Current adaptation protocol](experiments/adaptation_protocol_v2.md): the one follow-up with ten times v1's training budget and a fresh evaluation panel.
+- [A-only competence protocol](experiments/competence_protocol_v1.md) and [result](experiments/competence_results_v1.md): both fixed training sets reach 100% greedy success for every seed; fresh-map competence remains unmet.
+- [Competence validation](validation/competence-v1.md): software, artifacts, and dashboard checks.
+- [Prior adaptation protocol](experiments/adaptation_protocol_v2.md): the one follow-up with ten times v1's training budget and a fresh evaluation panel.
 - [Adaptation v2 report](experiments/adaptation_pilot_v2.md), [raw results](../experiments/adaptation/pilot_v2/results.json), and [diagnostics](../experiments/adaptation/pilot_v2/diagnostics.json): 1.08 million transitions, 31.25% initial A evaluation success, and a failed 70% competence gate. The post-hoc random/planner checks diagnose feasibility; they do not establish forgetting or recovery.
 - [Provenance protocol](experiments/provenance-protocol.md): independently calibrated counting controls and held-out scenarios.
 - [Provenance errata](experiments/provenance-errata.md): limits and corrections to earlier results.
