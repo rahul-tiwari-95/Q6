@@ -64,7 +64,7 @@ def independent_world_values(env):
                 ended = collected or remaining == 1
                 after = 0.0 if ended else -distance[q] / config.size
                 reward = config.step_cost + config.pellet_reward * collected + config.shaping_weight * (config.gamma * after - before)
-                values[remaining, *p, action] = reward + (0.0 if ended else config.gamma * values[remaining - 1, *q].max())
+                values[remaining, p[0], p[1], action] = reward + (0.0 if ended else config.gamma * values[remaining - 1, q[0], q[1]].max())
     return distance, following, values, goal
 
 
@@ -87,7 +87,7 @@ def check_saved_replay(trace, row, env, agent, *, skip_forward):
     initial_error = None
     for step, frame in enumerate(trace["steps"]):
         remaining, before = config.horizon - step, env.position
-        optimal = exact_values[remaining, *before]
+        optimal = exact_values[remaining, before[0], before[1]]
         assert np.allclose(frame["optimal_q_values"], optimal, atol=1e-12, rtol=0)
         possible = np.asarray([following[before, a] == goal or distance[following[before, a]] <= remaining - 1 for a in range(4)])
         winnable = distance[before] <= remaining
@@ -393,7 +393,7 @@ def audit_pairs(study, protocol, result, rows, planner):
                 close(csv_item[key], value, key)
         left_c, right_c = comparison_lookup[item["comparison"]]
         key = (item["panel"], item["seed"], item["map_seed"], item["mode"], item["repetition"])
-        left, right = raw[left_c, *key], raw[right_c, *key]
+        left, right = raw[(left_c,) + key], raw[(right_c,) + key]
         close(item["success_delta"], int(right["success"]) - int(left["success"]))
         close(item["steps_delta"], int(right["steps"]) - int(left["steps"]))
         close(item["efficient_success_delta"], efficient_rate([right], planner) - efficient_rate([left], planner))

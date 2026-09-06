@@ -120,6 +120,15 @@ generalization. No extra main evaluation, bank draw or training followed.
 
 ## CI scope
 
+The first final-artifact CI run exposed Python 3.11-only starred subscript
+syntax in the new auditor on Python 3.10. Explicit tuple/coordinate indexing
+replaces it, and CI now compiles all audit scripts even when their main
+artifacts are absent. Full and portable saved-evidence audits pass after this
+compatibility correction. The experiment runner, captured source, checkpoints
+and result artifacts were not changed or rerun.
+All audit scripts, the new runner and its tests also compile under an actual
+local Python 3.10.20 interpreter after the fix.
+
 CI runs Python 3.10 and 3.12 fast tests, portable audits for every stored study,
 JavaScript syntax and the dashboard harness. Python 3.12 also builds and
 installs a wheel away from source and imports `q6.panel_evaluation`. The full

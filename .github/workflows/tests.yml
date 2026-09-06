@@ -69,6 +69,7 @@ jobs:
           PY
       - name: Verify saved evidence and dashboard syntax
         run: |
+          python -m py_compile scripts/audit_*.py
           python scripts/verify_pilot_artifacts.py
           node --check --input-type=module < dashboard/lab.js
           node scripts/check_dashboard.mjs
