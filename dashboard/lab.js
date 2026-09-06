@@ -31,7 +31,7 @@ const fixedMode=()=>$('fixed-epsilon').value;
 const latestFixedUpdate=()=>Math.max(0,...(fixed?.aggregate || []).map(r=>r.checkpoint).filter(Number.isFinite));
 let coverage=null, coverageTrajectory=null, coverageFrame=0, coverageTimer=null;
 let coverageConditions=['collected_unique','uniform_subset'];
-const coverageStudies={coverage:null,equal_support:null};
+const coverageStudies={coverage:null,equal_support:null,panel_evaluation:null};
 const coverageIsEqual=()=>$('coverage-study').value==='equal_support';
 const coverageDirection=()=>coverageIsEqual()?'uniform subset minus collected unique states':'collected unique states minus exhaustive states';
 const coverageColors={exhaustive:'#a6e5c1',collected_unique:'#98b8d1',uniform_subset:'#e7b985'};
@@ -39,6 +39,105 @@ const coverageLabel=condition=>({exhaustive:'Exhaustive states',collected_unique
 const coverageMode=()=>$('coverage-epsilon').value;
 const latestCoverageUpdate=()=>Math.max(0,...(coverage?.aggregate || []).map(r=>r.checkpoint).filter(Number.isFinite));
 const signed=(value,scale=1,suffix='')=>Number.isFinite(value)?`${value>0?'+':''}${(value*scale).toFixed(1)}${suffix}`:'—';
+
+function robustnessData(){return coverageStudies.panel_evaluation;}
+const robustnessConditions=['collected_unique','uniform_subset','exhaustive'];
+let robustnessTrajectory=null,robustnessFrame=0,robustnessTimer=null;
+const robustnessMode=()=>$('robustness-epsilon').value;
+const robustnessEligible=()=>robustnessData()?.descriptive_thresholds?.eligible===true && robustnessData()?.run?.status==='complete' && robustnessData()?.protocol?.smoke!==true && !(robustnessData()?.protocol?.deviations?.length);
+const robustnessPanelLabel=panel=>panel==='all'?'All panels':`Panel ${Number(String(panel).split('_').at(-1))+1}`;
+function robustnessPanels(){
+  const study=robustnessData(),declared=study?.protocol?.panels;
+  return Array.isArray(declared)?declared.map(p=>typeof p==='string'?p:p.id || p.panel).filter(Boolean):[...new Set((study?.aggregate || []).map(r=>r.panel).filter(p=>p!=='all'))].sort((a,b)=>Number(a.split('_').at(-1))-Number(b.split('_').at(-1)));
+}
+function renderRobustness(){
+  stopRobustnessPlayback();
+  const study=robustnessData(),ready=Boolean(study?.aggregate?.length),run=study?.run || {};
+  $('robustness-empty').hidden=ready;$('robustness-content').hidden=!ready;
+  if(!ready){
+    $('robustness-empty-title').textContent=run.status?.startsWith('inconsistent')?'Consistency check failed.':study?'No complete panel result available.':'No saved panel-robustness result yet.';
+    $('robustness-empty-message').textContent=study?`Status: ${(run.status || 'unavailable').replaceAll('_',' ')}. ${run.stop_reason || study.provenance?.stop_reason || 'No completed result is substituted.'}`:'Earlier learning studies remain available through the study selector.';
+    for(const id of ['robustness-success-chart','robustness-efficient-chart','robustness-steps-chart','robustness-difference-chart','robustness-outcomes'])$(id).innerHTML='';return;
+  }
+  $('robustness-study-label').textContent=`${run.id || study.protocol?.id || 'Saved evaluation'} · ${(run.status || 'unavailable').replaceAll('_',' ')}`;
+  const eligible=robustnessEligible();
+  $('robustness-note').textContent=run.status?.startsWith('inconsistent')?`Consistency check failed. No descriptive threshold or sign-count conclusion is available. ${run.stop_reason || study.provenance?.stop_reason || ''}`:run.status!=='complete'?'Incomplete evaluation. Inspect completed panel measurements; incomplete coverage cannot support the declared panel-wide summaries.':!eligible?'Smoke or protocol-deviation evaluation. Measurements check execution; threshold frequencies and panel sign counts are not research evidence.':'These are repeated evaluations of the same saved policies. Compare variation across fresh panels and paired route efficiency. Historical thresholds provide context only; no new competence gate, significance test, or equivalence claim is established.';
+  $('robustness-stats').innerHTML=[[number(robustnessConditions.length),'Frozen training conditions','Each retains its saved weights'],[number(study.protocol?.seeds?.length),'Saved learner seeds per condition','Reused across every panel'],[number(robustnessPanels().length),'New evaluation panels','Same maps for every policy'],['None','New optimization or collection','This study only evaluates saved policies']].map(([value,label,detail])=>`<div class="stat-card"><span>${label}</span><strong>${value}</strong><small>${detail}</small></div>`).join('');
+  $('robustness-method').textContent=`${number(run.wall_seconds)} seconds elapsed. Saved policies are evaluated without optimization, replay insertion, or new training collection. Earlier training studies remain separate, including their fresh panels and fit diagnostics.`;
+  if(Number.isFinite(run.peak_rss_bytes))$('robustness-method').textContent+=` Peak process memory ${(run.peak_rss_bytes/1024**3).toFixed(2)} GiB.`;
+  listItems('robustness-limitations',run.limitations);
+  $('robustness-evidence-links').innerHTML='<a href="data/panel_evaluation.json" download>Download displayed data ↓</a>'+[['protocol_document','Study design'],['protocol','Saved protocol'],['report','Measured findings'],['evaluations','Raw episodes'],['paired_differences','Paired differences'],['provenance','Frozen-weight provenance'],['manifest','Artifact checksums']].flatMap(([key,label])=>{const path=study.artifacts?.[key];return typeof path==='string' && /^(docs|experiments)\/[a-zA-Z0-9_./-]+$/.test(path) && !path.split('/').includes('..')?[`<a href="../${escape(path)}">${label} ↗</a>`]:[];}).join('');
+  renderRobustnessComparison();
+}
+function renderPanelChart(id,series,panels,{title,rates=false,reference=null,difference=false}={}){
+  const width=500,height=265,p={l:48,r:18,t:24,b:43},values=series.flatMap(s=>s.rows.map(r=>r.value)).filter(Number.isFinite);
+  const top=difference?Math.max(.01,...values.map(Math.abs))*1.12:rates?1:Math.max(1,...values)*1.1,bottom=difference?-top:0;
+  const x=panel=>p.l+(panels.indexOf(panel)+.5)/Math.max(1,panels.length)*(width-p.l-p.r),y=value=>p.t+(top-value)/(top-bottom)*(height-p.t-p.b),fmt=difference?value=>signed(value,100,' pp'):rates?percent:value=>value.toFixed(1);
+  let svg=`<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"><title>${escape(title)} across evaluation panels</title>`;
+  for(let i=0;i<=4;i++){const value=bottom+i*(top-bottom)/4;svg+=`<line x1="${p.l}" y1="${y(value)}" x2="${width-p.r}" y2="${y(value)}" stroke="#26302a"/><text x="${p.l-7}" y="${y(value)+4}" text-anchor="end" fill="#8a978f" font-size="9">${fmt(value)}</text>`;}
+  if(Number.isFinite(reference)){svg+=`<line x1="${p.l}" y1="${y(reference)}" x2="${width-p.r}" y2="${y(reference)}" stroke="#8a978f" stroke-dasharray="4 4"/><text x="${width-p.r}" y="${y(reference)-5}" text-anchor="end" fill="#a4afa8" font-size="9">${percent(reference)} historical reference</text>`;}
+  panels.forEach(panel=>{svg+=`<text x="${x(panel)}" y="${height-24}" text-anchor="middle" fill="#8a978f" font-size="10">${escape(robustnessPanelLabel(panel).replace('Panel ','P'))}</text>`;});
+  svg+=`<text x="${width/2}" y="${height-7}" text-anchor="middle" fill="#8a978f" font-size="10">Fixed evaluation panels · no training axis</text>`;
+  for(const s of series){let segment=[];const segments=[];for(const panel of panels){const row=s.rows.find(r=>r.panel===panel);if(Number.isFinite(row?.value))segment.push(row);else if(segment.length){segments.push(segment);segment=[];}}if(segment.length)segments.push(segment);
+    for(const points of segments){if(!difference)svg+=`<path d="${points.map((r,i)=>`${i?'L':'M'}${x(r.panel)},${y(r.value)}`).join(' ')}" stroke="${s.color}" stroke-width="2" fill="none"/>`;
+      for(const r of points){const tooltip=`${s.label}, ${robustnessPanelLabel(r.panel)}: ${fmt(r.value)}`;
+        if(difference){const barWidth=Math.min(30,(width-p.l-p.r)/Math.max(1,panels.length)*.6);svg+=`<rect x="${x(r.panel)-barWidth/2}" y="${Math.min(y(0),y(r.value))}" width="${barWidth}" height="${Math.max(1,Math.abs(y(r.value)-y(0)))}" fill="${r.value>=0?'#a6e5c1':'#e7b985'}"><title>${escape(tooltip)}</title></rect>`;}
+        else svg+=`<circle cx="${x(r.panel)}" cy="${y(r.value)}" r="3.5" fill="${s.color}"><title>${escape(tooltip)}</title></circle>`;
+      }
+    }
+  }
+  if(!values.length)svg+=`<text x="${width/2}" y="${height/2}" text-anchor="middle" fill="#8a978f" font-size="12">No complete measurements</text>`;
+  $(id).innerHTML=svg+'</svg>';
+}
+function renderRobustnessComparison(){
+  const study=robustnessData();if(!study?.aggregate?.length)return;
+  const mode=robustnessMode(),panels=robustnessPanels(),rows=study.aggregate.filter(r=>r.mode===mode),panelRows=rows.filter(r=>r.panel!=='all'),eligible=robustnessEligible();
+  const series=metric=>robustnessConditions.map(condition=>({label:coverageLabel(condition),color:coverageColors[condition],rows:panelRows.filter(r=>r.condition===condition).map(r=>({panel:r.panel,value:r[metric]}))}));
+  renderPanelChart('robustness-success-chart',series('success_rate'),panels,{title:'Episode success',rates:true,reference:study.protocol?.descriptive_reference_lines?.success});
+  renderPanelChart('robustness-efficient-chart',series('efficient_success_rate'),panels,{title:'Efficient episode success',rates:true,reference:study.protocol?.descriptive_reference_lines?.efficient_success});
+  renderPanelChart('robustness-steps-chart',series('mean_steps'),panels,{title:'Mean episode steps'});
+  $('robustness-legend').innerHTML=robustnessConditions.map(c=>`<span><i style="background:${coverageColors[c]}"></i>${coverageLabel(c)}</span>`).join('');
+  $('robustness-mode-note').textContent=`Each point pools the same saved learner seeds on one panel using ${mode==='greedy'?'greedy actions':'ε = 0.1 exploration'}. Lines connect evaluation groups; they do not show learning. Efficient success means success within twice the shortest-path length, with all episodes in the denominator. The dashed 70% / 80% lines are historical references only. Threshold frequency counts remain greedy when this mode changes.`;
+  $('robustness-pooled-caption').textContent='Pooled values use all completed new panels. Ranges are the minimum and maximum of condition-level panel means, not confidence intervals. The same networks appear in every panel.';
+  $('robustness-outcomes').innerHTML=robustnessConditions.map(condition=>{const pooled=rows.find(r=>r.condition===condition && r.panel==='all'),perPanel=panelRows.filter(r=>r.condition===condition);return `<div class="robustness-outcome-card"><strong style="color:${coverageColors[condition]}">${coverageLabel(condition)}</strong>${[['Success','success_rate',percent],['Efficient success','efficient_success_rate',percent],['Mean steps','mean_steps',value=>Number.isFinite(value)?value.toFixed(1):'—']].map(([label,key,format])=>{const values=perPanel.map(r=>r[key]).filter(Number.isFinite);return `<div><span>${label}</span><b>${format(pooled?.[key])}</b><small>Panel range ${values.length?`${format(Math.min(...values))}–${format(Math.max(...values))}`:'—'}</small></div>`;}).join('')}</div>`;}).join('');
+  const pairs=(study.paired_differences?.aggregate || []).filter(r=>r.mode===mode),difference=pairs.filter(r=>r.comparison==='uniform_minus_collected' && r.panel!=='all');
+  renderPanelChart('robustness-difference-chart',[{label:'Uniform subset minus collected states',color:'#a6e5c1',rows:difference.map(r=>({panel:r.panel,value:r.mean_seed_efficient_success_rate_delta}))}],panels,{title:'Paired efficient-success difference',difference:true});
+  const summary=study.robustness?.per_comparison?.find(r=>r.comparison==='uniform_minus_collected' && r.mode===mode)?.metrics?.efficient_success_rate_delta;
+  $('robustness-difference-caption').textContent=mode!=='greedy'?'Paired differences were declared for greedy episodes only. Switch to greedy to inspect the route-advantage comparison; exploration curves and replays remain available.':eligible && summary?`${mode==='greedy'?'Greedy':'ε = 0.1'} uniform subset minus collected states: positive in ${number(summary.positive_panels)} panels, negative in ${number(summary.negative_panels)}, tied in ${number(summary.zero_panels)}. Panel-mean differences range ${signed(summary.minimum,100,' pp')} to ${signed(summary.maximum,100,' pp')}. These are descriptive counts, not independent training replications or a significance test.`:'Panel sign counts are not evidence for this smoke, deviating, inconsistent, incomplete, or missing-summary evaluation. Recorded paired differences remain inspectable.';
+  $('robustness-threshold-table').innerHTML='<thead><tr><th>Condition</th><th>Panels with every seed ≥70% greedy success and above panel random</th><th>Panels with every seed ≥80% greedy efficient success</th></tr></thead><tbody>'+robustnessConditions.map(condition=>{const counts=study.descriptive_thresholds?.per_condition?.find(r=>r.condition===condition);return `<tr><td>${coverageLabel(condition)}</td><td>${eligible && counts?`${number(counts.success_reference_panels)} / ${number(counts.panels)}`:'Not eligible'}</td><td>${eligible && counts?`${number(counts.efficiency_reference_panels)} / ${number(counts.panels)}`:'Not eligible'}</td></tr>`;}).join('')+'</tbody>';
+  const table=(id,selected,seed)=>{$(id).innerHTML=`<thead><tr><th>Condition</th><th>${seed?'Learner seed':'Panel'}</th><th>Success</th><th>Efficient success</th><th>Mean steps</th><th>No-op rate</th><th>Episodes</th></tr></thead><tbody>`+selected.map(r=>`<tr><td>${coverageLabel(r.condition)}</td><td>${seed?number(r.seed):robustnessPanelLabel(r.panel)}</td><td>${percent(r.success_rate)}</td><td>${percent(r.efficient_success_rate)}</td><td>${decimal(r.mean_steps)}</td><td>${percent(r.noop_rate)}</td><td>${number(r.episodes)}</td></tr>`).join('')+'</tbody>';};
+  table('robustness-panel-table',rows,false);table('robustness-learner-table',(study.seed_results || []).filter(r=>r.mode===mode && r.panel==='all'),true);
+  const comparisons=study.paired_differences?.comparisons || [],pairLabel=id=>{const c=comparisons.find(c=>c.id===id);return c?`${coverageLabel(c.right)} − ${coverageLabel(c.left)}`:id.replaceAll('_',' ');};
+  $('robustness-paired-table').innerHTML='<thead><tr><th>Comparison</th><th>Panel</th><th>Success Δ</th><th>Efficient success Δ</th><th>Mean steps Δ</th><th>Mean seed no-op Δ</th></tr></thead><tbody>'+pairs.map(r=>`<tr><td>${escape(pairLabel(r.comparison))}</td><td>${robustnessPanelLabel(r.panel)}</td><td>${signed(r.mean_seed_success_rate_delta,100,' pp')}</td><td>${signed(r.mean_seed_efficient_success_rate_delta,100,' pp')}</td><td>${signed(r.mean_seed_mean_steps_delta)}</td><td>${signed(r.mean_seed_noop_rate_delta,100,' pp')}</td></tr>`).join('')+'</tbody>';
+  if(!pairs.length)$('robustness-paired-table').innerHTML='<caption>No paired comparisons were saved for this action mode; the declared paired analysis uses greedy episodes.</caption>'+$('robustness-paired-table').innerHTML;
+  selectRobustnessTrajectory();
+}
+function stopRobustnessPlayback(){if(robustnessTimer)clearInterval(robustnessTimer);robustnessTimer=null;$('robustness-replay-play').textContent='▶ Play';$('robustness-replay-play').setAttribute('aria-label','Play frozen-policy recording');}
+function selectRobustnessTrajectory(){
+  stopRobustnessPlayback();const study=robustnessData(),rows=(study?.trajectories || []).filter(r=>r.policy!=='learner' || r.mode===robustnessMode());
+  selectOptions('robustness-replay-panel',robustnessPanels().filter(p=>rows.some(r=>r.panel===p)).map(p=>[p,robustnessPanelLabel(p)]),robustnessPanels()[0]);
+  const atPanel=rows.filter(r=>r.panel===$('robustness-replay-panel').value),controller=r=>r.policy==='learner'?r.condition:r.policy;
+  selectOptions('robustness-replay-controller',[...new Set(atPanel.map(controller))].map(c=>[c,robustnessConditions.includes(c)?coverageLabel(c):policyLabel(c)]),'collected_unique');
+  const available=atPanel.filter(r=>controller(r)===$('robustness-replay-controller').value);
+  selectOptions('robustness-replay-seed',[...new Set(available.map(r=>r.seed))].sort((a,b)=>a-b).map(s=>[String(s),String(s)]),'0');
+  robustnessTrajectory=available.find(r=>r.seed===Number($('robustness-replay-seed').value)) || null;robustnessFrame=0;$('robustness-replay-scrub').value='0';$('robustness-replay-scrub').max=robustnessTrajectory?.steps.length || 0;
+  for(const id of ['robustness-replay-play','robustness-replay-reset','robustness-replay-scrub'])$(id).disabled=!robustnessTrajectory;
+  drawRobustnessWorld();renderRobustnessReferences();
+}
+function drawRobustnessWorld(){const t=robustnessTrajectory;drawRecordedWorld('robustness',t,robustnessFrame,t?`${robustnessPanelLabel(t.panel)} · ${t.policy==='learner'?coverageLabel(t.condition):policyLabel(t.policy)} · seed ${t.seed} · map ${t.map_seed}. ${t.policy==='learner'?(t.mode==='greedy'?'Greedy actions.':'ε = 0.1 exploration.'):'Reference policy.'} Frozen policy; no learning. The first map of this panel was selected before outcomes.`:'',t?`${robustnessPanelLabel(t.panel)}, ${coverageLabel(t.condition)}`:'');}
+function renderRobustnessReferences(){
+  const study=robustnessData();if(!study)return;const panel=$('robustness-replay-panel').value;
+  const rows=robustnessConditions.map(c=>[study.aggregate.find(r=>r.condition===c && r.panel===panel && r.mode===robustnessMode()),coverageLabel(c),coverageColors[c]]);
+  for(const [policy,color] of [['random_actions','#b5a7d2'],['shortest_path','#ddd5b0']])rows.push([study.references?.find(r=>r.policy===policy && r.panel===panel),policyLabel(policy),color]);
+  $('robustness-reference-title').textContent=robustnessPanelLabel(panel);
+  $('robustness-reference-bars').innerHTML=rows.filter(([r])=>r).map(([r,label,color])=>`<div class="diagnostic-row"><span>${label}</span><div class="diagnostic-track"><div class="diagnostic-fill" style="width:${100*r.success_rate}%;background:${color}"></div></div><strong>${percent(r.success_rate)}</strong></div>`).join('');
+  $('robustness-reference-caption').textContent=`Same selected panel; networks use ${robustnessMode()==='greedy'?'greedy actions':'ε = 0.1'}. References retain their own policies. No earlier-study scores are included.`;
+}
+$('robustness-epsilon').addEventListener('change',renderRobustnessComparison);
+for(const id of ['robustness-replay-panel','robustness-replay-controller','robustness-replay-seed'])$(id).addEventListener('change',selectRobustnessTrajectory);
+$('robustness-replay-play').addEventListener('click',()=>{if(robustnessTimer){stopRobustnessPlayback();return;}if(!robustnessTrajectory)return;if(robustnessFrame>=robustnessTrajectory.steps.length)robustnessFrame=0;$('robustness-replay-play').textContent='Ⅱ Pause';$('robustness-replay-play').setAttribute('aria-label','Pause frozen-policy recording');robustnessTimer=setInterval(()=>{robustnessFrame=Math.min(robustnessFrame+1,robustnessTrajectory.steps.length);$('robustness-replay-scrub').value=String(robustnessFrame);drawRobustnessWorld();if(robustnessFrame>=robustnessTrajectory.steps.length)stopRobustnessPlayback();},160);});
+$('robustness-replay-reset').addEventListener('click',()=>{stopRobustnessPlayback();robustnessFrame=0;$('robustness-replay-scrub').value='0';drawRobustnessWorld();});
+$('robustness-replay-scrub').addEventListener('input',event=>{stopRobustnessPlayback();robustnessFrame=Number(event.target.value);drawRobustnessWorld();});
 
 let loadInProgress = false;
 const replayRows = () => [...(adaptation?.trajectories || []),...(diagnostics?.trajectories || [])];
@@ -64,7 +163,7 @@ function activateTab(name) {
   stopCompetencePlayback();
   stopSupervisedPlayback();
   stopFixedPlayback();
-  stopCoveragePlayback();
+  stopCoveragePlayback();stopRobustnessPlayback();
   history.replaceState(null,'',`#${name}`);
 }
 for (const [index,name] of tracks.entries()) {
@@ -80,14 +179,17 @@ for (const [index,name] of tracks.entries()) {
 if (tracks.includes(location.hash.slice(1))) activateTab(location.hash.slice(1));
 
 function selectCoverageStudy(){
-  stopCoveragePlayback();coverage=coverageStudies[$('coverage-study').value] || null;
+  stopCoveragePlayback();stopRobustnessPlayback();coverage=coverageStudies[$('coverage-study').value] || null;
   coverageConditions=coverageIsEqual()?['collected_unique','uniform_subset']:['exhaustive','collected_unique'];
-  for(const id of ['coverage-replay-condition','coverage-replay-controller','coverage-replay-checkpoint','coverage-replay-panel','coverage-replay-seed','coverage-support-condition'])$(id).value='';
+  for(const id of ['coverage-replay-condition','coverage-replay-controller','coverage-replay-checkpoint','coverage-replay-panel','coverage-replay-seed','coverage-support-condition','robustness-replay-panel','robustness-replay-controller','robustness-replay-seed'])$(id).value='';
   renderCoverage();
 }
 $('coverage-study').addEventListener('change',selectCoverageStudy);
 function renderCoverage(){
-  stopCoveragePlayback();
+  stopCoveragePlayback();stopRobustnessPlayback();
+  const frozen=$('coverage-study').value==='panel_evaluation';
+  $('robustness-view').hidden=!frozen;$('coverage-learning-intro').hidden=frozen;
+  if(frozen){$('coverage-study-context').textContent='Frozen policies on several new panels; no training or new competence gate.';$('coverage-empty').hidden=true;$('coverage-content').hidden=true;renderRobustness();return;}
   renderCoveragePanelSensitivity();
   const equal=coverageIsEqual();
   $('coverage-study-context').textContent=equal?'Same number of states; different bank composition. Fresh panel belongs only to this study.':'Earlier measured coverage comparison, with its own fresh panel and larger exhaustive bank.';
@@ -240,7 +342,7 @@ function renderCoverageComparison(){
 }
 function stopCoveragePlayback(){if(coverageTimer)clearInterval(coverageTimer);coverageTimer=null;$('coverage-replay-play').textContent='▶ Play';$('coverage-replay-play').setAttribute('aria-label','Play saved experience-coverage trajectory');}
 function selectCoverageTrajectory(){
-  stopCoveragePlayback();
+  stopCoveragePlayback();stopRobustnessPlayback();
   const rows=(coverage?.trajectories || []).filter(r=>r.policy!=='learner' || r.mode===coverageMode());
   selectOptions('coverage-replay-condition',[...new Set(rows.map(r=>r.condition))].map(c=>[c,coverageLabel(c)]),coverageConditions[0]);
   const atCondition=rows.filter(r=>r.condition===$('coverage-replay-condition').value);
@@ -271,9 +373,9 @@ function renderCoverageReferences(){
 }
 $('coverage-epsilon').addEventListener('change',renderCoverageComparison);
 for(const id of ['coverage-replay-condition','coverage-replay-controller','coverage-replay-checkpoint','coverage-replay-panel','coverage-replay-seed'])$(id).addEventListener('change',selectCoverageTrajectory);
-$('coverage-replay-play').addEventListener('click',()=>{if(coverageTimer){stopCoveragePlayback();return;}if(!coverageTrajectory)return;if(coverageFrame>=coverageTrajectory.steps.length)coverageFrame=0;$('coverage-replay-play').textContent='Ⅱ Pause';$('coverage-replay-play').setAttribute('aria-label','Pause saved experience-coverage trajectory');coverageTimer=setInterval(()=>{coverageFrame=Math.min(coverageFrame+1,coverageTrajectory.steps.length);$('coverage-replay-scrub').value=String(coverageFrame);drawCoverageWorld();if(coverageFrame>=coverageTrajectory.steps.length)stopCoveragePlayback();},160);});
-$('coverage-replay-reset').addEventListener('click',()=>{stopCoveragePlayback();coverageFrame=0;$('coverage-replay-scrub').value='0';drawCoverageWorld();});
-$('coverage-replay-scrub').addEventListener('input',event=>{stopCoveragePlayback();coverageFrame=Number(event.target.value);drawCoverageWorld();});
+$('coverage-replay-play').addEventListener('click',()=>{if(coverageTimer){stopCoveragePlayback();stopRobustnessPlayback();return;}if(!coverageTrajectory)return;if(coverageFrame>=coverageTrajectory.steps.length)coverageFrame=0;$('coverage-replay-play').textContent='Ⅱ Pause';$('coverage-replay-play').setAttribute('aria-label','Pause saved experience-coverage trajectory');coverageTimer=setInterval(()=>{coverageFrame=Math.min(coverageFrame+1,coverageTrajectory.steps.length);$('coverage-replay-scrub').value=String(coverageFrame);drawCoverageWorld();if(coverageFrame>=coverageTrajectory.steps.length)stopCoveragePlayback();stopRobustnessPlayback();},160);});
+$('coverage-replay-reset').addEventListener('click',()=>{stopCoveragePlayback();stopRobustnessPlayback();coverageFrame=0;$('coverage-replay-scrub').value='0';drawCoverageWorld();});
+$('coverage-replay-scrub').addEventListener('input',event=>{stopCoveragePlayback();stopRobustnessPlayback();coverageFrame=Number(event.target.value);drawCoverageWorld();});
 
 function renderFixed(){
   stopFixedPlayback();
@@ -907,9 +1009,9 @@ async function getData(path) {
 }
 async function loadData() {
   if(loadInProgress)return;loadInProgress=true;$('refresh').disabled=true;$('study-run').disabled=true;
-  stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();stopCoveragePlayback();
+  stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();stopCoveragePlayback();stopRobustnessPlayback();
   const adaptationPath=$('study-run').value==='pilot_v1'?'../experiments/adaptation/pilot_v1/results.json':'data/adaptation.json';
-  const results=await Promise.allSettled([getData(adaptationPath),getData('data/provenance.json'),getData('data/competence.json'),getData('data/supervised.json'),getData('data/fixed_targets.json'),getData('data/coverage.json'),getData('data/equal_support.json')]);
+  const results=await Promise.allSettled([getData(adaptationPath),getData('data/provenance.json'),getData('data/competence.json'),getData('data/supervised.json'),getData('data/fixed_targets.json'),getData('data/coverage.json'),getData('data/equal_support.json'),getData('data/panel_evaluation.json')]);
   const errors=[];
   diagnostics=null;
   if(results[0].status==='fulfilled') {
@@ -931,16 +1033,17 @@ async function loadData() {
   renderFixed();
   if(results[5].status==='fulfilled')coverageStudies.coverage=results[5].value;else {coverageStudies.coverage=null;errors.push(results[5].reason.message);}
   if(results[6].status==='fulfilled')coverageStudies.equal_support=results[6].value;else {coverageStudies.equal_support=null;errors.push(results[6].reason.message);}
+  if(results[7].status==='fulfilled')coverageStudies.panel_evaluation=results[7].value;else {coverageStudies.panel_evaluation=null;errors.push(results[7].reason.message);}
   coverage=coverageStudies[$('coverage-study').value] || null;coverageConditions=coverageIsEqual()?['collected_unique','uniform_subset']:['exhaustive','collected_unique'];
   renderCoverage();
   if(errors.length) $('load-status').textContent=errors.join(' · ');
   else {
-    const loaded=[coverageStudies.equal_support&&'Equal-size banks',coverageStudies.coverage&&'Experience coverage',fixed&&'Fixed-data targets',supervised&&'Exact targets',competence&&'Competence',adaptation&&'Adaptation',provenance&&'Provenance'].filter(Boolean);
+    const loaded=[coverageStudies.panel_evaluation&&'Panel robustness',coverageStudies.equal_support&&'Equal-size banks',coverageStudies.coverage&&'Experience coverage',fixed&&'Fixed-data targets',supervised&&'Exact targets',competence&&'Competence',adaptation&&'Adaptation',provenance&&'Provenance'].filter(Boolean);
     $('load-status').textContent=`${loaded.join(' + ') || 'No'} saved ${loaded.length===1?'study':'studies'} loaded · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
   }
   $('refresh').disabled=false;$('study-run').disabled=false;loadInProgress=false;
 }
 $('refresh').addEventListener('click',loadData);
 $('study-run').addEventListener('change',loadData);
-document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();stopCoveragePlayback();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();stopCoveragePlayback();stopRobustnessPlayback();}});
 await loadData();

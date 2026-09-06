@@ -157,3 +157,8 @@ body.theater.research-lab main { max-width:1440px; padding:42px 44px 22px; }
 @media(max-width:760px) { .coverage-study-toolbar label { width:100%; }.coverage-study-toolbar select { width:100%; } }
 
 .coverage-panel-note { border-left:3px solid #98b8d1; background:#13202a66; color:var(--text); padding:13px 18px; margin:0 0 20px; font-size:12px; line-height:1.8; }
+
+.robustness-outcomes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-top:20px; }.robustness-outcome-card { border:1px solid var(--border); border-radius:5px; padding:17px; }.robustness-outcome-card>strong { font-size:12px; font-weight:500; }.robustness-outcome-card>div { display:grid; grid-template-columns:1fr auto; gap:5px 8px; margin-top:18px; }.robustness-outcome-card span,.robustness-outcome-card small { font-size:10px; color:var(--muted); }.robustness-outcome-card b { font:20px var(--mono); color:var(--text); }.robustness-outcome-card small { grid-column:1/-1; }.robustness-thresholds { margin-top:20px; }
+#robustness-world-canvas { display:block; width:min(100%,390px); height:auto; aspect-ratio:1; margin:auto; }#robustness-replay-step { font:10px var(--mono); color:var(--muted); min-width:55px; text-align:right; }
+#robustness-content>.study-toolbar { margin-top:24px; }
+@media(max-width:760px) { .robustness-outcomes { grid-template-columns:1fr; }.robustness-outcome-card>div { margin-top:12px; } }

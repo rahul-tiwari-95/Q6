@@ -1,12 +1,12 @@
 // Exercise saved-study controls with DOM/canvas stubs; does not test browser layout.
-// Run from any directory: node /path/to/Q6/scripts/check_dashboard.mjs [competence-results.json] [--supervised supervised-results.json] [--missing-supervised] [--fixed fixed-targets-results.json] [--missing-fixed] [--coverage coverage-results.json] [--missing-coverage] [--equal-support results.json] [--missing-equal-support]
+// Run from any directory: node /path/to/Q6/scripts/check_dashboard.mjs [competence-results.json] [--supervised supervised-results.json] [--missing-supervised] [--fixed fixed-targets-results.json] [--missing-fixed] [--coverage coverage-results.json] [--missing-coverage] [--equal-support results.json] [--missing-equal-support] [--panels results.json] [--missing-panels]
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-let competencePath=null,supervisedPath=null,missingSupervised=false,fixedPath=null,missingFixed=false,coveragePath=null,missingCoverage=false,equalSupportPath=null,missingEqualSupport=false;
+let competencePath=null,supervisedPath=null,missingSupervised=false,fixedPath=null,missingFixed=false,coveragePath=null,missingCoverage=false,equalSupportPath=null,missingEqualSupport=false,panelsPath=null,missingPanels=false;
 for(let i=2;i<process.argv.length;i++){
  const arg=process.argv[i];
  if(arg==='--supervised'){supervisedPath=process.argv[++i];assert(supervisedPath,'--supervised needs a real results path');}
@@ -17,6 +17,8 @@ for(let i=2;i<process.argv.length;i++){
  else if(arg==='--missing-coverage')missingCoverage=true;
  else if(arg==='--equal-support'){equalSupportPath=process.argv[++i];assert(equalSupportPath,'--equal-support needs a real results path');}
  else if(arg==='--missing-equal-support')missingEqualSupport=true;
+ else if(arg==='--panels'){panelsPath=process.argv[++i];assert(panelsPath,'--panels needs a real results path');}
+ else if(arg==='--missing-panels')missingPanels=true;
  else if(!arg.startsWith('-')&&!competencePath)competencePath=arg;
  else throw Error('Unknown argument '+arg);
 }
@@ -51,13 +53,14 @@ const sandbox={document,location:{hash:''},history:{replaceState(){}},setInterva
  if(relative==='data/fixed_targets.json'&&missingFixed)return {status:404,ok:false};
  if(relative==='data/coverage.json'&&missingCoverage)return {status:404,ok:false};
  if(relative==='data/equal_support.json'&&missingEqualSupport)return {status:404,ok:false};
- const override=relative==='data/competence.json'?competencePath:relative==='data/supervised.json'?supervisedPath:relative==='data/fixed_targets.json'?fixedPath:relative==='data/coverage.json'?coveragePath:relative==='data/equal_support.json'?equalSupportPath:null;
+ if(relative==='data/panel_evaluation.json'&&missingPanels)return {status:404,ok:false};
+ const override=relative==='data/competence.json'?competencePath:relative==='data/supervised.json'?supervisedPath:relative==='data/fixed_targets.json'?fixedPath:relative==='data/coverage.json'?coveragePath:relative==='data/equal_support.json'?equalSupportPath:relative==='data/panel_evaluation.json'?panelsPath:null;
  const target=override||full;
  if(!fs.existsSync(target))return {status:404,ok:false};
  return {status:200,ok:true,json:async()=>JSON.parse(fs.readFileSync(target,'utf8'))};
 }};
 const context=vm.createContext(sandbox);
-await vm.runInContext(`(async()=>{${source}\n globalThis.labDebug={get coverageStudies(){return coverageStudies;},get coverage(){return coverage;},renderCoverage,get coverageSelected(){return coverageTrajectory;},set coverageFrame(value){coverageFrame=value;},drawCoverageWorld,get fixed(){return fixed;},renderFixed,get fixedSelected(){return fixedTrajectory;},set fixedFrame(value){fixedFrame=value;},drawFixedWorld,activateTab,renderCompetence,renderCompetenceComparison,selectCompetenceTrajectory,drawCompetenceWorld,loadData,renderSupervised,get supervised(){return supervised;},get supervisedSelected(){return supervisedTrajectory;},drawSupervisedWorld,set supervisedFrame(value){supervisedFrame=value;},get competence(){return competence;},get selected(){return competenceTrajectory;},get condition(){return competenceCondition;},set frame(value){competenceFrame=value;}};})()`,context);
+await vm.runInContext(`(async()=>{${source}\n globalThis.labDebug={get robustness(){return robustnessData();},renderRobustness,get robustnessSelected(){return robustnessTrajectory;},set robustnessFrame(value){robustnessFrame=value;},drawRobustnessWorld,get coverageStudies(){return coverageStudies;},get coverage(){return coverage;},renderCoverage,get coverageSelected(){return coverageTrajectory;},set coverageFrame(value){coverageFrame=value;},drawCoverageWorld,get fixed(){return fixed;},renderFixed,get fixedSelected(){return fixedTrajectory;},set fixedFrame(value){fixedFrame=value;},drawFixedWorld,activateTab,renderCompetence,renderCompetenceComparison,selectCompetenceTrajectory,drawCompetenceWorld,loadData,renderSupervised,get supervised(){return supervised;},get supervisedSelected(){return supervisedTrajectory;},drawSupervisedWorld,set supervisedFrame(value){supervisedFrame=value;},get competence(){return competence;},get selected(){return competenceTrajectory;},get condition(){return competenceCondition;},set frame(value){competenceFrame=value;}};})()`,context);
 const get=id=>elements.get(id),debug=sandbox.labDebug;
 assert.equal(get('adaptation-content').hidden,false,'Existing adaptation data render');
 assert.equal(get('provenance-content').hidden,false,'Existing provenance data render');
@@ -66,9 +69,77 @@ assert(get('provenance-bars').innerHTML.includes('bar-row'),'Existing provenance
 const expectedMissing=[];if(missingSupervised)expectedMissing.push('data/supervised.json');if(missingFixed || (!fixedPath&&!fs.existsSync(path.join(root,'dashboard/data/fixed_targets.json'))))expectedMissing.push('data/fixed_targets.json');
 if(missingCoverage || (!coveragePath&&!fs.existsSync(path.join(root,'dashboard/data/coverage.json'))))expectedMissing.push('data/coverage.json');
 if(missingEqualSupport || (!equalSupportPath&&!fs.existsSync(path.join(root,'dashboard/data/equal_support.json'))))expectedMissing.push('data/equal_support.json');
+if(missingPanels || (!panelsPath&&!fs.existsSync(path.join(root,'dashboard/data/panel_evaluation.json'))))expectedMissing.push('data/panel_evaluation.json');
 const unexpectedErrors=(get('load-status').textContent || '').split(' · ').filter(text=>text.includes('Could not load')&&!expectedMissing.some(path=>text.includes(path)));assert.deepEqual(unexpectedErrors,[],'No unexpected data errors');
 assert.equal(get('tab-coverage').attributes['aria-selected'],'true','Experience coverage is the default track');
-assert.equal(get('coverage-study').value,'equal_support','Equal-size banks is the default coverage study');
+assert.equal(get('coverage-study').value,'panel_evaluation','Panel robustness is the default research study');
+if(debug.robustness?.aggregate?.length){
+ const data=debug.robustness,conditions=['collected_unique','uniform_subset','exhaustive'],panels=data.protocol.panels.map(p=>p.id),label=c=>({collected_unique:'Collected unique states',uniform_subset:'Uniform subset',exhaustive:'Exhaustive states'}[c]);
+ assert.equal(get('robustness-view').hidden,false);assert.equal(get('robustness-content').hidden,false);assert.equal(get('coverage-content').hidden,true);assert.equal(get('coverage-learning-intro').hidden,true);
+ const chartIds=['robustness-success-chart','robustness-efficient-chart','robustness-steps-chart','robustness-difference-chart'];
+ for(const id of chartIds){assert(get(id).innerHTML.includes('<svg'));assert(!get(id).innerHTML.includes('Optimizer updates'),'Frozen evaluation has no learning axis');}
+ for(const panel of panels)assert(get('robustness-success-chart').innerHTML.includes('P'+(Number(panel.split('_').at(-1))+1)));
+ assert(get('robustness-success-chart').innerHTML.includes('70.0% historical reference'));assert(get('robustness-efficient-chart').innerHTML.includes('80.0% historical reference'));
+ const verifyRobustnessValues=mode=>{
+  const values=[...get('robustness-outcomes').innerHTML.matchAll(/<b>([^<]*)<\/b>/g)].map(m=>m[1]);
+  const expected=conditions.flatMap(condition=>{const r=data.aggregate.find(r=>r.condition===condition && r.panel==='all' && r.mode===mode);return [(100*r.success_rate).toFixed(1)+'%',(100*r.efficient_success_rate).toFixed(1)+'%',r.mean_steps.toFixed(1)];});
+  assert.deepEqual(values,expected,'Pooled frozen-policy outcomes match selected mode');
+  for(const condition of conditions)for(const key of ['success_rate','efficient_success_rate','mean_steps']){
+   const rows=data.aggregate.filter(r=>r.condition===condition && r.panel!=='all' && r.mode===mode),values=rows.map(r=>r[key]),format=v=>key==='mean_steps'?v.toFixed(1):(100*v).toFixed(1)+'%';
+   assert(get('robustness-outcomes').innerHTML.includes(`Panel range ${format(Math.min(...values))}–${format(Math.max(...values))}`),'Panel range matches saved panel means');
+  }
+ };
+ verifyRobustnessValues('greedy');
+ if(data.descriptive_thresholds.eligible){
+  const summary=data.robustness.per_comparison.find(r=>r.comparison==='uniform_minus_collected' && r.mode==='greedy').metrics.efficient_success_rate_delta;
+  assert(get('robustness-difference-caption').textContent.includes(`positive in ${summary.positive_panels} panels, negative in ${summary.negative_panels}, tied in ${summary.zero_panels}`),'Saved tolerance-aware sign counts displayed');
+  for(const r of data.descriptive_thresholds.per_condition){assert(get('robustness-threshold-table').innerHTML.includes(`${r.success_reference_panels} / ${r.panels}`));assert(get('robustness-threshold-table').innerHTML.includes(`${r.efficiency_reference_panels} / ${r.panels}`));}
+ }else{assert(get('robustness-threshold-table').innerHTML.includes('Not eligible'));assert(!get('robustness-difference-caption').textContent.includes('positive in'));}
+ // Exercise the eligible presentation branch with the same saved summaries in memory.
+ const initialProtocol=data.protocol,initialRun=data.run,initialThresholds=data.descriptive_thresholds;
+ data.protocol={...initialProtocol,smoke:false,deviations:[]};data.run={...initialRun,status:'complete'};data.descriptive_thresholds={...initialThresholds,eligible:true};debug.renderRobustness();
+ const declaredSummary=data.robustness.per_comparison.find(r=>r.comparison==='uniform_minus_collected' && r.mode==='greedy').metrics.efficient_success_rate_delta;
+ assert(get('robustness-difference-caption').textContent.includes(`positive in ${declaredSummary.positive_panels} panels, negative in ${declaredSummary.negative_panels}, tied in ${declaredSummary.zero_panels}`),'Eligible branch reads declared sign counts instead of recomputing zero tolerance');
+ data.protocol=initialProtocol;data.run=initialRun;data.descriptive_thresholds=initialThresholds;debug.renderRobustness();
+ const threshold=get('robustness-threshold-table').innerHTML;
+ get('robustness-epsilon').value='epsilon_0_1';get('robustness-epsilon').listeners.change();verifyRobustnessValues('epsilon_0_1');
+ assert.equal(get('robustness-threshold-table').innerHTML,threshold,'Historical reference counts remain greedy');
+ assert(get('robustness-difference-caption').textContent.includes('greedy episodes only'));assert(get('robustness-difference-chart').innerHTML.includes('No complete measurements'),'No fabricated epsilon paired result');
+ const savedRun=data.run,savedThresholds=data.descriptive_thresholds;
+ for(const [status,phrase] of [['incomplete_admission_cap','Incomplete evaluation'],['inconsistent_not_evidence','Consistency check failed'],['complete','Smoke or protocol-deviation evaluation']]){
+  data.run={...savedRun,status,stop_reason:'Literal <failure> & reason'};data.descriptive_thresholds={...savedThresholds,eligible:false};debug.renderRobustness();assert(get('robustness-note').textContent.includes(phrase));assert(get('robustness-threshold-table').innerHTML.includes('Not eligible'));
+ }
+ const savedAggregate=data.aggregate;data.aggregate=[];debug.renderRobustness();assert.equal(get('robustness-content').hidden,true);for(const id of chartIds)assert.equal(get(id).innerHTML,'');
+ data.run={...savedRun,status:'inconsistent_not_evidence',stop_reason:'Literal <failure> & reason'};debug.renderRobustness();assert(get('robustness-empty-message').textContent.includes('Literal <failure> & reason'));
+ data.aggregate=savedAggregate;data.run=savedRun;data.descriptive_thresholds=savedThresholds;debug.renderRobustness();
+ let recordings=0;
+ for(const row of data.trajectories){
+  get('robustness-epsilon').value=row.policy==='learner'?row.mode:'greedy';get('robustness-epsilon').listeners.change();
+  get('robustness-replay-panel').value=row.panel;get('robustness-replay-panel').listeners.change();
+  get('robustness-replay-controller').value=row.policy==='learner'?row.condition:row.policy;get('robustness-replay-controller').listeners.change();
+  get('robustness-replay-seed').value=String(row.seed);get('robustness-replay-seed').listeners.change();
+  assert.equal(debug.robustnessSelected,row,'Every frozen-policy recording reachable');
+  if(row.steps.length){assert(get('robustness-step-diagnostics').innerHTML.includes('Decision for step 1'));if(row.policy==='learner')assert(get('robustness-step-diagnostics').innerHTML.includes('Learned Q'));debug.robustnessFrame=row.steps.length;debug.drawRobustnessWorld();assert(get('robustness-step-diagnostics').innerHTML.includes('Decision for step '+row.steps.length));}
+  assert(get('robustness-world-caption').textContent.startsWith('Rule A'));recordings++;
+ }
+ for(const mode of ['greedy','epsilon_0_1'])for(const panel of panels)for(const condition of conditions){
+  get('robustness-epsilon').value=mode;get('robustness-epsilon').listeners.change();get('robustness-replay-panel').value=panel;get('robustness-replay-panel').listeners.change();get('robustness-replay-controller').value=condition;get('robustness-replay-controller').listeners.change();
+  assert.equal(debug.robustnessSelected.panel,panel);assert.equal(debug.robustnessSelected.condition,condition);assert.equal(debug.robustnessSelected.mode,mode);
+  for(const c of conditions)assert(get('robustness-reference-bars').innerHTML.includes(label(c)));
+ }
+ get('robustness-replay-reset').listeners.click();get('robustness-replay-play').listeners.click();assert.equal(intervals.size,1);intervals.values().next().value();assert.equal(get('robustness-replay-step').textContent,`1 / ${debug.robustnessSelected.steps.length}`);
+ if(intervals.size)get('robustness-replay-play').listeners.click();assert.equal(intervals.size,0);
+ get('robustness-replay-scrub').listeners.input({target:{value:String(debug.robustnessSelected.steps.length)}});assert(get('robustness-replay-step').textContent.startsWith(String(debug.robustnessSelected.steps.length)));
+ get('robustness-replay-play').listeners.click();const tick=intervals.values().next().value;for(let i=0;i<debug.robustnessSelected.steps.length;i++)tick();assert.equal(intervals.size,0);
+ get('robustness-replay-reset').listeners.click();get('robustness-replay-play').listeners.click();get('coverage-study').value='equal_support';get('coverage-study').listeners.change();assert.equal(intervals.size,0);assert.equal(get('robustness-view').hidden,true);
+ get('coverage-study').value='panel_evaluation';get('coverage-study').listeners.change();assert.equal(get('robustness-view').hidden,false);assert.equal(debug.robustnessSelected.panel,panels[0],'Returning to frozen study selects first declared panel');
+ await get('refresh').listeners.click();assert.equal(get('robustness-content').hidden,false);
+ console.log(`Panel robustness: ${data.aggregate.length} aggregate rows, ${panels.length} panels, all ${recordings} recordings, pooled/range/sign/threshold checks, both action modes, no epsilon paired fabrication, incomplete/inconsistent/smoke/empty branches and playback/study-switch/refresh passed.`);
+}else{
+ assert.equal(get('robustness-view').hidden,false);assert.equal(get('robustness-content').hidden,true);assert.equal(get('robustness-empty').hidden,false);assert.equal(get('coverage-content').hidden,true);
+ console.log('Missing panel robustness stays empty; no prior-study result substituted.');
+}
+
 for(const studyKey of ['equal_support','coverage']){
  get('coverage-study').value=studyKey;get('coverage-study').listeners.change();
  const equal=studyKey==='equal_support',conditions=equal?['collected_unique','uniform_subset']:['exhaustive','collected_unique'];

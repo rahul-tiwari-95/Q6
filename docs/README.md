@@ -4,6 +4,7 @@ The [root README](../README.md) is the entry point for installing and running Q6
 
 ## Current experiments
 
+- [Frozen-policy panel protocol](experiments/panel_evaluation_protocol_v1.md): evaluate nine archived policies on eight new disjoint 64-map panels, without training, support changes or a new competence gate.
 - [Equal-size bank protocol](experiments/equal_support_protocol_v1.md), [result](experiments/equal_support_results_v1.md) and [validation](validation/equal-support-v1.md): primary fresh success is close, while uniform support improves route efficiency. Identical collected weights score differently across panels; next is a frozen-policy evaluation across multiple new panels.
 - [Experience-coverage protocol](experiments/coverage_protocol_v1.md), [result](experiments/coverage_results_v1.md) and [validation](validation/coverage-v1.md): exhaustive DDQN reaches 80.21% fresh success versus 68.23% from collected unique states, despite better familiar-start success in the collected arm. The subsequent equal-size study separates row count from combined composition.
 - [Fixed-data target protocol](experiments/fixed_targets_protocol_v1.md), [result](experiments/fixed_targets_results_v1.md) and [validation](validation/fixed-targets-v1.md): exact and Double DQN targets both pass fresh success under matched coverage; DDQN improves efficient success, but both miss the stricter efficiency and every-seed fit diagnostics. The later coverage study tests that procedure under collected current-state support.

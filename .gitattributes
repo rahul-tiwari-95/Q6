@@ -8,3 +8,4 @@ dashboard/data/supervised.json linguist-generated=true
 dashboard/data/fixed_targets.json linguist-generated=true
 dashboard/data/coverage.json linguist-generated=true
 dashboard/data/equal_support.json linguist-generated=true
+dashboard/data/panel_evaluation.json linguist-generated=true
