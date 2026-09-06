@@ -53,16 +53,22 @@ def verify_adaptation(folder):
     print(f"{folder.name}: source/protocol hashes and {len(groups)} CSV aggregates verified")
 
 
-def main():
-    for version in ("v1", "v2"):
-        verify_adaptation(ROOT / "experiments/adaptation" / f"pilot_{version}")
-    folder = ROOT / "experiments/provenance/release-pilot-v1"
+def verify_manifest(folder):
     manifest = read_json(folder / "manifest.json")
     if manifest["algorithm"] != "sha256":
         raise ValueError("Unsupported manifest algorithm")
     for name, digest in manifest["files"].items():
         check_hash(folder / name, digest)
-    print(f"Provenance: all {len(manifest['files'])} manifest files verified")
+    print(f"{folder.relative_to(ROOT)}: all {len(manifest['files'])} manifest files verified")
+
+
+def main():
+    for version in ("v1", "v2"):
+        verify_adaptation(ROOT / "experiments/adaptation" / f"pilot_{version}")
+    folder = ROOT / "experiments/provenance/release-pilot-v1"
+    verify_manifest(folder)
+    for manifest in sorted((ROOT / "experiments/competence").glob("*/manifest.json")):
+        verify_manifest(manifest.parent)
 
 
 if __name__ == "__main__":
