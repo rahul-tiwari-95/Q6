@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Watch Q6 agents learn, adapt, and return to earlier worlds. Explore reproducible adaptation and provenance experiments.">
+  <meta name="description" content="Inspect Q6's one-world learning, adaptation, and provenance experiments through saved evaluations and real trajectories.">
   <title>Q6 — Changing Worlds Lab</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="lab.css">
@@ -22,23 +22,63 @@
     <header class="lab-hero">
       <div>
         <p class="eyebrow"><span class="signal-dot"></span> SMALL WORLDS. OBSERVABLE LEARNING.</p>
-        <h1>What survives a<br><em>change of world?</em></h1>
-        <p class="hero-copy">Watch an agent learn a rule, adapt when it changes, and return to what it knew. Every curve here comes from a saved experiment.</p>
+        <h1>Learn one world.<br><em>Then test what changes.</em></h1>
+        <p class="hero-copy">Start with a task an agent can demonstrably learn. Compare familiar and fresh maps before asking what survives a changing world. Every curve comes from a saved experiment.</p>
       </div>
       <aside class="research-note">
         <span class="eyebrow">THE CURRENT QUESTION</span>
-        <p>Can an agent adapt to B<br>without losing competence in A?</p>
+        <p>Can the learner solve A<br>before we change the rules?</p>
         <div class="note-footer"><span class="status-badge">Exploratory pilots</span><button id="refresh" class="text-button">Refresh data ↻</button></div>
         <small id="load-status" role="status">Loading saved experiments…</small>
       </aside>
     </header>
 
     <div class="experiment-tabs" role="tablist" aria-label="Experiment tracks">
-      <button id="tab-adaptation" role="tab" aria-selected="true" aria-controls="adaptation-panel" tabindex="0"><span>01</span> Adaptation & retention</button>
-      <button id="tab-provenance" role="tab" aria-selected="false" aria-controls="provenance-panel" tabindex="-1"><span>02</span> Evidence & decisions</button>
+      <button id="tab-competence" role="tab" aria-selected="true" aria-controls="competence-panel" tabindex="0"><span>01</span> Learn one world</button>
+      <button id="tab-adaptation" role="tab" aria-selected="false" aria-controls="adaptation-panel" tabindex="-1"><span>02</span> Adaptation & retention</button>
+      <button id="tab-provenance" role="tab" aria-selected="false" aria-controls="provenance-panel" tabindex="-1"><span>03</span> Evidence & decisions</button>
     </div>
 
-    <section id="adaptation-panel" role="tabpanel" aria-labelledby="tab-adaptation">
+    <section id="competence-panel" role="tabpanel" aria-labelledby="tab-competence">
+      <div class="competence-intro"><div><p class="eyebrow">A-ONLY / COMPETENCE CHECK</p><h2>How much of the world can it learn?</h2><p>Keep the movement rule fixed. Vary the maps seen during training, then compare familiar and fresh maps under the same evaluation action mode.</p></div><div class="support-preview" aria-label="Three training conditions"><span>1 map</span><span>16 maps</span><span>Streaming maps</span></div></div>
+      <div id="competence-empty" class="empty-panel"><h2>No saved one-world result yet.</h2><p>The study is being prepared. Refresh after it finishes to see measured learning curves, evaluation comparisons, and recorded behavior. Adaptation and provenance results remain available in the other tabs.</p></div>
+      <div id="competence-content" hidden>
+        <div class="study-toolbar"><span id="competence-study-label" class="eyebrow">SAVED EXPERIMENT</span><label class="competence-mode-label">Evaluation actions<select id="competence-epsilon"><option value="greedy">Greedy · ε = 0</option><option value="epsilon_0_1">Exploring · ε = 0.1</option></select></label></div>
+        <div id="competence-gate-note" class="interpretation-note" role="status"></div>
+        <div id="competence-stats" class="stat-grid"></div>
+        <div id="competence-support-cards" class="competence-support-cards" aria-label="Training support comparison"></div>
+        <div class="competence-charts">
+          <article class="lab-panel"><div class="panel-heading"><div><p class="eyebrow">FAMILIAR MAPS</p><h2 id="competence-support-title">Learning on the training support</h2></div></div><div id="competence-support-chart" class="success-chart" role="img" aria-label="Evaluation success on training-support maps by training step"></div><p id="competence-support-caption" class="help-text"></p></article>
+          <article class="lab-panel"><div class="panel-heading"><div><p class="eyebrow">FRESH MAPS</p><h2>What transfers beyond training?</h2></div></div><div id="competence-fresh-chart" class="success-chart" role="img" aria-label="Evaluation success on fresh maps by training step"></div><p id="competence-fresh-caption" class="help-text"></p></article>
+        </div>
+        <div id="competence-curve-legend" class="curve-legend competence-legend"></div>
+        <p id="competence-mode-note" class="help-text competence-mode-note"></p>
+        <div class="observation-grid competence-observation-grid">
+          <article class="lab-panel replay-panel">
+            <div class="panel-heading"><div><p class="eyebrow">WATCH THE BEHAVIOR</p><h2>Inspect a saved episode</h2></div><span id="competence-replay-outcome" class="status-badge">No trajectory selected</span></div>
+            <div class="replay-selectors competence-replay-selectors">
+              <label>Controller<select id="competence-replay-controller"></select></label>
+              <label>Training step<select id="competence-replay-checkpoint"></select></label>
+              <label>Map panel<select id="competence-replay-panel"></select></label>
+              <label>Seed<select id="competence-replay-seed"></select></label>
+            </div>
+            <div class="world-stage"><canvas id="competence-world-canvas" width="560" height="560" role="img" aria-label="Recorded one-world trajectory"></canvas><div id="competence-world-caption" class="world-caption"></div></div>
+            <div class="replay-controls"><button id="competence-replay-play" class="primary-button" aria-label="Play saved one-world trajectory">▶ Play</button><button id="competence-replay-reset" class="icon-button" aria-label="Restart saved one-world trajectory">↺</button><label class="scrub-label"><span class="sr-only">Saved one-world trajectory step</span><input id="competence-replay-scrub" type="range" min="0" max="0" value="0"></label><output id="competence-replay-step">—</output></div>
+            <div class="world-legend"><span><i class="legend-dot agent-dot"></i> Agent</span><span><i class="legend-dot pellet-dot"></i> Pellet</span><span><i class="legend-dot wall-dot"></i> Wall</span><span class="legend-trail">··· Visited path</span></div>
+            <p id="competence-replay-explanation" class="help-text"></p>
+            <div id="competence-step-diagnostics" class="step-diagnostics"></div>
+          </article>
+          <div class="chart-column">
+            <article class="lab-panel"><p class="eyebrow">CHECK THE REFERENCES</p><h2 id="competence-reference-title">Learner, random, and planner</h2><div id="competence-reference-bars" class="diagnostic-bars"></div><p id="competence-reference-caption" class="help-text"></p><div id="competence-policy-diagnostics" class="policy-diagnostics"></div></article>
+            <article class="lab-panel reading-panel"><p class="eyebrow">HYPOTHESES & GATES</p><h3>Separate learning from map coverage.</h3><div id="competence-hypotheses"></div><div id="competence-gates" class="finding-note"></div><div id="competence-gate-results" class="gate-results"></div></article>
+          </div>
+        </div>
+        <article class="lab-panel"><details class="data-details"><summary>Inspect all measured checkpoints</summary><p class="help-text">Optimal-action rate includes only states where finishing is still possible. No-op rate counts actions that do not move the agent. Q error and action regret use the exact finite-horizon reference with the same shaped rewards; they describe errors, not their cause.</p><div class="table-scroll"><table id="competence-table" class="evidence-table"></table></div></details></article>
+        <article class="lab-panel evidence-panel"><div><p class="eyebrow">REPRODUCE & INSPECT</p><h2>Keep the learning claim bounded</h2><p id="competence-method" class="help-text"></p></div><div id="competence-evidence-links" class="evidence-links"><a href="data/competence.json" download>Download displayed data ↓</a></div><details><summary>Scope and limitations</summary><ul id="competence-limitations"></ul></details></article>
+      </div>
+    </section>
+
+    <section id="adaptation-panel" role="tabpanel" aria-labelledby="tab-adaptation" hidden>
       <div class="study-toolbar"><span id="study-label" class="eyebrow">SAVED EXPERIMENT</span><label>Study<select id="study-run"><option value="latest">Latest saved pilot</option><option value="pilot_v1">Pilot v1 · initial budget</option></select></label></div>
       <div class="phase-strip" aria-label="Training sequence">
         <button class="phase-card active" data-phase="after_a"><span class="phase-number">A</span><span><strong>Learn the first world</strong><small>Establish collection competence</small></span><span class="phase-arrow">→</span></button>

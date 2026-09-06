@@ -6,6 +6,7 @@ Run from any directory: python /path/to/Q6/scripts/verify_pilot_artifacts.py
 
 from collections import defaultdict
 import csv
+import gzip
 import hashlib
 import json
 import math
@@ -62,6 +63,49 @@ def verify_manifest(folder):
     print(f"{folder.relative_to(ROOT)}: all {len(manifest['files'])} manifest files verified")
 
 
+def verify_competence(folder):
+    protocol = read_json(folder / "protocol.json")
+    result = read_json(folder / "results.json")
+    check_hash(folder / "protocol.md", protocol["protocol_sha256"])
+    for name, digest in protocol["source_sha256"].items():
+        check_hash(folder / "source" / name, digest)
+    if result["protocol"] != protocol:
+        raise ValueError(f"Results/protocol mismatch: {folder.name}")
+    groups = defaultdict(list)
+    with (folder / "evaluations.csv").open(newline="") as handle:
+        for row in csv.DictReader(handle):
+            if int(row["checkpoint_complete"]):
+                key = (row["condition"], int(row["checkpoint"]), row["panel"], row["mode"])
+                groups[key].append(row)
+    reported = {(r["condition"], r["checkpoint"], r["panel"], r["mode"]): r
+                for r in result["aggregate"]}
+    if groups.keys() != reported.keys():
+        raise ValueError(f"Missing competence groups: {folder.name}")
+    for key, rows in groups.items():
+        summary = reported[key]
+        if summary["episodes"] != len(rows):
+            raise ValueError(f"Episode-count mismatch: {key}")
+        per_seed = defaultdict(list)
+        for row in rows:
+            per_seed[row["seed"]].append(int(row["success"]))
+        rates = [sum(values) / len(values) for values in per_seed.values()]
+        expected = {"success_rate": math.fsum(float(r["success"]) for r in rows) / len(rows),
+                    "mean_steps": math.fsum(float(r["steps"]) for r in rows) / len(rows),
+                    "seed_success_min": min(rates), "seed_success_max": max(rates),
+                    "seeds": len(per_seed),
+                    "winnable_steps": sum(int(r["winnable_steps"]) for r in rows)}
+        for metric, value in expected.items():
+            if not math.isclose(value, summary[metric], rel_tol=1e-12, abs_tol=1e-12):
+                raise ValueError(f"Competence aggregate mismatch: {key} {metric}")
+    log = folder / Path(result["artifacts"]["training"]).name
+    opener = gzip.open if log.suffix == ".gz" else open
+    with opener(log, "rt", newline="") as handle:
+        logged_steps = sum(int(row["steps"]) for row in csv.DictReader(handle))
+    if logged_steps != result["run"]["train_steps"]:
+        raise ValueError("Training transitions do not match the episode log")
+    print(f"{folder.name}: {len(groups)} competence CSV aggregates and {logged_steps} training transitions verified")
+
+
 def main():
     for version in ("v1", "v2"):
         verify_adaptation(ROOT / "experiments/adaptation" / f"pilot_{version}")
@@ -69,6 +113,8 @@ def main():
     verify_manifest(folder)
     for manifest in sorted((ROOT / "experiments/competence").glob("*/manifest.json")):
         verify_manifest(manifest.parent)
+        if (manifest.parent / "protocol.json").exists():
+            verify_competence(manifest.parent)
 
 
 if __name__ == "__main__":
