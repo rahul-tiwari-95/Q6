@@ -1,0 +1,107 @@
+# Contributing to Q6
+
+Useful contributions make an experiment easier to reproduce or its interpretation easier to test. Start with a small issue or pull request describing the observed behavior, the proposed change, and how you checked it. Include the failing seed and command for a bug. For a larger experiment, use the template below before spending the training budget.
+
+## Development setup
+
+Use Python 3.10+ in a virtual environment and work from the repository root:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e '.[dev]'
+```
+
+Runtime dependency bounds live in `pyproject.toml`; `requirements.txt` and `requirements-dev.txt` are compatibility installers for this checkout. The `test` extra contains pytest and SciPy (used to check the custom statistics against a reference implementation). The `dev` extra adds build and metadata-checking tools. These are compatibility ranges, not an exact reproduction lock: preserve the resolved environment with each published experiment.
+
+## Tests
+
+The fast lane excludes exactly three existing training-heavy cases. It keeps environment, replay, agent-update, statistics, orchestration, and new compact experiment checks. To reproduce the seeded, single-thread CPU setup used in CI:
+
+```bash
+PYTHONHASHSEED=0 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python - <<'PY'
+import random
+import sys
+import numpy as np
+import pytest
+import torch
+
+random.seed(0)
+np.random.seed(0)
+torch.manual_seed(0)
+torch.set_num_threads(1)
+sys.exit(pytest.main([
+    "tests", "-q",
+    "--deselect=tests/test_train_phase2.py::test_smoke_run_writes_artifacts",
+    "--deselect=tests/test_no_way_home_smoke.py::test_floored_decay_learner_reliably_avoids_forward_storm_bins",
+    "--deselect=tests/test_no_way_home_smoke.py::test_floored_decay_learner_outcome_is_stable_across_training_amounts",
+]))
+PY
+```
+
+The full lane includes all cases, including five episodes of the legacy CNN self-play trainer and two 50-versus-200-episode tabular-learner checks:
+
+```bash
+PYTHONHASHSEED=0 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python - <<'PY'
+import random
+import sys
+import numpy as np
+import pytest
+import torch
+
+random.seed(0)
+np.random.seed(0)
+torch.manual_seed(0)
+torch.set_num_threads(1)
+sys.exit(pytest.main(["tests", "-q"]))
+PY
+```
+
+GitHub Actions runs the fast lane for pushes and pull requests on Python 3.10 and 3.12. The full lane runs weekly or through **Actions → tests → Run workflow → full_suite**. The workflow describes intended checks; consult the actual run for their status. Seeding makes this CPU check repeatable within an environment, not a promise of identical results across hardware and library versions.
+
+Run focused tests while developing. Run the relevant broader lane before submitting changes to dynamics, observations, rewards, learner updates, persistence, or statistical analysis. Add tests for a meaningful invariant or regression, not just a second copy of the implementation. Do not replace scientific evaluation with a passing smoke test.
+
+## Build a package
+
+```bash
+python -m build
+```
+
+CI builds both an sdist and a wheel, installs the wheel into an isolated target, and checks imports away from the source directory. Package discovery is explicit: it includes `q6`, `no_way_home`, and selected legacy support modules, with the root `config` module retained for compatibility. It excludes experiment outputs and historical training scripts. The static dashboard and legacy trainer commands should be used from the repository checkout.
+
+## Experiment template
+
+Copy this outline into `docs/experiments/<study>.md`. Mark it as a protocol or an exploratory note; use a separate results document when outcomes are available.
+
+```text
+Question and scope:
+Primary hypothesis and outcome:
+Baseline(s) and the one intended change:
+Observations and information available to each policy:
+Calibration/training seeds and budget:
+Untouched evaluation seeds/scenarios and budget:
+Interaction, compute, and wall-clock limits:
+Paired unit of analysis and uncertainty calculation:
+Success criterion, failure criterion, and stopping rule:
+Exact command, configuration, source revision, and environment:
+Expected artifacts and their location:
+Known limitations and possible confounds:
+Post-run deviations from this protocol, with reasons:
+```
+
+Keep calibration, training, and evaluation roles separate. If a seed or result has informed tuning, label it as observed and choose fresh evaluation data. Compare methods under stated interaction and compute budgets. For paired simulations, preserve pairing in the analysis and isolate policy randomness from world randomness. Report per-seed outcomes and distinguish training curves from fixed-policy evaluation.
+
+## Reproduction record and artifacts
+
+For a result intended for others to use, preserve:
+
+- The complete invocation, resolved configuration, commit, dirty-state indicator, seeds, and checkpoint ancestry. A resume run should state what state was restored.
+- Python, package, OS, device, and thread details; include `python -m pip freeze` output and any non-default deterministic settings.
+- Raw per-seed metrics, evaluation trajectories, training curves where relevant, and the script that produces tables and dashboard summaries.
+- A manifest of artifact paths, byte sizes, and SHA-256 hashes. Put large checkpoints in a release artifact or other persistent archive and document retrieval; do not commit credentials or machine-specific absolute paths.
+- A clear status: smoke, exploratory pilot, or a completed comparison under the stated protocol. Include negative results, deviations, and uncertainty.
+
+Use a new output directory for a new experiment. The legacy `training_runs/` directory is intentionally ignored, so its existence on the author's machine is not a public artifact archive. Small curated results under `experiments/` can be committed deliberately; inspect them before adding them. Keep old reports intact and append dated errata when their interpretation changes.
+
+For a pull request, lead with the problem and resulting behavior, then list the relevant checks and remaining limitations. Cite the original methods you build on. Describe assistance and attribution where they matter, and avoid claiming algorithmic novelty from an implementation or renamed component alone.

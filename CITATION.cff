@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use Q6, cite this repository and record the exact commit and experiment artifact."
+type: software
+title: "Q6: Adaptation and provenance in small simulated worlds"
+authors:
+  - family-names: Tiwari
+    given-names: Rahul
+repository-code: "https://github.com/rahul-tiwari-95/Q6"
+url: "https://github.com/rahul-tiwari-95/Q6"
+abstract: >-
+  A research repository for compact neural adaptation experiments,
+  synthetic provenance controls, and the history of a self-play gridworld project.
+keywords:
+  - reinforcement learning
+  - adaptation
+  - simulation
+  - provenance

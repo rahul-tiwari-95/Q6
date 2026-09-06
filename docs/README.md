@@ -1,0 +1,25 @@
+# Documentation
+
+The [root README](../README.md) is the entry point for installing and running Q6.
+
+## Current experiments
+
+- [Current adaptation protocol](experiments/adaptation_protocol_v2.md): the one follow-up with ten times v1's training budget and a fresh evaluation panel.
+- [Adaptation v2 report](experiments/adaptation_pilot_v2.md), [raw results](../experiments/adaptation/pilot_v2/results.json), and [diagnostics](../experiments/adaptation/pilot_v2/diagnostics.json): 1.08 million transitions, 31.25% initial A evaluation success, and a failed 70% competence gate. The post-hoc random/planner checks diagnose feasibility; they do not establish forgetting or recovery.
+- [Provenance protocol](experiments/provenance-protocol.md): independently calibrated counting controls and held-out scenarios.
+- [Provenance errata](experiments/provenance-errata.md): limits and corrections to earlier results.
+- [Roadmap](roadmap.md): what the current experiments need to show before increasing scope.
+- [Contributing](../CONTRIBUTING.md): test lanes, experiment template, and reproduction records.
+
+## History and interpretation
+
+- [September 2026 review](../research_review/2026-09-05/README.md) separates implemented behavior, observed results, and untested explanations.
+- [Archived adaptation pilot v1](experiments/adaptation_pilot_v1.md) and [its original protocol](experiments/adaptation_protocol_v1.md) preserve the initial 108,000-transition result. V2 is the final tuning run in this milestone.
+- [Versions](../versions/README.md) and [articles](../articles/) record the original Krishna–Hunter self-play experiments, including failures.
+- [No Way Home results index](../no_way_home/results/README.md) preserves the earlier synthetic-world findings. Consult the current errata before quoting them.
+- [Original Q6 narrative](../Q6.md), [No Way Home design](../Q6%20No%20Way%20Home.md), and [archive](../archive/README.md) are historical context, not current specifications.
+- [Longer-memory notes](../longer_memory/README.md) are an old backlog. The current dashboard uses static files, not the Flask/PostgreSQL system proposed there.
+
+## Tools
+
+The dashboard is served from this checkout with `python3 -m http.server 8080 --bind 127.0.0.1`; open `/dashboard/lab.html` for current results and `/dashboard/index.html` for historical summaries. [`dashboard/scan.py`](../dashboard/scan.py) indexes local legacy runs. The [orchestrator](../orchestrator/README.md) supervises local training processes using their documented output and resume conventions.

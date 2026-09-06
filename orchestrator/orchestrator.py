@@ -110,6 +110,7 @@ class JobState:
     log_path: Optional[Path] = None
     proc: Optional[subprocess.Popen] = field(default=None, repr=False)
     _log_fh: Optional[Any] = field(default=None, repr=False)
+    _launch_log_offset: int = field(default=0, repr=False)
 
     def to_status_dict(self) -> Dict[str, Any]:
         return {
@@ -280,6 +281,10 @@ class Orchestrator:
 
         job.log_path = self.log_dir / f"{job.spec.id}.log"
         job._log_fh = open(job.log_path, "a", buffering=1)
+        # A reused job id can leave an older run_dir in this append-only log.
+        # Parse only output from this launch, including while the new process
+        # has not printed its own run_dir yet.
+        job._launch_log_offset = job._log_fh.tell()
         cmd = self._build_command(job)
         mode = "resume" if job.run_dir else "fresh start"
         job._log_fh.write(
@@ -304,12 +309,14 @@ class Orchestrator:
         if job.run_dir or not job.log_path or not job.log_path.exists():
             return
         try:
-            text = job.log_path.read_text(errors="ignore")
+            with job.log_path.open("rb") as fh:
+                fh.seek(job._launch_log_offset)
+                text = fh.read().decode(errors="ignore")
         except OSError:
             return
-        m = _RUN_DIR_RE.search(text)
-        if m:
-            job.run_dir = m.group(1)
+        matches = _RUN_DIR_RE.findall(text)
+        if matches:
+            job.run_dir = matches[-1]
 
     def _extract_progress(self, job: JobState) -> None:
         if not job.log_path or not job.log_path.exists():
@@ -564,7 +571,8 @@ def main() -> int:
     log_dir, status_path = default_paths(args.config, args.log_dir, args.status_file)
     orch = build_orchestrator(config, log_dir, status_path, config_path=args.config)
     orch.run()
-    return 0
+    # Expose a failed child to shell scripts and CI as well as the status JSON.
+    return 1 if any(job.status == "failed" for job in orch.jobs) else 0
 
 
 if __name__ == "__main__":

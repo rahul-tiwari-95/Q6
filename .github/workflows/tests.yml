@@ -1,0 +1,123 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      full_suite:
+        description: Run the full suite, including long training tests
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    - cron: '23 6 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONHASHSEED: '0'
+  OMP_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+  MPLBACKEND: Agg
+
+jobs:
+  fast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install CPU dependencies and editable package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install 'torch>=2.3,<3' --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e '.[dev]'
+      - name: Seeded unit and compact integration checks
+        run: |
+          python - <<'PY'
+          import random
+          import sys
+          import numpy as np
+          import pytest
+          import torch
+          random.seed(0)
+          np.random.seed(0)
+          torch.manual_seed(0)
+          torch.set_num_threads(1)
+          sys.exit(pytest.main([
+              "tests", "-q",
+              "--deselect=tests/test_train_phase2.py::test_smoke_run_writes_artifacts",
+              "--deselect=tests/test_no_way_home_smoke.py::test_floored_decay_learner_reliably_avoids_forward_storm_bins",
+              "--deselect=tests/test_no_way_home_smoke.py::test_floored_decay_learner_outcome_is_stable_across_training_amounts",
+          ]))
+          PY
+      - name: Build and install wheel away from source
+        if: matrix.python == '3.12'
+        run: |
+          python -m build --outdir "$RUNNER_TEMP/q6-dist"
+          python -m pip install --no-deps --target "$RUNNER_TEMP/q6-installed" "$RUNNER_TEMP"/q6-dist/*.whl
+          cd "$RUNNER_TEMP"
+          PYTHONPATH="$RUNNER_TEMP/q6-installed" python - <<'PY'
+          import os
+          from importlib.metadata import version
+          from pathlib import Path
+          import q6
+          import config
+          import no_way_home.channels
+          import orchestrator.orchestrator
+          from q6 import CollectionWorld, WorldConfig
+          expected = Path(os.environ["RUNNER_TEMP"]) / "q6-installed"
+          assert Path(q6.__file__).is_relative_to(expected)
+          assert Path(config.__file__).is_relative_to(expected)
+          assert version("q6-research")
+          print("Installed wheel imports passed")
+          PY
+
+  full:
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.full_suite)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install CPU dependencies and editable package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install 'torch>=2.3,<3' --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e '.[dev]'
+      - name: All tests, including long training checks
+        run: |
+          python - <<'PY'
+          import random
+          import sys
+          import numpy as np
+          import pytest
+          import torch
+          random.seed(0)
+          np.random.seed(0)
+          torch.manual_seed(0)
+          torch.set_num_threads(1)
+          sys.exit(pytest.main(["tests", "-q"]))
+          PY

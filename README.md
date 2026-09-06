@@ -1,300 +1,77 @@
-# Q6 — Kṛṣṇa vs Hunter: Deep RL Self-Play
+# Q6
 
-A two-agent reinforcement learning project where **Kṛṣṇa** (a pellet-collecting agent) and **Hunter** (a chasing agent) both learn entirely through self-play. The central research question: when a reward function says "complete the objective" but the training distribution says "the objective is dangerous," does the agent learn to do the objective, or does it learn to avoid the danger and call that a win? See [`Q6.md`](Q6.md) for the full research narrative and roadmap.
+**Small, inspectable experiments in learning across changing worlds.**
 
-Built with PyTorch. Phase 1–2 use Double DQN + Dueling networks + Fictitious Self-Play (FSP). Phase 3 adds a Gated Option Policy network (dual evade/collect heads) and Counterfactual Hindsight Experience Replay (CHER). `v8` is an independent PPO port of the same environment, for a structural DQN-vs-PPO comparison — see below.
+Q6 studies how a neural agent adapts when a task changes, and what it retains when an earlier task returns. The main experiment follows **A → B → A** in a compact collection world. A separate No Way Home experiment compares ways of counting repeated evidence in a synthetic resource-allocation task.
 
-> **For researchers and collaborators:** See [`versions/`](versions/README.md) for the research log up to v6 on this branch. The deeper Phase 3 ablation work (rectified opponent sampling, floor tuning) lives on the `v7-ablations` branch — see its own [`versions/README.md`](https://github.com/rahul-tiwari-95/Q6/blob/v7-ablations/versions/README.md) for that thread. Write-ups intended for a general audience are in [`articles/`](articles/). The live dashboard at `http://localhost:8080/dashboard/versions.html` shows run data interactively.
+This is a public research preview; a license has not yet been selected. Its earlier Krishna–Hunter self-play work, failed experiments, and methodological corrections remain available as a research history.
 
----
+**Latest finding:** [pilot v2](docs/experiments/adaptation_pilot_v2.md) completed **1,080,000 training transitions** across three seeds and A → B → A, but mean A success after initial training was **31.25%**, below the predeclared **70% competence gate**. [Post-hoc diagnostics](experiments/adaptation/pilot_v2/diagnostics.json) on the same A evaluation panel gave **41.67%** for seeded random actions and **100%** for a shortest-path controller. This is a failed competence check; it does not establish forgetting or recovery. The next milestone is reliable initial-task learning before adding memory or a new architecture.
 
-## Quick Start
+## Start on CPU
 
-```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-
-# Verify everything works
-python -m pytest tests/ -q              # 221 tests
-
-# Phase 1: Krishna learns vs scripted A* Hunter
-python3 train_v2.py --episodes 6000 --device mps
-
-# Phase 2: both agents learn via self-play (DQN)
-python3 train_phase2.py --episodes 6000 --device mps --name my_run
-
-# Phase 3: Gated Option Policy + CHER (see Q6.md for the research context)
-python3 train_phase3.py --episodes 6000 --device mps --name my_run
-
-# Visualise results in browser
-python3 dashboard/scan.py
-python3 -m http.server 8080
-# open http://localhost:8080/dashboard/
-```
-
-Long training runs (Phase 3 and later commonly run 6,000+ episodes over many hours) support checkpoint/resume and can be supervised by a small crash-restart daemon — see [`orchestrator/README.md`](orchestrator/README.md) for running multiple jobs unattended.
-
----
-
-
-## The Game
-
-25×25 gridworld with walls (~20% density). Krishna collects 4 pellets to win. Hunter catches Krishna 3 times to win. Episodes end on win, hunter-win, or 1000-step timeout.
-
-```
-Grid cell IDs:  WALL=0  PELLET=1  KRISHNA=2  HUNTER=3  EMPTY=6
-Actions:        UP=0    DOWN=1    LEFT=2     RIGHT=3
-```
-
----
-
-## Phase 1 — Krishna vs Scripted Hunter
-
-Krishna learns with a DQNv2 agent against a progressively harder scripted Hunter (random → greedy → A*).
-
-**Network architecture** (`model/cnn_q_network.py`):
-- Input: 6-channel 25×25 binary tensor (one channel per cell type)
-- Conv: 32 filters (3×3) → 64 filters (3×3), ReLU
-- FC: 256 hidden → Dueling heads: Value V(s) + Advantage A(s,a)
-- Output: Q(s,a) for 4 actions
-
-**Training:**
-- Double DQN (decouple action selection from value estimation)
-- Soft target update τ=0.001, Huber loss, Adam lr=1e-4
-- ε-greedy: 1.0 → 0.05 at rate 0.9994/episode
-- Replay buffer: 100k transitions, batch 64, update every 4 steps
-
-**Result:** 85% win rate vs A* Hunter at 6000 episodes. (`tag: phase1-complete`)
-
----
-
-## Phase 2 — Self-Play with Fictitious Self-Play (FSP)
-
-Both Krishna and Hunter are live DQNv2 agents learning simultaneously.
-
-### What is FSP?
-
-Without FSP, two agents co-training will cycle: Krishna learns to beat the current Hunter, Hunter adapts, Krishna adapts back — policy cycling with no convergence. FSP breaks this by maintaining a historical snapshot pool.
-
-Each episode is one of two modes:
-
-- **Joint** (70%): Both agents step, observe, and learn from the same episode. Policies improve against each other's current strategy.
-- **FSP** (30%): Krishna plays against a *frozen historical snapshot* of Hunter sampled from the pool. This forces Krishna to generalise across Hunter's full learning history, not just beat the current version.
-
-Hunter snapshots are saved every 100 episodes (max 20, FIFO eviction → `pool/pool_index.json`).
-
-### Reward design
-
-**Krishna** needs both pellet skill and evasion — two competing pressures:
-
-| Signal | Value | Why |
-|---|---|---|
-| Collect pellet | +50 | Primary objective |
-| Win (4 pellets) | +100 | Terminal |
-| Caught | −10 | Avoid Hunter |
-| Lose (0 lives) | −50 | Terminal penalty |
-| Step | −0.001 | Efficiency pressure |
-| Proximity shaping | ±0.3 × Δd | Dense gradient toward nearest pellet |
-
-**Hunter** has a single objective — chase:
-
-| Signal | Value | Why |
-|---|---|---|
-| Catch | +30 | Primary objective |
-| Win (3 catches) | +50 | Terminal |
-| Krishna wins | −50 | Terminal penalty |
-| Step | −0.001 | Efficiency pressure |
-| Chase shaping | +0.1 × Δd | Dense gradient toward Krishna |
-
-Wall hits carry **zero penalty** (`K_WALL=0`). A non-zero penalty (tried −5, then −1) created a pathological local attractor: the greedy policy learned to press into a corner wall for entire episodes, because the penalty was still lower than the expected cost of moving toward an aggressive Hunter. Zero penalty removes the attractor entirely while walls remain physically impassable.
-
-### Epsilon decay calibration
-
-With 6000 episodes and `ε_min=0.05`:
-
-$$\text{decay} = \left(\frac{0.05}{1.0}\right)^{1/5000} \approx 0.9994$$
-
-The old default of 0.9999 would leave ε≈0.55 at episode 6000 — the agent never exits exploration. At 0.9994, ε reaches the floor at episode ~5000, leaving 1000 episodes of near-pure exploitation.
-
-### What actually emerged (v3 run, 6k episodes)
-
-- **Both networks learned**: hunter_loss was nonzero from episode 10 onward (was flat 0.000 without approach shaping — Hunter had no dense gradient without it)
-- **Krishna's first win**: episode 279 (vs episode 1049 in the previous run without fixes)
-- **Hunter converged fast**: aggressive catch behaviour by ep ~500; catching in under 300 steps by ep 3000
-- **Red Queen dynamics**: Krishna win 4% overall, 11% in the final 28 episodes as both ε values reached floor — late-game improvement confirms genuine learning, not luck
-- **Remaining noise**: ~3.6% of episodes were catastrophic wall-hugging collapses (r_k ≤ −800); fixed in v4 with K_WALL=0
-
----
-
-## Phase 3 and beyond — GOP+CHER, reward redesign, and the DQN-vs-PPO comparison
-
-Phase 2 (v4) hit a **bimodal collapse**: pure evasion, zero collection, no in-between — the clearest sign that Krishna faced two competing objectives it couldn't hold at once. Phase 3 (`train_phase3.py`) answers this with a **Gated Option Policy** network: separate evade/collect heads plus a learned gate deciding which to trust, combined with **Counterfactual Hindsight Experience Replay (CHER)** — a synthetic teaching signal that shows the agent what it should have done in moments it judges to have been safe to collect. See [`versions/v5_phase3_gop_cher.md`](versions/v5_phase3_gop_cher.md) for the architecture and first results.
-
-From there the research question sharpened into: is collection paralysis a live-reward problem, a training-distribution problem, or both? That thread — reward redesign (v7), rectified opponent sampling, and floor-tuning ablations — lives on the **`v7-ablations`** branch, with each experiment pre-registered before running and written up (including the ones that failed) in that branch's `versions/`. Two of those are also distilled into general-audience write-ups in [`articles/`](articles/).
-
-**`v8`** (own branch) is an independent PPO port of the identical environment, reward, and opponent-pool design — the only variable changed is DQN → PPO. The question: is the risk-dominant collapse this project keeps rediscovering a property of DQN's stale-replay-buffer mechanics specifically, or of the game's payoff structure generally, which an on-policy algorithm would hit too. See `Q6.md` §3 for the full reasoning.
-
----
-
-## Repository Layout
-
-```
-Q6/
-├── agent/
-│   ├── dqn_v2_agent.py       # DQNv2: CNN + Dueling + Double DQN
-│   ├── gated_dqn_agent.py    # Phase 3: Gated Option Policy DQN agent
-│   ├── frozen_agent.py       # Read-only checkpoint opponent for FSP
-│   └── opponent_pool.py      # FSP snapshot pool (FIFO, max 20)
-│   (agent/ppo_agent.py, agent/frozen_ppo_agent.py — PPO variants, on the v8 branch)
-├── environment/
-│   ├── hunter_gridworld.py   # Phase 1 env (scripted Hunter)
-│   └── selfplay_env.py       # Phase 2+ env (Hunter externally controlled)
-├── model/
-│   ├── cnn_q_network.py      # CNN Dueling Q-network (Phase 1-2)
-│   └── gated_option_network.py  # Phase 3: dual evade/collect heads + gate
-│   (model/actor_critic_network.py — PPO actor-critic, on the v8 branch)
-├── utils/
-│   ├── state_encoder.py      # 6-channel binary encoder (shared across phases)
-│   ├── cher.py                # Counterfactual Hindsight Experience Replay (Phase 3)
-│   ├── hierarchical_pool.py   # Two-tier (easy/hard) opponent pool with rectified sampling
-│   ├── replay_recorder.py    # Per-step replay recording for dashboard
-│   └── environment_wrapper.py
-├── dashboard/
-│   ├── scan.py               # Rebuilds index.json from training_runs/ (merge-safe)
-│   ├── index.html            # Run list
-│   ├── run.html              # Per-run metrics (algorithm-aware: DQN/GOP/PPO)
-│   └── replay.html           # Step-by-step replay viewer
-├── orchestrator/
-│   ├── orchestrator.py       # Crash-restart, checkpoint-aware, config-hot-reload daemon
-│   └── q6_jobs.json           # Example multi-job config
-├── versions/                 # Research log — thesis/results/failure-mode per version
-├── articles/                 # General-audience write-ups distilled from versions/
-├── tests/                    # 221 tests (pytest)
-├── train_v2.py               # Phase 1 training
-├── train_phase2.py           # Phase 2 self-play training (DQN)
-├── train_phase3.py           # Phase 3 training (GOP + CHER + hierarchical pool)
-├── verify_phase2.py          # Checkpoint sanity checker
-└── config.py                 # All hyperparameters centralised
-    (train_v8.py — independent PPO self-play training, on the v8 branch)
-```
-
----
-
-## Key Hyperparameters (`config.py`)
-
-| Parameter | Value | Note |
-|---|---|---|
-| `EPSILON_DECAY` | 0.9994 | Per-episode; reaches 0.05 floor ~ep 5000 |
-| `EPSILON_MIN` | 0.05 | 5% random at convergence |
-| `GAMMA` | 0.99 | Discount factor |
-| `TAU` | 0.001 | Soft target update |
-| `LEARNING_RATE` | 1e-4 | Adam |
-| `BATCH_SIZE` | 64 | Replay sample size |
-| `BUFFER_SIZE` | 100,000 | Per-agent replay capacity |
-| `UPDATE_EVERY` | 4 | Steps between gradient updates |
-
----
-
-## Lessons Learned
-
-**1. Reward scale dominates early learning.**
-A wall penalty of −5 completely drowned the pellet signal (+50). The agent learned nothing useful for hundreds of episodes. Reducing to −1 helped; setting to 0 eliminated the problem entirely. When your agent is doing something bizarre, check whether one reward term is an order of magnitude larger than the others.
-
-**2. Dense shaping is not optional for sparse rewards.**
-Without `K_APPROACH=0.3`, Krishna had zero gradient toward pellets for the first 200 episodes — every episode timed out and every update was noise. The shaping reward turns a sparse "collect pellet" signal into a dense continuous gradient that works from episode 1.
-
-**3. Calibrate ε-decay to your episode budget.**
-`decay = (ε_min / ε_start)^(1 / target_episode)`. If you miss this, the agent never exits exploration. This is one of the most common silent failures in DQN experiments.
-
-**4. FSP prevents Nash cycling.**
-Without the historical pool, two co-training agents cycle endlessly: A beats B, B adapts, A adapts, repeat. The pool makes each agent's policy robust to the full distribution of opponent strategies seen so far, not just the latest one.
-
-**5. In asymmetric tasks, the simpler objective wins faster.**
-Hunter (single goal: reduce distance) converged to aggressive chasing by episode 500. Krishna (two competing goals: collect pellets AND evade) was still learning at episode 6000. This is expected and correct — it is the Red Queen dynamic working as designed.
-
----
-
-## Running Tests
+Use Python 3.10 or later; Python 3.12 is a practical starting point. Run commands from the repository root.
 
 ```bash
-python -m pytest tests/ -q                      # all 147 tests
-python -m pytest tests/test_selfplay_env.py -v  # Phase 2 env
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e '.[dev]'
+
+# Short execution check; writes to a new temporary output directory.
+python -m q6.adaptation --output /tmp/q6-adaptation-smoke \
+  --seeds 0 --phase-steps 64 --eval-episodes 2 --max-seconds 30
 ```
 
----
+Choose a fresh `--output` directory when repeating a run. A smoke run checks execution and artifacts; its small training budget does not establish adaptation or retention.
 
-## Monitoring a Training Run
+## Experiments
+
+| Track | Question | Start here |
+| --- | --- | --- |
+| **Adaptation — primary** | Can the compact learner first acquire A reliably enough to study B and recovery of A? | [Current protocol](docs/experiments/adaptation_protocol_v2.md), [`q6/`](q6/) |
+| **Provenance — bounded companion** | Does deduplicating message origins improve decisions compared with independently calibrated raw and decayed counts? | [Protocol](docs/experiments/provenance-protocol.md), [errata](docs/experiments/provenance-errata.md), [`no_way_home/`](no_way_home/) |
+
+Reproduce adaptation pilot v2 in a fresh directory and export its dashboard data:
 
 ```bash
-# Live log tail
-tail -f training_runs/<run_dir>/logs/episode_stats.csv
+python -m q6.adaptation --output experiments/adaptation/my-reproduction \
+  --dashboard dashboard/data/adaptation.json --seeds 0,1,2 \
+  --phase-steps 120000 --eval-episodes 32 --eval-seed-start 910000 \
+  --max-seconds 900 --protocol-file docs/experiments/adaptation_protocol_v2.md
 
-# Quick summary of a completed run
-python3 - <<'EOF'
-import csv, statistics
-rows = list(csv.DictReader(open("training_runs/<run_dir>/logs/episode_stats.csv")))
-last = rows[-500:]
-k = sum(1 for r in last if r["winner"]=="krishna")
-print(f"Last 500: Krishna {k}/500 ({100*k/500:.1f}%)  avg_pellets {statistics.mean(float(r['pellets']) for r in last):.2f}")
-EOF
+# Post-hoc planner/random references; no further training.
+python -m q6.diagnostics --study experiments/adaptation/my-reproduction
 ```
 
+Run the fixed-budget provenance pilot:
 
-TROUBLESHOOTING:
-================
+```bash
+python -m no_way_home.run_provenance_release \
+  --out experiments/provenance/my-reproduction
+```
 
-Problem: "Module not found" error
-Solution: Make sure you activated venv: source venv/bin/activate
+Stored pilots: [adaptation v2](experiments/adaptation/pilot_v2/results.json), [archived v1](docs/experiments/adaptation_pilot_v1.md), and [provenance results](experiments/provenance/release-pilot-v1/RESULTS.md). V2 kept the learner and task fixed, used ten times v1's training budget, and evaluated on a fresh panel; the larger budget also stretched the existing exploration schedule. Both failed the competence gate. The milestone stops here, with no third tuning run. The runners refuse to overwrite an existing study directory; read the protocol before changing its seeds or budget.
 
-Problem: CUDA out of memory
-Solution: Set device="cpu" in main.py (should auto-detect, but just in case)
+## Inspect results
 
-Problem: Training seems stuck (scores not improving after 500 episodes)
-Solution: 
-- Check TRAINING_IMPROVEMENTS.txt for next debugging steps
-- The -0.01 reward is the critical fix - make sure it's in place
-- Watch intermediate metrics (pellets, hits, etc.) - they might be improving
+```bash
+python3 -m http.server 8080 --bind 127.0.0.1
+```
 
-Problem: Can't understand the output
-Solution:
-- Read QUICK_START.txt for output interpretation
-- Watch a few episodes, note the metrics
-- They'll start making sense!
+Open **[the current lab](http://127.0.0.1:8080/dashboard/lab.html)** for learning curves, comparisons, and recorded behavior. The [historical registry](http://127.0.0.1:8080/dashboard/index.html) preserves earlier run summaries. To index legacy training runs available on your machine, run `python dashboard/scan.py` before starting the server.
 
+Historical summaries are not a complete artifact archive: many referenced CSV files, checkpoints, and replays are absent from a fresh checkout. Claims from the earlier reports should be read with the [September 2026 review](research_review/2026-09-05/README.md), which documents confounds, bugs, and unsupported interpretations. The new pilots also need independent seeds and fair baselines before supporting general conclusions. No Way Home is a synthetic decision model, not empirical evidence about human institutions.
 
-NEXT STEPS AFTER FIRST SUCCESSFUL RUN:
-========================================
+## Develop and contribute
 
-If training converges and agent learns to win:
+- [Contribution guide](CONTRIBUTING.md): fast and full test commands, experiment template, and reproducibility requirements.
+- [Documentation index](docs/README.md) and [roadmap](docs/roadmap.md): current scope and criteria for the next experiment.
+- [Training supervisor](orchestrator/README.md): local job logging, crash restart, and resume conventions.
+- [Citation metadata](CITATION.cff): cite the repository and the exact revision/artifact used.
 
-1. Analyze the learned behavior
-   - Which actions does it prefer?
-   - Where does it go on the map?
-   - How does it evade enemies?
+The package installs the current experiment modules and selected legacy support modules. Historical trainer scripts and the dashboard are documented as commands run from this checkout; their APIs are not a stable library contract.
 
-2. Test generalization
-   - Does learned strategy work on different seed?
-   - Can it handle layout variations?
+## Research history
 
-3. Move to MVP 2 "Protean"
-   - Test adaptation to changing environments
-   - Implement continual learning techniques
-
-The path to Kṛṣṇa's eventual mastery begins here!
-
-
-GOOD LUCK!
-==========
-
-You now have a complete, working RL implementation.
-The logging will show you exactly what's happening.
-The code is heavily commented to teach concepts.
-The metrics will prove the agent is learning.
-
-This is real AI learning in action. Enjoy the journey!
-
-Questions? Check the documentation files.
-Something not working? Run validate.py to diagnose.
-Ready to understand the code? Check main.py's comments.
-
-Hari Om 🙏
+The [version index](versions/README.md), [articles](articles/), [original Q6 narrative](Q6.md), [No Way Home design](Q6%20No%20Way%20Home.md), and [archive](archive/README.md) preserve the project's progression. Older ablations and the PPO port live on the [`v7-ablations`](https://github.com/rahul-tiwari-95/Q6/tree/v7-ablations) and [`v8`](https://github.com/rahul-tiwari-95/Q6/tree/v8) branches. These are historical experiments, not interchangeable controlled comparisons. The [`longer_memory/`](longer_memory/README.md) folder contains old planning notes, not an implemented memory architecture.

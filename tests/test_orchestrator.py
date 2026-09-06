@@ -12,6 +12,7 @@ resume-flag construction actually work end to end against a real process.
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -71,6 +72,14 @@ class TestExtractRunDir:
         job = JobState(spec=JobSpec(id="a", cwd=".", command=[]), log_path=tmp_path / "nope.log")
         orch._extract_run_dir(job)  # must not raise
         assert job.run_dir is None
+
+    def test_uses_latest_run_dir_in_current_output(self, tmp_path):
+        log = tmp_path / "job.log"
+        log.write_text("run_dir=/earlier/path\nrun_dir=/current/path\n")
+        orch = Orchestrator(jobs=[], log_dir=tmp_path, status_path=tmp_path / "s.json")
+        job = JobState(spec=JobSpec(id="a", cwd=".", command=[]), log_path=log)
+        orch._extract_run_dir(job)
+        assert job.run_dir == "/current/path"
 
 
 class TestExtractProgress:
@@ -177,6 +186,38 @@ def _poll_until(orch: Orchestrator, job: JobState, predicate, timeout: float = 1
 
 
 class TestIntegrationRealSubprocess:
+    def test_fresh_launch_does_not_recover_an_old_run_from_reused_log(self, tmp_path):
+        gate = tmp_path / "print_new_run"
+        new_run = str(tmp_path / "new_run")
+        script = _write_script(tmp_path, "wait_then_report.py", """
+import sys
+import time
+from pathlib import Path
+for _ in range(500):
+    if Path(sys.argv[1]).exists():
+        break
+    time.sleep(0.01)
+else:
+    sys.exit(2)
+print('run_dir=' + sys.argv[2], flush=True)
+""")
+        log_dir = tmp_path / "logs"
+        log_dir.mkdir()
+        (log_dir / "reused.log").write_text("run_dir=/old/unrelated_run\n")
+        spec = JobSpec(id="reused", cwd=str(tmp_path),
+                       command=[sys.executable, str(script), str(gate), new_run])
+        orch = Orchestrator(jobs=[spec], log_dir=log_dir, status_path=tmp_path / "status.json")
+        job = orch.jobs[0]
+
+        orch._start_job(job)
+        orch._extract_run_dir(job)
+        before_new_output = job.run_dir
+        gate.touch()
+        _poll_until(orch, job, lambda j: j.status == "completed")
+
+        assert before_new_output is None
+        assert job.run_dir == new_run
+
     def test_successful_job_reaches_completed(self, tmp_path):
         script = _write_script(tmp_path, "fake_success.py", _FAKE_SUCCESS)
         run_dir_arg = str(tmp_path / "training_runs" / "fake_run")
@@ -239,6 +280,32 @@ class TestIntegrationRealSubprocess:
         payload = json.loads(status_path.read_text())
         assert payload["jobs"][0]["id"] == "succeeds2"
         assert payload["jobs"][0]["status"] == "completed"
+
+    @pytest.mark.parametrize("child_exit, expected_cli_exit, expected_status", [
+        (0, 0, "completed"),
+        (3, 1, "failed"),
+    ])
+    def test_cli_exit_status_reflects_child_failure(
+        self, tmp_path, child_exit, expected_cli_exit, expected_status
+    ):
+        config = tmp_path / "jobs.json"
+        config.write_text(json.dumps({
+            "poll_interval_seconds": 0.01,
+            "jobs": [{
+                "id": "child", "cwd": str(tmp_path),
+                "command": [sys.executable, "-c", f"raise SystemExit({child_exit})"],
+                "max_restarts": 0,
+            }],
+        }))
+        status = tmp_path / "status.json"
+        cli = Path(__file__).resolve().parents[1] / "orchestrator" / "orchestrator.py"
+        result = subprocess.run(
+            [sys.executable, str(cli), "--config", str(config),
+             "--status-file", str(status)],
+            cwd=tmp_path, capture_output=True, text=True, timeout=10,
+        )
+        assert result.returncode == expected_cli_exit, result.stdout + result.stderr
+        assert json.loads(status.read_text())["jobs"][0]["status"] == expected_status
 
     def test_recovers_run_dir_from_prior_status_file(self, tmp_path):
         # Simulate a previous orchestrator session having written a status
