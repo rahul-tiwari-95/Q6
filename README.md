@@ -1,300 +1,83 @@
-# Q6 — Kṛṣṇa vs Hunter: Deep RL Self-Play
+# Q6
 
-A two-agent reinforcement learning project where **Kṛṣṇa** (a pellet-collecting agent) and **Hunter** (a chasing agent) both learn entirely through self-play. The central research question: when a reward function says "complete the objective" but the training distribution says "the objective is dangerous," does the agent learn to do the objective, or does it learn to avoid the danger and call that a win? See [`Q6.md`](Q6.md) for the full research narrative and roadmap.
+**Learn a world. Change the rules. See what sticks.**
 
-Built with PyTorch. Phase 1–2 use Double DQN + Dueling networks + Fictitious Self-Play (FSP). Phase 3 adds a Gated Option Policy network (dual evade/collect heads) and Counterfactual Hindsight Experience Replay (CHER). `v8` is an independent PPO port of the same environment, for a structural DQN-vs-PPO comparison — see below.
+A pellet. A few walls. Thirty-two moves. Enough room for a neural network to surprise you.
 
-> **For researchers and collaborators:** See [`versions/`](versions/README.md) for the research log up to v6 on this branch. The deeper Phase 3 ablation work (rectified opponent sampling, floor tuning) lives on the `v7-ablations` branch — see its own [`versions/README.md`](https://github.com/rahul-tiwari-95/Q6/blob/v7-ablations/versions/README.md) for that thread. Write-ups intended for a general audience are in [`articles/`](articles/). The live dashboard at `http://localhost:8080/dashboard/versions.html` shows run data interactively.
+Q6 is a research lab for small agents learning across changing worlds. The ambition is simple to describe and difficult to get right: build worlds we can run cheaply, agents whose mistakes we can inspect, and experiments that explain what they learn—and what survives when the rules change.
 
----
+```mermaid
+flowchart LR
+    A["World A<br/>Learn the task"] --> B["World B<br/>Change the rules"]
+    B --> A2["World A returns<br/>What does the agent remember?"]
+```
 
-## Quick Start
+We’re building toward that loop. The first adaptation pilots exposed a more immediate problem: the agent had not reliably learned the starting task. So the current work asks **what experience helps the same small network learn useful behavior across maps?** Memory comes after that foundation.
+
+**Public research preview.** The current code and evidence live on [`q6-adaptation-lab`](https://github.com/rahul-tiwari-95/Q6/tree/q6-adaptation-lab), with integration tracked in [PR #1](https://github.com/rahul-tiwari-95/Q6/pull/1). A license has not yet been selected.
+
+## Start by watching
+
+The dashboard lets you step through a policy’s decisions, see its predicted action values, compare them with exact values, and inspect the experience used for training. The active movement rule is visible from the first frame. Successful runs and awkward failures both stay in the record.
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-
-# Verify everything works
-python -m pytest tests/ -q              # 221 tests
-
-# Phase 1: Krishna learns vs scripted A* Hunter
-python3 train_v2.py --episodes 6000 --device mps
-
-# Phase 2: both agents learn via self-play (DQN)
-python3 train_phase2.py --episodes 6000 --device mps --name my_run
-
-# Phase 3: Gated Option Policy + CHER (see Q6.md for the research context)
-python3 train_phase3.py --episodes 6000 --device mps --name my_run
-
-# Visualise results in browser
-python3 dashboard/scan.py
-python3 -m http.server 8080
-# open http://localhost:8080/dashboard/
+git clone --branch q6-adaptation-lab https://github.com/rahul-tiwari-95/Q6.git
+cd Q6
+python3 -m http.server 8080 --bind 127.0.0.1
 ```
 
-Long training runs (Phase 3 and later commonly run 6,000+ episodes over many hours) support checkpoint/resume and can be supervised by a small crash-restart daemon — see [`orchestrator/README.md`](orchestrator/README.md) for running multiple jobs unattended.
+Open **[the lab](http://127.0.0.1:8080/dashboard/lab.html#coverage)**. No training is required to explore the shipped results.
 
----
+Start with **Experience coverage → Map-balanced replay**. On the first map, bank 1 / seed 0 improves from 30 to 15 steps; seed 2 changes from a 14-step success to failure. Switch learners, then look at the averages. There are **1,402 saved recordings** across the current studies, plus the earlier research dashboards.
 
+## A few things the worlds have taught us
 
-## The Game
+- **A score can change without a single weight changing.** The same set of three collected policies scored 68.2% success on one evaluation panel and 83.9% on another. That prompted prospective evaluation across eight new panels. [Follow the panel story →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/panel_evaluation_results_v1.md)
+- **The amount of experience is only part of the story.** Across three comparisons with size matched within each pair, uniformly selected states improved efficient success by 17.1, 27.7 and 23.3 percentage points over trajectory-collected states. “Efficient” means reaching the goal within twice the shortest-path length, with failures counted. [Inspect the bank comparisons →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/bank_replication_results_v1.md)
+- **A sensible intervention can have a mixed result.** Giving every map equal replay probability improved two banks and harmed one: −3.9, +7.2 and +4.6 efficiency points. Exposure became nearly equal, but some sparse-map states were repeated more than a thousand times. We kept the original replay as the baseline. [Read the latest completed experiment →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/map_replay_results_v1.md)
 
-25×25 gridworld with walls (~20% density). Krishna collects 4 pellets to win. Hunter catches Krishna 3 times to win. Episodes end on win, hunter-win, or 1000-step timeout.
+These are bounded findings from a fully visible toy world and a **20,420-parameter feedforward network**. The offline studies still give the learner transitions for all four actions, including actions the collector did not take. They do not establish online-RL competence, general intelligence or a memory mechanism.
 
-```
-Grid cell IDs:  WALL=0  PELLET=1  KRISHNA=2  HUNTER=3  EMPTY=6
-Actions:        UP=0    DOWN=1    LEFT=2     RIGHT=3
-```
+## Where Q6 is headed
 
----
+| Step | The question | What would count as progress? |
+| --- | --- | --- |
+| **Now: experience composition** | Which states help an agent learn across maps? | Controlled comparisons that preserve the network, training budget and relevant sampling conditions. |
+| **Next: learn from actual experience** | Can useful behavior survive when training uses only recorded actions and transitions? | A reproducible bridge from privileged offline experiments toward online learning. |
+| **Then: adaptation and retention** | What remains when A changes to B and A returns? | Competent starting policies, then fair retained/reset/replay and memory comparisons. |
+| **Make more worlds affordable** | How much simulation and learning can we do with a stated compute budget? | Measured throughput, memory and behavior under sequential and batched execution. |
 
-## Phase 1 — Krishna vs Scripted Hunter
+**The next control is within-map state composition.** Keep each map’s exact state count and the original replay schedule, but change which states fill those slots. That holds map exposure and batch diversity fixed. It has not run yet.
 
-Krishna learns with a DQNv2 agent against a progressively harder scripted Hunter (random → greedy → A*).
+Recurrent memory and nested learning remain future experiments. They earn a place when a repeatable limitation gives us a concrete reason to add them. The [roadmap](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/roadmap.md) records those decisions.
 
-**Network architecture** (`model/cnn_q_network.py`):
-- Input: 6-channel 25×25 binary tensor (one channel per cell type)
-- Conv: 32 filters (3×3) → 64 filters (3×3), ReLU
-- FC: 256 hidden → Dueling heads: Value V(s) + Advantage A(s,a)
-- Output: Q(s,a) for 4 actions
+## Try an experiment on CPU
 
-**Training:**
-- Double DQN (decouple action selection from value estimation)
-- Soft target update τ=0.001, Huber loss, Adam lr=1e-4
-- ε-greedy: 1.0 → 0.05 at rate 0.9994/episode
-- Replay buffer: 100k transitions, batch 64, update every 4 steps
-
-**Result:** 85% win rate vs A* Hunter at 6000 episodes. (`tag: phase1-complete`)
-
----
-
-## Phase 2 — Self-Play with Fictitious Self-Play (FSP)
-
-Both Krishna and Hunter are live DQNv2 agents learning simultaneously.
-
-### What is FSP?
-
-Without FSP, two agents co-training will cycle: Krishna learns to beat the current Hunter, Hunter adapts, Krishna adapts back — policy cycling with no convergence. FSP breaks this by maintaining a historical snapshot pool.
-
-Each episode is one of two modes:
-
-- **Joint** (70%): Both agents step, observe, and learn from the same episode. Policies improve against each other's current strategy.
-- **FSP** (30%): Krishna plays against a *frozen historical snapshot* of Hunter sampled from the pool. This forces Krishna to generalise across Hunter's full learning history, not just beat the current version.
-
-Hunter snapshots are saved every 100 episodes (max 20, FIFO eviction → `pool/pool_index.json`).
-
-### Reward design
-
-**Krishna** needs both pellet skill and evasion — two competing pressures:
-
-| Signal | Value | Why |
-|---|---|---|
-| Collect pellet | +50 | Primary objective |
-| Win (4 pellets) | +100 | Terminal |
-| Caught | −10 | Avoid Hunter |
-| Lose (0 lives) | −50 | Terminal penalty |
-| Step | −0.001 | Efficiency pressure |
-| Proximity shaping | ±0.3 × Δd | Dense gradient toward nearest pellet |
-
-**Hunter** has a single objective — chase:
-
-| Signal | Value | Why |
-|---|---|---|
-| Catch | +30 | Primary objective |
-| Win (3 catches) | +50 | Terminal |
-| Krishna wins | −50 | Terminal penalty |
-| Step | −0.001 | Efficiency pressure |
-| Chase shaping | +0.1 × Δd | Dense gradient toward Krishna |
-
-Wall hits carry **zero penalty** (`K_WALL=0`). A non-zero penalty (tried −5, then −1) created a pathological local attractor: the greedy policy learned to press into a corner wall for entire episodes, because the penalty was still lower than the expected cost of moving toward an aggressive Hunter. Zero penalty removes the attractor entirely while walls remain physically impassable.
-
-### Epsilon decay calibration
-
-With 6000 episodes and `ε_min=0.05`:
-
-$$\text{decay} = \left(\frac{0.05}{1.0}\right)^{1/5000} \approx 0.9994$$
-
-The old default of 0.9999 would leave ε≈0.55 at episode 6000 — the agent never exits exploration. At 0.9994, ε reaches the floor at episode ~5000, leaving 1000 episodes of near-pure exploitation.
-
-### What actually emerged (v3 run, 6k episodes)
-
-- **Both networks learned**: hunter_loss was nonzero from episode 10 onward (was flat 0.000 without approach shaping — Hunter had no dense gradient without it)
-- **Krishna's first win**: episode 279 (vs episode 1049 in the previous run without fixes)
-- **Hunter converged fast**: aggressive catch behaviour by ep ~500; catching in under 300 steps by ep 3000
-- **Red Queen dynamics**: Krishna win 4% overall, 11% in the final 28 episodes as both ε values reached floor — late-game improvement confirms genuine learning, not luck
-- **Remaining noise**: ~3.6% of episodes were catastrophic wall-hugging collapses (r_k ≤ −800); fixed in v4 with K_WALL=0
-
----
-
-## Phase 3 and beyond — GOP+CHER, reward redesign, and the DQN-vs-PPO comparison
-
-Phase 2 (v4) hit a **bimodal collapse**: pure evasion, zero collection, no in-between — the clearest sign that Krishna faced two competing objectives it couldn't hold at once. Phase 3 (`train_phase3.py`) answers this with a **Gated Option Policy** network: separate evade/collect heads plus a learned gate deciding which to trust, combined with **Counterfactual Hindsight Experience Replay (CHER)** — a synthetic teaching signal that shows the agent what it should have done in moments it judges to have been safe to collect. See [`versions/v5_phase3_gop_cher.md`](versions/v5_phase3_gop_cher.md) for the architecture and first results.
-
-From there the research question sharpened into: is collection paralysis a live-reward problem, a training-distribution problem, or both? That thread — reward redesign (v7), rectified opponent sampling, and floor-tuning ablations — lives on the **`v7-ablations`** branch, with each experiment pre-registered before running and written up (including the ones that failed) in that branch's `versions/`. Two of those are also distilled into general-audience write-ups in [`articles/`](articles/).
-
-**`v8`** (own branch) is an independent PPO port of the identical environment, reward, and opponent-pool design — the only variable changed is DQN → PPO. The question: is the risk-dominant collapse this project keeps rediscovering a property of DQN's stale-replay-buffer mechanics specifically, or of the game's payoff structure generally, which an on-policy algorithm would hit too. See `Q6.md` §3 for the full reasoning.
-
----
-
-## Repository Layout
-
-```
-Q6/
-├── agent/
-│   ├── dqn_v2_agent.py       # DQNv2: CNN + Dueling + Double DQN
-│   ├── gated_dqn_agent.py    # Phase 3: Gated Option Policy DQN agent
-│   ├── frozen_agent.py       # Read-only checkpoint opponent for FSP
-│   └── opponent_pool.py      # FSP snapshot pool (FIFO, max 20)
-│   (agent/ppo_agent.py, agent/frozen_ppo_agent.py — PPO variants, on the v8 branch)
-├── environment/
-│   ├── hunter_gridworld.py   # Phase 1 env (scripted Hunter)
-│   └── selfplay_env.py       # Phase 2+ env (Hunter externally controlled)
-├── model/
-│   ├── cnn_q_network.py      # CNN Dueling Q-network (Phase 1-2)
-│   └── gated_option_network.py  # Phase 3: dual evade/collect heads + gate
-│   (model/actor_critic_network.py — PPO actor-critic, on the v8 branch)
-├── utils/
-│   ├── state_encoder.py      # 6-channel binary encoder (shared across phases)
-│   ├── cher.py                # Counterfactual Hindsight Experience Replay (Phase 3)
-│   ├── hierarchical_pool.py   # Two-tier (easy/hard) opponent pool with rectified sampling
-│   ├── replay_recorder.py    # Per-step replay recording for dashboard
-│   └── environment_wrapper.py
-├── dashboard/
-│   ├── scan.py               # Rebuilds index.json from training_runs/ (merge-safe)
-│   ├── index.html            # Run list
-│   ├── run.html              # Per-run metrics (algorithm-aware: DQN/GOP/PPO)
-│   └── replay.html           # Step-by-step replay viewer
-├── orchestrator/
-│   ├── orchestrator.py       # Crash-restart, checkpoint-aware, config-hot-reload daemon
-│   └── q6_jobs.json           # Example multi-job config
-├── versions/                 # Research log — thesis/results/failure-mode per version
-├── articles/                 # General-audience write-ups distilled from versions/
-├── tests/                    # 221 tests (pytest)
-├── train_v2.py               # Phase 1 training
-├── train_phase2.py           # Phase 2 self-play training (DQN)
-├── train_phase3.py           # Phase 3 training (GOP + CHER + hierarchical pool)
-├── verify_phase2.py          # Checkpoint sanity checker
-└── config.py                 # All hyperparameters centralised
-    (train_v8.py — independent PPO self-play training, on the v8 branch)
-```
-
----
-
-## Key Hyperparameters (`config.py`)
-
-| Parameter | Value | Note |
-|---|---|---|
-| `EPSILON_DECAY` | 0.9994 | Per-episode; reaches 0.05 floor ~ep 5000 |
-| `EPSILON_MIN` | 0.05 | 5% random at convergence |
-| `GAMMA` | 0.99 | Discount factor |
-| `TAU` | 0.001 | Soft target update |
-| `LEARNING_RATE` | 1e-4 | Adam |
-| `BATCH_SIZE` | 64 | Replay sample size |
-| `BUFFER_SIZE` | 100,000 | Per-agent replay capacity |
-| `UPDATE_EVERY` | 4 | Steps between gradient updates |
-
----
-
-## Lessons Learned
-
-**1. Reward scale dominates early learning.**
-A wall penalty of −5 completely drowned the pellet signal (+50). The agent learned nothing useful for hundreds of episodes. Reducing to −1 helped; setting to 0 eliminated the problem entirely. When your agent is doing something bizarre, check whether one reward term is an order of magnitude larger than the others.
-
-**2. Dense shaping is not optional for sparse rewards.**
-Without `K_APPROACH=0.3`, Krishna had zero gradient toward pellets for the first 200 episodes — every episode timed out and every update was noise. The shaping reward turns a sparse "collect pellet" signal into a dense continuous gradient that works from episode 1.
-
-**3. Calibrate ε-decay to your episode budget.**
-`decay = (ε_min / ε_start)^(1 / target_episode)`. If you miss this, the agent never exits exploration. This is one of the most common silent failures in DQN experiments.
-
-**4. FSP prevents Nash cycling.**
-Without the historical pool, two co-training agents cycle endlessly: A beats B, B adapts, A adapts, repeat. The pool makes each agent's policy robust to the full distribution of opponent strategies seen so far, not just the latest one.
-
-**5. In asymmetric tasks, the simpler objective wins faster.**
-Hunter (single goal: reduce distance) converged to aggressive chasing by episode 500. Krishna (two competing goals: collect pellets AND evade) was still learning at episode 6000. This is expected and correct — it is the Red Queen dynamic working as designed.
-
----
-
-## Running Tests
+From the research checkout above, use Python 3.10 or later; Python 3.12 matches the current reference runs.
 
 ```bash
-python -m pytest tests/ -q                      # all 147 tests
-python -m pytest tests/test_selfplay_env.py -v  # Phase 2 env
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
+
+# Small execution check. Choose a new output directory each time.
+python -m q6.map_replay \
+  --output /tmp/q6-map-replay-smoke \
+  --protocol-file docs/experiments/map_replay_protocol_v1.md --smoke
 ```
 
----
+Smoke reuses the shipped supports and archived controls, trains three treatments for 24 updates each, and evaluates four alternate maps. Its unequal treatment/control budgets check execution only; smoke is ineligible research evidence.
 
-## Monitoring a Training Run
+The latest main comparison took **about three minutes on one CPU thread**, peaking at **0.45 GiB process memory** on the reference Mac. This is one observed run, not a cross-machine benchmark. Full reproduction commands, pinned versions, fixed budgets and audit instructions are in the [experiment report](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/map_replay_results_v1.md) and [validation record](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/validation/map-replay-v1.md).
 
-```bash
-# Live log tail
-tail -f training_runs/<run_dir>/logs/episode_stats.csv
+## Bring a good question
 
-# Quick summary of a completed run
-python3 - <<'EOF'
-import csv, statistics
-rows = list(csv.DictReader(open("training_runs/<run_dir>/logs/episode_stats.csv")))
-last = rows[-500:]
-k = sum(1 for r in last if r["winner"]=="krishna")
-print(f"Last 500: Krishna {k}/500 ({100*k/500:.1f}%)  avg_pellets {statistics.mean(float(r['pellets']) for r in last):.2f}")
-EOF
-```
+Useful contributions include reproducing a result, finding a missing control, explaining a failure visible in a replay, improving inspection tools, or measuring a simulation bottleneck. A well-explained negative result belongs here.
 
+Start with the [contribution guide](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/CONTRIBUTING.md), [documentation index](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/README.md) and [citation metadata](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/CITATION.cff). The current modules are packaged for experimentation; their APIs are still evolving.
 
-TROUBLESHOOTING:
-================
+## The history stays
 
-Problem: "Module not found" error
-Solution: Make sure you activated venv: source venv/bin/activate
+Q6 began with **Krishna–Hunter self-play**, then explored reward incentives, policy heads, replay, and a separate **No Way Home** provenance idea. That companion study asks how repeated evidence should be counted in a synthetic decision task; it has its own [bounded results and limitations](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/provenance-results.md).
 
-Problem: CUDA out of memory
-Solution: Set device="cpu" in main.py (should auto-detect, but just in case)
-
-Problem: Training seems stuck (scores not improving after 500 episodes)
-Solution: 
-- Check TRAINING_IMPROVEMENTS.txt for next debugging steps
-- The -0.01 reward is the critical fix - make sure it's in place
-- Watch intermediate metrics (pellets, hits, etc.) - they might be improving
-
-Problem: Can't understand the output
-Solution:
-- Read QUICK_START.txt for output interpretation
-- Watch a few episodes, note the metrics
-- They'll start making sense!
-
-
-NEXT STEPS AFTER FIRST SUCCESSFUL RUN:
-========================================
-
-If training converges and agent learns to win:
-
-1. Analyze the learned behavior
-   - Which actions does it prefer?
-   - Where does it go on the map?
-   - How does it evade enemies?
-
-2. Test generalization
-   - Does learned strategy work on different seed?
-   - Can it handle layout variations?
-
-3. Move to MVP 2 "Protean"
-   - Test adaptation to changing environments
-   - Implement continual learning techniques
-
-The path to Kṛṣṇa's eventual mastery begins here!
-
-
-GOOD LUCK!
-==========
-
-You now have a complete, working RL implementation.
-The logging will show you exactly what's happening.
-The code is heavily commented to teach concepts.
-The metrics will prove the agent is learning.
-
-This is real AI learning in action. Enjoy the journey!
-
-Questions? Check the documentation files.
-Something not working? Run validate.py to diagnose.
-Ready to understand the code? Check main.py's comments.
-
-Hari Om 🙏
+The [research review](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/research_review/2026-09-05/README.md), [version log](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/versions/README.md), [articles](https://github.com/rahul-tiwari-95/Q6/tree/q6-adaptation-lab/articles) and [original narrative](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/Q6.md) preserve the experiments, corrections and changes of direction. Older ablations and the PPO port remain on [`v7-ablations`](https://github.com/rahul-tiwari-95/Q6/tree/v7-ablations) and [`v8`](https://github.com/rahul-tiwari-95/Q6/tree/v8). Some legacy summaries lack their original artifacts; the current documentation identifies those limits.
