@@ -28,27 +28,27 @@ python3 -m http.server 8080 --bind 127.0.0.1
 
 Open **[the lab](http://127.0.0.1:8080/dashboard/lab.html#coverage)**. No training is required to explore the shipped results.
 
-Start with **Experience coverage → Within-map states**. On the first map, bank 1 / seed 0 finds the goal in two steps instead of 19. Switch learners, inspect the overlapping map-exposure curves, then look at the averages. There are **1,706 saved recordings** across the current studies, plus the earlier research dashboards.
+Start with **Experience coverage → Recorded actions**. On the first preselected map, bank 1 / seed 0 takes three steps in both arms. Switch to bank 2: seed 0 improves from 26 to seven steps, while seed 1 worsens from three to 17. Then inspect the panel averages and action coverage. There are **2,010 saved recordings** across the current studies, plus the earlier research dashboards.
 
 ## A few things the worlds have taught us
 
 - **A score can change without a single weight changing.** The same set of three collected policies scored 68.2% success on one evaluation panel and 83.9% on another. That prompted prospective evaluation across eight new panels. [Follow the panel story →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/panel_evaluation_results_v1.md)
-- **The amount of experience is only part of the story.** Across three comparisons with size matched within each pair, uniformly selected states improved efficient success by 17.1, 27.7 and 23.3 percentage points over trajectory-collected states. “Efficient” means reaching the goal within twice the shortest-path length, with failures counted. [Inspect the bank comparisons →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/bank_replication_results_v1.md)
 - **A sensible intervention can have a mixed result.** Giving every map equal replay probability improved two banks and harmed one: −3.9, +7.2 and +4.6 efficiency points. Exposure became nearly equal, but some sparse-map states were repeated more than a thousand times. We kept the original replay as the baseline. [Inspect the replay experiment →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/map_replay_results_v1.md)
-- **Same maps. Same batch order. Different states.** Replacing states within each map while preserving its exact quota and replay schedule raised efficient success from **45.7% to 68.7%**. All 24 bank-panel averages improved. Which states fill the experience bank matters even when map exposure stays fixed. [Read the latest control →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/within_map_results_v1.md)
+- **Same maps. Same batch order. Different states.** Replacing states within each map while preserving its exact quota and replay schedule raised efficient success from **45.7% to 68.7%**. All 24 bank-panel averages improved. Which states fill the experience bank matters even when map exposure stays fixed. [Inspect the composition control →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/within_map_results_v1.md)
+- **What if the learner only gets recorded outcomes?** Keeping the original collected states and replay fixed, but removing outcomes for unrecorded actions, cut efficient success from **43.0% to 21.3%** on new common panels. The logs cover only about 35% of the four possible actions at each collected state, averaged across those states. This exposed how much the earlier procedure relied on broader supervision. [Read the latest experiment →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/recorded_actions_results_v1.md)
 
-These are bounded findings from a fully visible toy world and a **20,420-parameter feedforward network**. The offline studies still give the learner transitions for all four actions, including actions the collector did not take. They do not establish online-RL competence, general intelligence or a memory mechanism.
+“Efficient” means reaching the goal within twice the shortest-path length, with failures counted. These are bounded findings from a fully visible toy world and a **20,420-parameter feedforward network**. Earlier offline arms receive transitions for all four actions; the latest treatment uses logged outcomes only. It still replays deduplicated states offline and can bootstrap from predictions for actions without recorded outcomes. None of this establishes online-RL competence, general intelligence or a memory mechanism.
 
 ## Where Q6 is headed
 
 | Step | The question | What would count as progress? |
 | --- | --- | --- |
 | **Established control: experience composition** | Which states help an agent learn across maps? | Within-map replacements improve efficiency across three banks with map exposure and batch diversity fixed. |
-| **Next: learn from actual experience** | Can useful behavior survive when training uses only recorded actions and transitions? | A reproducible bridge from privileged offline experiments toward online learning. |
+| **Now: learn from actual experience** | Can useful behavior survive when training uses only recorded actions and transitions? | The first recorded-action control exposes an efficiency loss; next test the actions allowed in its bootstrap targets. |
 | **Then: adaptation and retention** | What remains when A changes to B and A returns? | Competent starting policies, then fair retained/reset/replay and memory comparisons. |
 | **Make more worlds affordable** | How much simulation and learning can we do with a stated compute budget? | Measured throughput, memory and behavior under sequential and batched execution. |
 
-**The next control removes counterfactual action supervision.** Reuse the original collected states and replay schedule, but train only on actions and transitions actually present in the collection logs. Keep the network and update budget fixed, and report the reduced number of action targets. This comparison has not run yet. The latest result still changes position, time remaining and successor coverage together; it does not tell us which one supplies the gain.
+**The next control changes bootstrap action selection.** At each recorded successor, let the training target choose only among actions logged there. Keep recorded outcomes, state replay, loss weighting, target count and update budget fixed; fresh-world evaluation still considers all four actions. This has not run yet. The current decline does not prove overestimation or identify one cause: action coverage, target count and successor queries changed together.
 
 Recurrent memory and nested learning remain future experiments. They earn a place when a repeatable limitation gives us a concrete reason to add them. The [roadmap](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/roadmap.md) records those decisions.
 
@@ -62,14 +62,14 @@ source .venv/bin/activate
 python -m pip install -e '.[dev]'
 
 # Small execution check. Choose a new output directory each time.
-python -m q6.within_map \
-  --output /tmp/q6-within-map-smoke \
-  --protocol-file docs/experiments/within_map_protocol_v1.md --smoke
+python -m q6.recorded_actions \
+  --output /tmp/q6-recorded-actions-smoke \
+  --protocol-file docs/experiments/recorded_actions_protocol_v1.md --smoke
 ```
 
-Smoke draws three quota-matched replacements from shipped data, reuses archived controls, trains three treatments for 24 updates each, and evaluates four alternate maps. Its unequal treatment/control budgets check execution only; smoke is ineligible research evidence.
+Smoke reconstructs three recorded-action tables from shipped collection logs, reuses archived controls, trains three treatments for 24 updates each, and evaluates four alternate maps. Its unequal treatment/control budgets check execution only; smoke is ineligible research evidence.
 
-The latest main comparison took **2.45 minutes on one CPU thread**, peaking at **0.45 GiB process memory** on the reference Mac. This is one observed run, not a cross-machine benchmark. Full reproduction commands, pinned versions, fixed budgets and audit instructions are in the [experiment report](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/within_map_results_v1.md) and [validation record](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/validation/within-map-v1.md).
+The latest main comparison took **2.78 minutes on one CPU thread**, peaking at **0.52 GiB process memory** on the reference Mac. This is one observed run, not a cross-machine benchmark. Full reproduction commands, pinned versions, fixed budgets and audit instructions are in the [experiment report](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/recorded_actions_results_v1.md) and [validation record](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/validation/recorded-actions-v1.md).
 
 ## Bring a good question
 
