@@ -1,80 +1,83 @@
 # Q6
 
-**Small, inspectable experiments in learning across changing worlds.**
+**Learn a world. Change the rules. See what sticks.**
 
-Q6 studies how a neural agent adapts when a task changes, and what it retains when an earlier task returns. The main experiment follows **A → B → A** in a compact collection world. A separate No Way Home experiment compares ways of counting repeated evidence in a synthetic resource-allocation task.
+A pellet. A few walls. Thirty-two moves. Enough room for a neural network to surprise you.
 
-This is a public research preview; a license has not yet been selected. Its earlier Krishna–Hunter self-play work, failed experiments, and methodological corrections remain available as a research history.
+Q6 is a research lab for small agents learning across changing worlds. The ambition is simple to describe and difficult to get right: build worlds we can run cheaply, agents whose mistakes we can inspect, and experiments that explain what they learn—and what survives when the rules change.
 
-**Latest finding:** equal-map replay produces **mixed results** on the same three collected banks: efficient-success changes of **−3.91, +7.16 and +4.56 percentage points**. The equal-bank average improves **42.17% → 44.77%**, but bank 1 worsens, so this is not a reliable replacement for the original replay. Exposure balancing worked; it also repeated sparse-map states much more often. Next: test within-map state composition while preserving exact map quotas and replay schedules. Read the [map-replay result](docs/experiments/map_replay_results_v1.md). This remains privileged offline evidence, not online-RL competence.
+```mermaid
+flowchart LR
+    A["World A<br/>Learn the task"] --> B["World B<br/>Change the rules"]
+    B --> A2["World A returns<br/>What does the agent remember?"]
+```
 
-## Start on CPU
+We’re building toward that loop. The first adaptation pilots exposed a more immediate problem: the agent had not reliably learned the starting task. So the current work asks **what experience helps the same small network learn useful behavior across maps?** Memory comes after that foundation.
 
-Use Python 3.10 or later; Python 3.12 is a practical starting point. Run commands from the repository root.
+**Public research preview.** The current code and evidence live on [`q6-adaptation-lab`](https://github.com/rahul-tiwari-95/Q6/tree/q6-adaptation-lab), with integration tracked in [PR #1](https://github.com/rahul-tiwari-95/Q6/pull/1). A license has not yet been selected.
+
+## Start by watching
+
+The dashboard lets you step through a policy’s decisions, see its predicted action values, compare them with exact values, and inspect the experience used for training. The active movement rule is visible from the first frame. Successful runs and awkward failures both stay in the record.
+
+```bash
+git clone --branch q6-adaptation-lab https://github.com/rahul-tiwari-95/Q6.git
+cd Q6
+python3 -m http.server 8080 --bind 127.0.0.1
+```
+
+Open **[the lab](http://127.0.0.1:8080/dashboard/lab.html#coverage)**. No training is required to explore the shipped results.
+
+Start with **Experience coverage → Map-balanced replay**. On the first map, bank 1 / seed 0 improves from 30 to 15 steps; seed 2 changes from a 14-step success to failure. Switch learners, then look at the averages. There are **1,402 saved recordings** across the current studies, plus the earlier research dashboards.
+
+## A few things the worlds have taught us
+
+- **A score can change without a single weight changing.** The same set of three collected policies scored 68.2% success on one evaluation panel and 83.9% on another. That prompted prospective evaluation across eight new panels. [Follow the panel story →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/panel_evaluation_results_v1.md)
+- **The amount of experience is only part of the story.** Across three comparisons with size matched within each pair, uniformly selected states improved efficient success by 17.1, 27.7 and 23.3 percentage points over trajectory-collected states. “Efficient” means reaching the goal within twice the shortest-path length, with failures counted. [Inspect the bank comparisons →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/bank_replication_results_v1.md)
+- **A sensible intervention can have a mixed result.** Giving every map equal replay probability improved two banks and harmed one: −3.9, +7.2 and +4.6 efficiency points. Exposure became nearly equal, but some sparse-map states were repeated more than a thousand times. We kept the original replay as the baseline. [Read the latest completed experiment →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/map_replay_results_v1.md)
+
+These are bounded findings from a fully visible toy world and a **20,420-parameter feedforward network**. The offline studies still give the learner transitions for all four actions, including actions the collector did not take. They do not establish online-RL competence, general intelligence or a memory mechanism.
+
+## Where Q6 is headed
+
+| Step | The question | What would count as progress? |
+| --- | --- | --- |
+| **Now: experience composition** | Which states help an agent learn across maps? | Controlled comparisons that preserve the network, training budget and relevant sampling conditions. |
+| **Next: learn from actual experience** | Can useful behavior survive when training uses only recorded actions and transitions? | A reproducible bridge from privileged offline experiments toward online learning. |
+| **Then: adaptation and retention** | What remains when A changes to B and A returns? | Competent starting policies, then fair retained/reset/replay and memory comparisons. |
+| **Make more worlds affordable** | How much simulation and learning can we do with a stated compute budget? | Measured throughput, memory and behavior under sequential and batched execution. |
+
+**The next control is within-map state composition.** Keep each map’s exact state count and the original replay schedule, but change which states fill those slots. That holds map exposure and batch diversity fixed. It has not run yet.
+
+Recurrent memory and nested learning remain future experiments. They earn a place when a repeatable limitation gives us a concrete reason to add them. The [roadmap](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/roadmap.md) records those decisions.
+
+## Try an experiment on CPU
+
+From the research checkout above, use Python 3.10 or later; Python 3.12 matches the current reference runs.
 
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
 python -m pip install -e '.[dev]'
 
-# Short execution check; writes to a new temporary output directory.
-python -m q6.map_replay --output /tmp/q6-map-replay-smoke \
+# Small execution check. Choose a new output directory each time.
+python -m q6.map_replay \
+  --output /tmp/q6-map-replay-smoke \
   --protocol-file docs/experiments/map_replay_protocol_v1.md --smoke
 ```
 
-Choose a fresh `--output` directory when repeating a run. This smoke reuses three shipped supports and archived 30,000-update controls, trains three treatments for 24 updates each, and evaluates four alternate maps. Its unequal budgets check execution only; it is ineligible research evidence.
+Smoke reuses the shipped supports and archived controls, trains three treatments for 24 updates each, and evaluates four alternate maps. Its unequal treatment/control budgets check execution only; smoke is ineligible research evidence.
 
-## Experiments
+The latest main comparison took **about three minutes on one CPU thread**, peaking at **0.45 GiB process memory** on the reference Mac. This is one observed run, not a cross-machine benchmark. Full reproduction commands, pinned versions, fixed budgets and audit instructions are in the [experiment report](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/map_replay_results_v1.md) and [validation record](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/validation/map-replay-v1.md).
 
-| Track | Question | Start here |
-| --- | --- | --- |
-| **Competence → adaptation — primary** | Can equal-map replay improve use of the same collected states? | [Current protocol](docs/experiments/map_replay_protocol_v1.md), [results](docs/experiments/map_replay_results_v1.md), [`q6/`](q6/) |
-| **Provenance — bounded companion** | Does deduplicating message origins improve decisions compared with independently calibrated raw and decayed counts? | [Protocol](docs/experiments/provenance-protocol.md), [errata](docs/experiments/provenance-errata.md), [`no_way_home/`](no_way_home/) |
+## Bring a good question
 
-Reproduce the current replay comparison in a fresh directory:
+Useful contributions include reproducing a result, finding a missing control, explaining a failure visible in a replay, improving inspection tools, or measuring a simulation bottleneck. A well-explained negative result belongs here.
 
-```bash
-# Match the main run's core dependencies in Python 3.12.
-python -m pip install 'torch==2.8.0' 'numpy==2.0.2'
-PYTHONHASHSEED=0 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 nice -n 10 python -m q6.map_replay \
-  --output experiments/map_replay/my-reproduction \
-  --protocol-file docs/experiments/map_replay_protocol_v1.md
-```
+Start with the [contribution guide](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/CONTRIBUTING.md), [documentation index](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/README.md) and [citation metadata](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/CITATION.cff). The current modules are packaged for experimentation; their APIs are still evolving.
 
-The [captured environment](experiments/map_replay/pilot_v1/environment.txt) records remaining versions. The runner preserves archived supports and control models, completes all nine treatment fits before evaluation and saves 45 new snapshots plus nine copied baseline finals. It runs sequentially on one CPU thread with a sampled 4 GiB process-RSS guard and a 1,200-second admission cap. The main comparison took **2.97 minutes** and peaked at **0.449 GiB**. No new collection or baseline training occurs. To display a reproduction locally, add `--dashboard dashboard/data/map_replay.json`; this replaces the viewer's current data, so preserve the original artifact. The [bank-replication protocol](docs/experiments/bank_replication_protocol_v1.md) reproduces the preceding support comparison.
+## The history stays
 
-Run the fixed-budget provenance pilot:
+Q6 began with **Krishna–Hunter self-play**, then explored reward incentives, policy heads, replay, and a separate **No Way Home** provenance idea. That companion study asks how repeated evidence should be counted in a synthetic decision task; it has its own [bounded results and limitations](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/provenance-results.md).
 
-```bash
-python -m no_way_home.run_provenance_release \
-  --out experiments/provenance/my-reproduction
-```
-
-Stored studies: [map replay v1](experiments/map_replay/pilot_v1/results.json), [bank replications v1](experiments/bank_replication/pilot_v1/results.json), [panel robustness v1](experiments/panel_evaluation/pilot_v1/results.json), [equal-size banks v1](experiments/equal_support/pilot_v1/results.json), [state coverage v1](experiments/coverage/pilot_v1/results.json), [paired fixed-data targets v1](experiments/fixed_targets/pilot_v1/results.json), [exact supervision v1](docs/experiments/supervised_results_v1.md), [A-only competence v1](docs/experiments/competence_results_v1.md), [adaptation v2](docs/experiments/adaptation_pilot_v2.md), [archived adaptation v1](docs/experiments/adaptation_pilot_v1.md), and [provenance](experiments/provenance/release-pilot-v1/RESULTS.md). Both adaptation pilots failed initial competence; their later A→B→A outcomes do not establish forgetting or recovery. The A-only RL diagnosis learned its selected fixed tasks but failed fresh-world competence. Subsequent studies establish useful offline behavior under broad coverage, first with exact targets and then bootstrapping. The coverage control found weaker transfer from collected states on its panel. At equal bank size, uniform support improves route efficiency while success is close; the repeated collected control exposes panel sensitivity. The prospective eight-panel evaluation found an efficiency advantage in every panel mean for the original policies. Three new bank pairs replicated that advantage. Equal-map replay on those fixed supports now gives mixed behavior improvements despite successful balancing; the next control holds map exposure fixed while replacing states within each map. Each milestone stops at its declared budget. Runners refuse to overwrite an existing study directory; read the protocol before changing its seeds or budget.
-
-## Inspect results
-
-```bash
-python3 -m http.server 8080 --bind 127.0.0.1
-```
-
-Open **[the current lab](http://127.0.0.1:8080/dashboard/lab.html#coverage)** and select **Experience coverage → Map-balanced replay**. Compare each bank's effect before the equal-bank mean. Use the map/learner controls to see actual presentation shares, repeated-state counts and clock/category exposure alongside unchanged support membership. The primary contrast stays greedy when replay mode changes. Inspect **304 preselected recordings**, including reversals, with the active rule and learned/exact values visible initially.
-
-The study selector preserves **Bank replications**, **Panel robustness**, **Equal-size banks** and **Exhaustive vs collected**. All other experiment tracks and **1,098 earlier recordings** remain accessible. The [historical registry](http://127.0.0.1:8080/dashboard/index.html) preserves older summaries. To index legacy training runs on your machine, run `python dashboard/scan.py` before starting the server.
-
-Historical summaries are not a complete artifact archive: many referenced CSV files, checkpoints, and replays are absent from a fresh checkout. Claims from the earlier reports should be read with the [September 2026 review](research_review/2026-09-05/README.md), which documents confounds, bugs, and unsupported interpretations. The new pilots also need independent seeds and fair baselines before supporting general conclusions. No Way Home is a synthetic decision model, not empirical evidence about human institutions.
-
-## Develop and contribute
-
-- [Contribution guide](CONTRIBUTING.md): fast and full test commands, experiment template, and reproducibility requirements.
-- [Documentation index](docs/README.md) and [roadmap](docs/roadmap.md): current scope and criteria for the next experiment.
-- [Map-replay validation](docs/validation/map-replay-v1.md), [bank-replication validation](docs/validation/bank-replication-v1.md), [panel-evaluation validation](docs/validation/panel-evaluation-v1.md), [equal-size validation](docs/validation/equal-support-v1.md), [coverage validation](docs/validation/coverage-v1.md), [fixed-target validation](docs/validation/fixed-targets-v1.md), [supervised validation](docs/validation/supervised-v1.md), [competence validation](docs/validation/competence-v1.md) and [earlier preview validation](docs/validation/2026-09-06.md): tests, CI, artifact audits and browser coverage.
-- [Training supervisor](orchestrator/README.md): local job logging, crash restart, and resume conventions.
-- [Citation metadata](CITATION.cff): cite the repository and the exact revision/artifact used.
-
-The package installs the current experiment modules and selected legacy support modules. Historical trainer scripts and the dashboard are documented as commands run from this checkout; their APIs are not a stable library contract.
-
-## Research history
-
-The [version index](versions/README.md), [articles](articles/), [original Q6 narrative](Q6.md), [No Way Home design](Q6%20No%20Way%20Home.md), and [archive](archive/README.md) preserve the project's progression. Older ablations and the PPO port live on the [`v7-ablations`](https://github.com/rahul-tiwari-95/Q6/tree/v7-ablations) and [`v8`](https://github.com/rahul-tiwari-95/Q6/tree/v8) branches. These are historical experiments, not interchangeable controlled comparisons. The [`longer_memory/`](longer_memory/README.md) folder contains old planning notes, not an implemented memory architecture.
+The [research review](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/research_review/2026-09-05/README.md), [version log](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/versions/README.md), [articles](https://github.com/rahul-tiwari-95/Q6/tree/q6-adaptation-lab/articles) and [original narrative](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/Q6.md) preserve the experiments, corrections and changes of direction. Older ablations and the PPO port remain on [`v7-ablations`](https://github.com/rahul-tiwari-95/Q6/tree/v7-ablations) and [`v8`](https://github.com/rahul-tiwari-95/Q6/tree/v8). Some legacy summaries lack their original artifacts; the current documentation identifies those limits.
