@@ -1,0 +1,902 @@
+[
+  {
+    "bank_id": 1,
+    "condition": "collected_unique",
+    "seed": 0,
+    "checkpoint": 0,
+    "saved": "models/bank1_collected_unique_seed0_update0.pt",
+    "sha256": "880a2057129fe1327d28c68f83baeca85511be572f748d012d420bc61be28e58",
+    "online_hash": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c",
+    "target_hash": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c"
+  },
+  {
+    "bank_id": 1,
+    "condition": "collected_unique",
+    "seed": 0,
+    "checkpoint": 1000,
+    "saved": "models/bank1_collected_unique_seed0_update1000.pt",
+    "sha256": "d4d7957b505d1219e380e9709e72be2be01104be30e7f2bc025e64ee0dfa3676",
+    "online_hash": "e0b1fd24baec3072d1d76644c01cc3bad35093bd14dd5d07b7a465712688ee72",
+    "target_hash": "58ba9daa2b0d71de0615ec647f090a43d8744b3185ed3afa55bb079a0a611200"
+  },
+  {
+    "bank_id": 1,
+    "condition": "collected_unique",
+    "seed": 0,
+    "checkpoint": 3000,
+    "saved": "models/bank1_collected_unique_seed0_update3000.pt",
+    "sha256": "938faa78687c0cb9fd1a05f04d4c55dfd7db93555d732bf331aeb61ab91a60df",
+    "online_hash": "e786b64d30b9144441a2656a10ef5acd0b4e94b4cc8ad260210a7f3a801a1d3f",
+    "target_hash": "8f4c9a57ab4fccf905c35d6f014ec41ab45a77cd358634ce8148545e49ce2cb3"
+  },
+  {
+    "bank_id": 1,
+    "condition": "collected_unique",
+    "seed": 0,
+    "checkpoint": 10000,
+    "saved": "models/bank1_collected_unique_seed0_update10000.pt",
+    "sha256": "76c0101a80238f9bfab25b55efe6a4879e90bdd32c2ea2d19148e726a72788a9",
+    "online_hash": "6850bddb41db30ae2451355db9869dfa9417bf58cb1df0df7d0b03d108045111",
+    "target_hash": "2a136e7ce00b3414614daac681569252967b6f006bdb47f976db468637b52826"
+  },
+  {
+    "bank_id": 1,
+    "condition": "collected_unique",
+    "seed": 0,
+    "checkpoint": 30000,
+    "saved": "models/bank1_collected_unique_seed0_update30000.pt",
+    "sha256": "801e2529f174e74e93f490789b29d5e87946482ccd0caa21d3eb25a823bf05c5",
+    "online_hash": "4b343d8f666b708c2787969681826871440f4c4fcca8bad009fbe053da272256",
+    "target_hash": "dae32c96a1923104d4d1eca6df41bad9e8696626a7c2bc62786650c5789e9391"
+  },
+  {
+    "bank_id": 1,
+    "condition": "collected_unique",
+    "seed": 1,
+    "checkpoint": 0,
+    "saved": "models/bank1_collected_unique_seed1_update0.pt",
+    "sha256": "8f33909b8175dbeb486c9078841509ca990edd5379f02ad7c878d93782677e06",
+    "online_hash": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b",
+    "target_hash": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b"
+  },
+  {
+    "bank_id": 1,
+    "condition": "collected_unique",
+    "seed": 1,
+    "checkpoint": 1000,
+    "saved": "models/bank1_collected_unique_seed1_update1000.pt",
+    "sha256": "13561eaef7ce734c3c806bee0db82201782ec78e3b2f19f504a5ddaeaae7f59e",
+    "online_hash": "9511828580abe429682543ce8b150777b68e1a8eaaa4a815e50c7ca915d29d20",
+    "target_hash": "8be30b7a7eddab32952256ca9ff26bcd3d8f462ef56cd043c88640bbfe2b7231"
+  },
+  {
+    "bank_id": 1,
+    "condition": "collected_unique",
+    "seed": 1,
+    "checkpoint": 3000,
+    "saved": "models/bank1_collected_unique_seed1_update3000.pt",
+    "sha256": "4c02d5b199d320fffc2bf8c1a3de9745786a2a9aedbf6cc2d86234af22f9cedf",
+    "online_hash": "3d37fe34828f7549d2d2fd535098ff7ec9be61ee6ad6d32737f5b8fc72f479cd",
+    "target_hash": "9093a992440d9da3c849a443007450bde708e4eae539c1df70a614d36eca3a0f"
+  },
+  {
+    "bank_id": 1,
+    "condition": "collected_unique",
+    "seed": 1,
+    "checkpoint": 10000,
+    "saved": "models/bank1_collected_unique_seed1_update10000.pt",
+    "sha256": "94fd95a14ffd1d7012b8afd849b8343b884ea677291a6fb9e01f08a1d4b9e355",
+    "online_hash": "8340795e4562e80e75b8bf30f198267b53abe0ad2744fdf5bd5ee906543b050d",
+    "target_hash": "b4ab893e08be8c6fe3d0c89055fcfabd91b1eb5ae3c6a5a7f7a4e46e6325bfd2"
+  },
+  {
+    "bank_id": 1,
+    "condition": "collected_unique",
+    "seed": 1,
+    "checkpoint": 30000,
+    "saved": "models/bank1_collected_unique_seed1_update30000.pt",
+    "sha256": "e1a92be99a9af2e78b275e3a0e70876fdbfc47a6fc0fc6b706b0480d1c2acc69",
+    "online_hash": "edf50f5348683d604fa5a624c0d62fbe9c76fd6bbf569abc53ac7c6de22b5b03",
+    "target_hash": "30b1d22a9ac7853480bc7d4658830849a2ab5aad7a86b541d0af6b6e59b2f29c"
+  },
+  {
+    "bank_id": 1,
+    "condition": "collected_unique",
+    "seed": 2,
+    "checkpoint": 0,
+    "saved": "models/bank1_collected_unique_seed2_update0.pt",
+    "sha256": "0fa1c5e7695ad8dd0e721ff45e334a5874672b656d496f0c1b097c02dd000ea4",
+    "online_hash": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4",
+    "target_hash": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4"
+  },
+  {
+    "bank_id": 1,
+    "condition": "collected_unique",
+    "seed": 2,
+    "checkpoint": 1000,
+    "saved": "models/bank1_collected_unique_seed2_update1000.pt",
+    "sha256": "5df0c670525feb8431758f78d16439b6c6c2190893c3851271c98cfb56943149",
+    "online_hash": "eaa1cf5e004490f853c9c4fd89e3141dbaed342e83a6c95c9055b24f88473528",
+    "target_hash": "f53ecf2bbcf42274cae24274942ce0504783d62327819f223b686318c9ba4dd4"
+  },
+  {
+    "bank_id": 1,
+    "condition": "collected_unique",
+    "seed": 2,
+    "checkpoint": 3000,
+    "saved": "models/bank1_collected_unique_seed2_update3000.pt",
+    "sha256": "68d2651f1522bb9f4a9c28e286f48ef84b14fc92bd6d0553be0338f362aaf13f",
+    "online_hash": "a26aae7487e811a902a26c6c0b8646210b79566c754e0cb0ab6b444b07b119f2",
+    "target_hash": "40390c8c1769483760079a0c3539e13f4b9ec8bda28d847be6755b23a7de5f16"
+  },
+  {
+    "bank_id": 1,
+    "condition": "collected_unique",
+    "seed": 2,
+    "checkpoint": 10000,
+    "saved": "models/bank1_collected_unique_seed2_update10000.pt",
+    "sha256": "22f5dfd6ca97fccd644603877aaedf1832838e03cd7807244fa882eb5a8794a1",
+    "online_hash": "772002778b4d79eaf36cd33ead53ade580a3f398c319eb309928a5a053546875",
+    "target_hash": "9b6ae08761f8475a3a6655e1ab2e5eb8bfb39c6871d7acb35e8f400814e7c5d5"
+  },
+  {
+    "bank_id": 1,
+    "condition": "collected_unique",
+    "seed": 2,
+    "checkpoint": 30000,
+    "saved": "models/bank1_collected_unique_seed2_update30000.pt",
+    "sha256": "6848b7ebc4d462a0d1106317a60561e50b124e70421705cfc0bb592a6c606ee1",
+    "online_hash": "615f1f0eabffbe66b617402a3b28feff7ce01829f865dd5cf238e8d7d2bc762f",
+    "target_hash": "4256aa7e6ff57afc650515d716daf23aad4521a826c30e6601d1bf28fe4102f2"
+  },
+  {
+    "bank_id": 1,
+    "condition": "uniform_subset",
+    "seed": 0,
+    "checkpoint": 0,
+    "saved": "models/bank1_uniform_subset_seed0_update0.pt",
+    "sha256": "e846fa887c57689c315c445ac20f4403366892ffed05f3bd121815a63aa08a55",
+    "online_hash": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c",
+    "target_hash": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c"
+  },
+  {
+    "bank_id": 1,
+    "condition": "uniform_subset",
+    "seed": 0,
+    "checkpoint": 1000,
+    "saved": "models/bank1_uniform_subset_seed0_update1000.pt",
+    "sha256": "8cf8f76b770e21e1cc64dcbf2312696efb2b1ba8d3d986aaeab71622c4814562",
+    "online_hash": "50d2bed6440bbfefb32ddaed3f8e37dd2c103382a51de3ea67c03bc704f8c56c",
+    "target_hash": "bf581a87ba1e077065b1ed7952f3f2f5712a604fe125cee7e2ec074674be48ec"
+  },
+  {
+    "bank_id": 1,
+    "condition": "uniform_subset",
+    "seed": 0,
+    "checkpoint": 3000,
+    "saved": "models/bank1_uniform_subset_seed0_update3000.pt",
+    "sha256": "795eabfc137098fe1eefe0e635e5a3c2676ac6bce3cf3cb6f1489c095fed27f6",
+    "online_hash": "b32b7e40dda140923087b86d6368ce6dd41fc10fe12f18320fb23e1da7841381",
+    "target_hash": "32e15d6d469baa57a3787f3ecd55894fd2ef2358fa9c1c3cfee9b60cb216b8f7"
+  },
+  {
+    "bank_id": 1,
+    "condition": "uniform_subset",
+    "seed": 0,
+    "checkpoint": 10000,
+    "saved": "models/bank1_uniform_subset_seed0_update10000.pt",
+    "sha256": "7416ecc6f01ee313038be1d1098f872bb9e3ccee2d83a428a8a44766be1c091f",
+    "online_hash": "c29631daee31c8c4b1582a3e44d6cb873a1de6210d74bd80cc9857240f54e46e",
+    "target_hash": "e4b7b73682d7cf19f4e2414bf2b17f9cf9ae707e114c471131592b676b646f0d"
+  },
+  {
+    "bank_id": 1,
+    "condition": "uniform_subset",
+    "seed": 0,
+    "checkpoint": 30000,
+    "saved": "models/bank1_uniform_subset_seed0_update30000.pt",
+    "sha256": "669a791f95f151190706bf26998307a6be6bc30a2ed238efa65325a662641df9",
+    "online_hash": "06e8603848572e08ee011b6e35c2c24bcc1989f4aae94cc5907b431578600ba3",
+    "target_hash": "68f4945bc1da683a9450839c64b848ace045f76655818119256b91c1c1b5a8dd"
+  },
+  {
+    "bank_id": 1,
+    "condition": "uniform_subset",
+    "seed": 1,
+    "checkpoint": 0,
+    "saved": "models/bank1_uniform_subset_seed1_update0.pt",
+    "sha256": "4f23557034ce232f5221b1323114aab0beaffc6f582adae0272bb09bb3d064d7",
+    "online_hash": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b",
+    "target_hash": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b"
+  },
+  {
+    "bank_id": 1,
+    "condition": "uniform_subset",
+    "seed": 1,
+    "checkpoint": 1000,
+    "saved": "models/bank1_uniform_subset_seed1_update1000.pt",
+    "sha256": "1ce64955e10deffc2ca0b6f6e29d8c060ce0458d9f17ef3532c41cf672396a2f",
+    "online_hash": "c5ea27c8724d7e8d0cd4de6457d061c27f321de20e376a4eaeb59d61de825aa2",
+    "target_hash": "63253c2c4eb0f4cfc7213d554da05885941859e81e4599809f607504ed9c5867"
+  },
+  {
+    "bank_id": 1,
+    "condition": "uniform_subset",
+    "seed": 1,
+    "checkpoint": 3000,
+    "saved": "models/bank1_uniform_subset_seed1_update3000.pt",
+    "sha256": "1ce4c1f7b2c7ccb9ac775bdc902a88f6aa0e60f9b616fafc240c14fd0417d959",
+    "online_hash": "32dca482e6510228451ef19390cb08e94ccc3ef6c63dff3e2d7788e1a36e6d88",
+    "target_hash": "f9bb427fae5e9aded47df5cffa55224c128d577613a5d804268cf2becdeead18"
+  },
+  {
+    "bank_id": 1,
+    "condition": "uniform_subset",
+    "seed": 1,
+    "checkpoint": 10000,
+    "saved": "models/bank1_uniform_subset_seed1_update10000.pt",
+    "sha256": "cc5e56f201e9be00bdba02266373929bb79a797a60e30abc20051a7608cfb9f8",
+    "online_hash": "9cbc72a446366ebe71b7ec800409f51f9e9c37e39e56a83224d6c16f8afb4474",
+    "target_hash": "86d9b5a5abf766e6b0169531c74914b63fff0662f303b07897f4d10240eacda5"
+  },
+  {
+    "bank_id": 1,
+    "condition": "uniform_subset",
+    "seed": 1,
+    "checkpoint": 30000,
+    "saved": "models/bank1_uniform_subset_seed1_update30000.pt",
+    "sha256": "3af62511a3baad2fe04ddf8b9bc56b25b34c17692d316c8d7466adb52f83d506",
+    "online_hash": "d69fa83ec43b28170456ca800b0b5a0bc6285faa672ca088bc9d237e33d84dcb",
+    "target_hash": "4b7d6a6c5668319e86940313d236f4b0ee1e3e760d46a30d19d22518f8cd1493"
+  },
+  {
+    "bank_id": 1,
+    "condition": "uniform_subset",
+    "seed": 2,
+    "checkpoint": 0,
+    "saved": "models/bank1_uniform_subset_seed2_update0.pt",
+    "sha256": "4107770e9b8a316179f237d4388b4c21657af2bba970a32039b36c65a1d2317c",
+    "online_hash": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4",
+    "target_hash": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4"
+  },
+  {
+    "bank_id": 1,
+    "condition": "uniform_subset",
+    "seed": 2,
+    "checkpoint": 1000,
+    "saved": "models/bank1_uniform_subset_seed2_update1000.pt",
+    "sha256": "535e16609e4f5d5cfc55bc483bf384cb5c800e2e8ba85cdbfdd8769078222c50",
+    "online_hash": "9446308ca0feca5fdd0b468d68511b6171ca1d7146cec8a23f9db62212aa7c3f",
+    "target_hash": "c3cae4d83854c61bb11cb28c7792d67c1f52da97356bcd6bac16011c5fe62aef"
+  },
+  {
+    "bank_id": 1,
+    "condition": "uniform_subset",
+    "seed": 2,
+    "checkpoint": 3000,
+    "saved": "models/bank1_uniform_subset_seed2_update3000.pt",
+    "sha256": "5e3e1de4cdbdb06600149b2983ce14b51a7f11e45f773238083f1048340f2f07",
+    "online_hash": "0a130d782bcb304d84ca551da93465e388a41b7f35cfe2fe3a57dd25dcca79a4",
+    "target_hash": "0ce10299f50b48f59bccdbfbd3cf7d81ed7cedf46e5a90d5880476ccada93a95"
+  },
+  {
+    "bank_id": 1,
+    "condition": "uniform_subset",
+    "seed": 2,
+    "checkpoint": 10000,
+    "saved": "models/bank1_uniform_subset_seed2_update10000.pt",
+    "sha256": "09397d4d80e740938ef09e76652a0a195ff5cb49d070b7bde8e7a8256514cb74",
+    "online_hash": "1d8ec16d45965f3d6f69db869b2e068f396c5d3c586e80f2ec789553e9870538",
+    "target_hash": "1aeddd9a57cb7f61c4628ffead013e60cbbece2d164178a9680d6cafc3127248"
+  },
+  {
+    "bank_id": 1,
+    "condition": "uniform_subset",
+    "seed": 2,
+    "checkpoint": 30000,
+    "saved": "models/bank1_uniform_subset_seed2_update30000.pt",
+    "sha256": "84394d5454dcf8323c38786a5c1a132462aa40ecb050b7935e7e5dfd7bd62f6d",
+    "online_hash": "d515c68a4dd0bce1a53416fc59fc08de3ee5cfeee1998bdf817c4cdeca6eca60",
+    "target_hash": "8d3ff78b6590408b755097fe313bec6e64c834e201c1545c98ba907b30874ce6"
+  },
+  {
+    "bank_id": 2,
+    "condition": "collected_unique",
+    "seed": 0,
+    "checkpoint": 0,
+    "saved": "models/bank2_collected_unique_seed0_update0.pt",
+    "sha256": "e70ada1c03578b2ad9da8f6861e28956f6a0f3720c0418cb9c0c4012b8b9c0a7",
+    "online_hash": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c",
+    "target_hash": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c"
+  },
+  {
+    "bank_id": 2,
+    "condition": "collected_unique",
+    "seed": 0,
+    "checkpoint": 1000,
+    "saved": "models/bank2_collected_unique_seed0_update1000.pt",
+    "sha256": "7d0203556671b15b07b427ef2abec584d2c0ae495c0ccfa3b04047afdbee5318",
+    "online_hash": "7c565a1b6ebde5d93ca000108d2310aec624e54ddc8ed0085e1ba8ba430c9924",
+    "target_hash": "a30f6483998431dbf15ffab25ad17ae0701f124f4fdb3f03a34aa907ba8b7807"
+  },
+  {
+    "bank_id": 2,
+    "condition": "collected_unique",
+    "seed": 0,
+    "checkpoint": 3000,
+    "saved": "models/bank2_collected_unique_seed0_update3000.pt",
+    "sha256": "e9b6307a0221cd0b187cd565fcc9a6a9dae095d43afc369306b523c54181e1cc",
+    "online_hash": "5499c1826379ef7e782ba19af868aa98d2768d5cec7c9acf75e6f83334b152e3",
+    "target_hash": "c297968cc93547fa9be0935a3751f078f14dc084d3060bde24e62e5464ea4de7"
+  },
+  {
+    "bank_id": 2,
+    "condition": "collected_unique",
+    "seed": 0,
+    "checkpoint": 10000,
+    "saved": "models/bank2_collected_unique_seed0_update10000.pt",
+    "sha256": "7b339c7fea5469e026b66105c054d8faebbbe3923405872de3cd413a4e12668a",
+    "online_hash": "55da312a41585a831f1c655714c04806a218c2e8a700db3f83e573e113ab63d3",
+    "target_hash": "330ddbbff28785b5d269e3273b403a4841c5b05b313c0c0f55bc81bebb4d35eb"
+  },
+  {
+    "bank_id": 2,
+    "condition": "collected_unique",
+    "seed": 0,
+    "checkpoint": 30000,
+    "saved": "models/bank2_collected_unique_seed0_update30000.pt",
+    "sha256": "f3b4007936b23e1b5a3d59a52bd9d2c530bb91c265877ccfc95502a4aba5a15a",
+    "online_hash": "af1ad08bd34abdae468a0dd52d4a748d5ac521c5f0d5ccc21bbfe1ac9058f600",
+    "target_hash": "ecefa4b42722dde06bf6c6e6fbbf756f4fc394a8a3c67590d86e212fd7ca8197"
+  },
+  {
+    "bank_id": 2,
+    "condition": "collected_unique",
+    "seed": 1,
+    "checkpoint": 0,
+    "saved": "models/bank2_collected_unique_seed1_update0.pt",
+    "sha256": "64add7582012227ec5c9065a45130b3c67cb34b6fa397a1e6bb3c201362815a6",
+    "online_hash": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b",
+    "target_hash": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b"
+  },
+  {
+    "bank_id": 2,
+    "condition": "collected_unique",
+    "seed": 1,
+    "checkpoint": 1000,
+    "saved": "models/bank2_collected_unique_seed1_update1000.pt",
+    "sha256": "f13e3561882d071778a043ca11958082aea9e547318d652effdc18f79366204d",
+    "online_hash": "359df1f453e71bc16020c876414108da24fb58a76d08b4ef41cccd2b919b4452",
+    "target_hash": "51e27f6743cd798528610c605a3670d6cc6edf2489e6b73bf6d05a9dc0682907"
+  },
+  {
+    "bank_id": 2,
+    "condition": "collected_unique",
+    "seed": 1,
+    "checkpoint": 3000,
+    "saved": "models/bank2_collected_unique_seed1_update3000.pt",
+    "sha256": "eaba8df91b0c78f6b4ed5d9da50b0b68922059447fa69d60747aa1819ef22539",
+    "online_hash": "b737e098775b6c30356958b3521003ce23ea844db843563361b2067beade93f5",
+    "target_hash": "1d023914f536bc90804463f23c805fae6591c6578b29e6c492934e2c0d9d1967"
+  },
+  {
+    "bank_id": 2,
+    "condition": "collected_unique",
+    "seed": 1,
+    "checkpoint": 10000,
+    "saved": "models/bank2_collected_unique_seed1_update10000.pt",
+    "sha256": "3d0bbdefc4c7fc12d694cc313ad6d753d451d0dae8f2791b5fd02f24c0786273",
+    "online_hash": "cdccc20c28fa787fd855a060b9567d5563a45d1c9c097c2e07d8ee8d648ba924",
+    "target_hash": "d6112b4ee0c8bdcdf9f3b3972689b79d1c95059619a8fdabc344f45776fd169c"
+  },
+  {
+    "bank_id": 2,
+    "condition": "collected_unique",
+    "seed": 1,
+    "checkpoint": 30000,
+    "saved": "models/bank2_collected_unique_seed1_update30000.pt",
+    "sha256": "6b7fcd188ba003d115c344ddbca4e3468ed282d9a2d87eee3d4133abdfcc60b6",
+    "online_hash": "dff349d239b866c9d3376be04191d382235d53718ba44368182fe0221b02ebe2",
+    "target_hash": "6b737dbec168b21bfd6d892e353e1279739a3900dc6cb446ababea866cbd9e19"
+  },
+  {
+    "bank_id": 2,
+    "condition": "collected_unique",
+    "seed": 2,
+    "checkpoint": 0,
+    "saved": "models/bank2_collected_unique_seed2_update0.pt",
+    "sha256": "e48408d75bd2b087e0734fcca32919ef83629e1866e092cefb86625805bdc739",
+    "online_hash": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4",
+    "target_hash": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4"
+  },
+  {
+    "bank_id": 2,
+    "condition": "collected_unique",
+    "seed": 2,
+    "checkpoint": 1000,
+    "saved": "models/bank2_collected_unique_seed2_update1000.pt",
+    "sha256": "845ec197ca688e981367c8bf21b5e87cdf10971fc8f7855336897ad7caa25205",
+    "online_hash": "c7f580f21e2da0d8625322c6c8108e05e58c927ef9ff8ba522b6bd9a851b410d",
+    "target_hash": "ebc847c6ba5fb826ec49a2e0f51a543cbbe670833117659c89d467eec3319a5f"
+  },
+  {
+    "bank_id": 2,
+    "condition": "collected_unique",
+    "seed": 2,
+    "checkpoint": 3000,
+    "saved": "models/bank2_collected_unique_seed2_update3000.pt",
+    "sha256": "71b9386ed113170654bff479731bab8a7732dc26254e6df4193845939ff73297",
+    "online_hash": "569630e5b10bad71489e3556aa5a65e3af95c9dedd7b55e04b68db9f44ab8599",
+    "target_hash": "e4f1d62fd3437b4fa5cbd29e134295276831cf94ff2fadebc96b26da068511c4"
+  },
+  {
+    "bank_id": 2,
+    "condition": "collected_unique",
+    "seed": 2,
+    "checkpoint": 10000,
+    "saved": "models/bank2_collected_unique_seed2_update10000.pt",
+    "sha256": "f45af7eb5a3b66dd2b62b3c75eedcb52e07e279a6a3fa1c625a458c42257456d",
+    "online_hash": "80f01c177704b3a8687dac444420aabdd09436028e143f0b2f94ec8a17c97b8c",
+    "target_hash": "6dc81108dccdbf513f6f23800e764aba7069e7edf0623037591516b1259e6ccd"
+  },
+  {
+    "bank_id": 2,
+    "condition": "collected_unique",
+    "seed": 2,
+    "checkpoint": 30000,
+    "saved": "models/bank2_collected_unique_seed2_update30000.pt",
+    "sha256": "3582e1541280fd3af0bfa85071e08b6f00772b34a155ff89d60595478e094c71",
+    "online_hash": "05cafcfa7643e4e3c9d90329621455bc36dc147db027bbf75f39e9f7cc5bc515",
+    "target_hash": "9d1049130964b8d5fb6a948d93aa032633947d4dc121a8ea819f44f9a681e022"
+  },
+  {
+    "bank_id": 2,
+    "condition": "uniform_subset",
+    "seed": 0,
+    "checkpoint": 0,
+    "saved": "models/bank2_uniform_subset_seed0_update0.pt",
+    "sha256": "c864d8cf9fc189ade86327c342ce7f8ed7c613340ba52effa443a2b4e194f98e",
+    "online_hash": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c",
+    "target_hash": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c"
+  },
+  {
+    "bank_id": 2,
+    "condition": "uniform_subset",
+    "seed": 0,
+    "checkpoint": 1000,
+    "saved": "models/bank2_uniform_subset_seed0_update1000.pt",
+    "sha256": "8158075ea4911e1a2dfd08b8b8e21901eef9a934494c961a6bc204c6c6160cd3",
+    "online_hash": "73facab6065eb7ce30a948d168eae06c45d081893c99f9d78870bce4a8d8cb43",
+    "target_hash": "2f5386a345aa88a71f8d263ba03c4f81e4c7a6fbe4481772becad2d64c890479"
+  },
+  {
+    "bank_id": 2,
+    "condition": "uniform_subset",
+    "seed": 0,
+    "checkpoint": 3000,
+    "saved": "models/bank2_uniform_subset_seed0_update3000.pt",
+    "sha256": "0a5613a8a6abde70dbb80b3f58e94f4c849adf2889f81f00d3b6e7ecdb45b859",
+    "online_hash": "5de0daafa41edf83b91d9bfa72396015e28b8e0625bd51028984e434ad7a9106",
+    "target_hash": "aca626b4929251b06524ff03dc5279ba1b3175eb4017018775de2f8507abb1f3"
+  },
+  {
+    "bank_id": 2,
+    "condition": "uniform_subset",
+    "seed": 0,
+    "checkpoint": 10000,
+    "saved": "models/bank2_uniform_subset_seed0_update10000.pt",
+    "sha256": "66ff5ebbe8fee12ec70ac32cc4fcd98bafca70e5a780fe17151a0c0254f3a763",
+    "online_hash": "3575f4fb728523ef31c56feb9c1795eda2b3b893b8b9a5c5a4efe68662682f44",
+    "target_hash": "4322c889eb1f642b804a307d9b6e685e2285aaf3275005ad362e619633cacbf3"
+  },
+  {
+    "bank_id": 2,
+    "condition": "uniform_subset",
+    "seed": 0,
+    "checkpoint": 30000,
+    "saved": "models/bank2_uniform_subset_seed0_update30000.pt",
+    "sha256": "51a0f7426f4b462e58a75524f83f9d7cfac852532751998a3e4cb566bac1f85d",
+    "online_hash": "08c40e0f2c9a0ff2c3a27667ed4e05ad661a342c8dd0ee4d53b7dd9a2789d810",
+    "target_hash": "c1be9e9bd8e22b730fb5f9f08209fd9d5626059a0714cf0a1ee6c8997d4af0c0"
+  },
+  {
+    "bank_id": 2,
+    "condition": "uniform_subset",
+    "seed": 1,
+    "checkpoint": 0,
+    "saved": "models/bank2_uniform_subset_seed1_update0.pt",
+    "sha256": "1b01b992d0ef969a0536d4ed897d64973654ba5b08ca97b5c7beff218ceab33f",
+    "online_hash": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b",
+    "target_hash": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b"
+  },
+  {
+    "bank_id": 2,
+    "condition": "uniform_subset",
+    "seed": 1,
+    "checkpoint": 1000,
+    "saved": "models/bank2_uniform_subset_seed1_update1000.pt",
+    "sha256": "30a1d8b9db317d890126ed4361f099bb551e752e969370851b401fc65a020ac3",
+    "online_hash": "83ab9648dc021fefd804200e4ee855a2c3b9908f7713b3b0007b2c17345ff806",
+    "target_hash": "4ea7e6a068949092d8c0c024b4272d0902a8c72301dfb595336e06e080ad1f5d"
+  },
+  {
+    "bank_id": 2,
+    "condition": "uniform_subset",
+    "seed": 1,
+    "checkpoint": 3000,
+    "saved": "models/bank2_uniform_subset_seed1_update3000.pt",
+    "sha256": "c2a229b1f153520e4b4d774473227b42bb505d332cb51b3d55dd01ec6779f61a",
+    "online_hash": "be4fc2677cdd570e30e94536dbdd2d33e9c0e1e8fdba8beb60fcf1c659a8ef18",
+    "target_hash": "937c493c19f4ca32043aa1037f14028c0f0cf86efc761ea6d95823f5bf172d54"
+  },
+  {
+    "bank_id": 2,
+    "condition": "uniform_subset",
+    "seed": 1,
+    "checkpoint": 10000,
+    "saved": "models/bank2_uniform_subset_seed1_update10000.pt",
+    "sha256": "bf7805a404284601f8cf214f34e48b3783e38fd6ec16bbc56358dc3ab6d115fc",
+    "online_hash": "ff6ec2d71c7d2dec31c95ea221e943ce2624c9735a1cd9d8d14ece5112182e8c",
+    "target_hash": "c7fd8de6816fb54e974e4645fdb2229ccfb0fdd64be235d1b8be6dae54d8e963"
+  },
+  {
+    "bank_id": 2,
+    "condition": "uniform_subset",
+    "seed": 1,
+    "checkpoint": 30000,
+    "saved": "models/bank2_uniform_subset_seed1_update30000.pt",
+    "sha256": "be27086e1163d59a592ebc6183fd4b612f489011d2219f012d5c2a417aa0f436",
+    "online_hash": "1282ed25845cadf035c64e3fede553f155a520fe2e9fa43395fd04656cae894e",
+    "target_hash": "e042093e2346af6a46f7fb7b8f4da23e333d8c5ec592b21d1e988fa1bb0bf93e"
+  },
+  {
+    "bank_id": 2,
+    "condition": "uniform_subset",
+    "seed": 2,
+    "checkpoint": 0,
+    "saved": "models/bank2_uniform_subset_seed2_update0.pt",
+    "sha256": "47d300982ff1698f75c4b002fe9d11c1037b2c94eee740c1d61a05b72ea8f554",
+    "online_hash": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4",
+    "target_hash": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4"
+  },
+  {
+    "bank_id": 2,
+    "condition": "uniform_subset",
+    "seed": 2,
+    "checkpoint": 1000,
+    "saved": "models/bank2_uniform_subset_seed2_update1000.pt",
+    "sha256": "d7f7a470310245285bebd12646326c5fb1106b2a991e63b260cfc1f3c0c16a47",
+    "online_hash": "64383a20ec6c8ea52df5b48d2da5d247c01ab75827e7992787dcad010907e300",
+    "target_hash": "5eb42c469d8df52c70c88434543a6bb4855df28023fafd335719bbbc0c186a03"
+  },
+  {
+    "bank_id": 2,
+    "condition": "uniform_subset",
+    "seed": 2,
+    "checkpoint": 3000,
+    "saved": "models/bank2_uniform_subset_seed2_update3000.pt",
+    "sha256": "f3ac378f2ab72b8e46684ca520e851675ade8be36fe9f42b05b093eae9ddfc96",
+    "online_hash": "72984896e35acf4c90d9335b21a01d7b511e83ddb6294fa4b8f001e47a67f288",
+    "target_hash": "f64dad337f16ad4533357b8f62e5c6fa292d52874a5f3a73ef724ef57941bab9"
+  },
+  {
+    "bank_id": 2,
+    "condition": "uniform_subset",
+    "seed": 2,
+    "checkpoint": 10000,
+    "saved": "models/bank2_uniform_subset_seed2_update10000.pt",
+    "sha256": "a839a642ad5111fb4da104d9c24bc92a90d5f453047319700da0c593bc97c3e6",
+    "online_hash": "4b9a205e62d128f7b079f426c0d3baf1e3d11b76e1ea29adbde3868a195f5b19",
+    "target_hash": "7322dc6383681966e3f0bdbaeea483784b6fda7fc5d95c630020cb0b905c3065"
+  },
+  {
+    "bank_id": 2,
+    "condition": "uniform_subset",
+    "seed": 2,
+    "checkpoint": 30000,
+    "saved": "models/bank2_uniform_subset_seed2_update30000.pt",
+    "sha256": "44aca7bc0412f9d09f92296779b847295f9603bd351de1cbabf422b2fce03ff2",
+    "online_hash": "fc3b815486a1477bdf76c69d86153ac0ab0876d913af3b9067b7349bc38ae86b",
+    "target_hash": "6cba7ca6a362650617141796c977e232c8dcd2d13b66d782207d522bcbc3f231"
+  },
+  {
+    "bank_id": 3,
+    "condition": "collected_unique",
+    "seed": 0,
+    "checkpoint": 0,
+    "saved": "models/bank3_collected_unique_seed0_update0.pt",
+    "sha256": "f51e7cc30d973d4d9eae122bfc3681041d9d662429729410a6014426883603f7",
+    "online_hash": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c",
+    "target_hash": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c"
+  },
+  {
+    "bank_id": 3,
+    "condition": "collected_unique",
+    "seed": 0,
+    "checkpoint": 1000,
+    "saved": "models/bank3_collected_unique_seed0_update1000.pt",
+    "sha256": "3418d09aa6a40937854db920901e7998188008d7e449c8e2c1b9ccff70acf800",
+    "online_hash": "d9f03878df510829e37a82b13f30dd18c789c2f7ecf3895e8f1997f1fe6a5703",
+    "target_hash": "adcb4a652e4b06acd084cbb65ebd04c0acaf821ec62836c5411c22d0084587a1"
+  },
+  {
+    "bank_id": 3,
+    "condition": "collected_unique",
+    "seed": 0,
+    "checkpoint": 3000,
+    "saved": "models/bank3_collected_unique_seed0_update3000.pt",
+    "sha256": "116808fa0bf758ec56f895bf04f2555ddc0dc14a2f9448338c2899c0aedab1da",
+    "online_hash": "71ee74a870df23ed1b7f16bb47493c172eb4ad6b65ecbf6b5ef153c5ef01d106",
+    "target_hash": "ba925effb91a55a8de5ada3a47f97e5c7eaddacb924a49a89167d0d6e122415a"
+  },
+  {
+    "bank_id": 3,
+    "condition": "collected_unique",
+    "seed": 0,
+    "checkpoint": 10000,
+    "saved": "models/bank3_collected_unique_seed0_update10000.pt",
+    "sha256": "b9b8ef1d5a80b49caee6dcf400b45c691b0d65779879f4c20d17a10d40f175a8",
+    "online_hash": "dbb73987f0301e13fb96e4c9025b2958fa57bc82b62a2fa565a0c52fc8e4075d",
+    "target_hash": "bfd7b1a3febaee7ebbdf42007d8ff30bb1802c3b942f725f197605fe0eaa7116"
+  },
+  {
+    "bank_id": 3,
+    "condition": "collected_unique",
+    "seed": 0,
+    "checkpoint": 30000,
+    "saved": "models/bank3_collected_unique_seed0_update30000.pt",
+    "sha256": "98433a0f12ec3f95a1965acde330b5f5cf6587c63e9a973f9d2ad3953d5149ba",
+    "online_hash": "26fb36b48270f47e5a2ff394d62620733977512829fde154aeea0fbd88dbd071",
+    "target_hash": "4359406ead50d3aa5633d51cdb4b3ae17aec3b40e1d8ec592cb6042a98b2a9d5"
+  },
+  {
+    "bank_id": 3,
+    "condition": "collected_unique",
+    "seed": 1,
+    "checkpoint": 0,
+    "saved": "models/bank3_collected_unique_seed1_update0.pt",
+    "sha256": "0524d5c850a7f6a7dcd710d56d745a6a5b58de58fb1a4ff80e32e86380b38b0f",
+    "online_hash": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b",
+    "target_hash": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b"
+  },
+  {
+    "bank_id": 3,
+    "condition": "collected_unique",
+    "seed": 1,
+    "checkpoint": 1000,
+    "saved": "models/bank3_collected_unique_seed1_update1000.pt",
+    "sha256": "0585f38c8136846baf895824f38a595136d466215fee22ffbc63a05433b72e51",
+    "online_hash": "48c846e40e015f4f21300441fd57cfafaefce7db85d1f81e842ff9d0813a8f38",
+    "target_hash": "4616811d543d3d223b0dc40f6c233b5f3f7bf0dccdb17526a0133903a192c92d"
+  },
+  {
+    "bank_id": 3,
+    "condition": "collected_unique",
+    "seed": 1,
+    "checkpoint": 3000,
+    "saved": "models/bank3_collected_unique_seed1_update3000.pt",
+    "sha256": "912e0182874b2308c68cd8143d5876535a1bd8cc4bcdf4f5800dbe59bc652b51",
+    "online_hash": "ecde30697eaed0c9f6777cb6be1139a3b79037d5c9e8d0addd0e2592d0eff1de",
+    "target_hash": "f456806f7ac0b1c04a420323b266ae7a3669d4ee7b56377153d1164895a34eae"
+  },
+  {
+    "bank_id": 3,
+    "condition": "collected_unique",
+    "seed": 1,
+    "checkpoint": 10000,
+    "saved": "models/bank3_collected_unique_seed1_update10000.pt",
+    "sha256": "38e51adb3a31f6b89fdcb90b6a9a8e33617a3e6ba1e740a72405fd296cea4e1f",
+    "online_hash": "ac96311a97f3751fdfb6f6e422d52a96d576a4ca4ca119cb9a9933a3223d2f8e",
+    "target_hash": "2097d180f6b1a7b2ff4b4473a3013aed43edc522e8871bea15246f77dae9cb41"
+  },
+  {
+    "bank_id": 3,
+    "condition": "collected_unique",
+    "seed": 1,
+    "checkpoint": 30000,
+    "saved": "models/bank3_collected_unique_seed1_update30000.pt",
+    "sha256": "c2a70a150877022e6f8e24732b25ec022f689befcaed419f770d088ece1a2534",
+    "online_hash": "4d31eeeadbbcd0376f1ba10c029e544abd5d552fd899cc6d1f1676734be8a875",
+    "target_hash": "5426b0f9d40c5aa9b32e8828ff06c85b4eec1456b30f462a55c9fc326fa09a8c"
+  },
+  {
+    "bank_id": 3,
+    "condition": "collected_unique",
+    "seed": 2,
+    "checkpoint": 0,
+    "saved": "models/bank3_collected_unique_seed2_update0.pt",
+    "sha256": "f72b5ec67687fa1e78b3e398f4d00d9edbdf239b4e77657982c935c172463d86",
+    "online_hash": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4",
+    "target_hash": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4"
+  },
+  {
+    "bank_id": 3,
+    "condition": "collected_unique",
+    "seed": 2,
+    "checkpoint": 1000,
+    "saved": "models/bank3_collected_unique_seed2_update1000.pt",
+    "sha256": "3bca3a1ba72190cac9fa81e4484e10a8cd615b3f434977b5894386e00113c379",
+    "online_hash": "beebf0a6509cafb09f8259e35f4dcd092be1648bbcdbdab2abf687b61ec6b25c",
+    "target_hash": "eae3481c1cd52a3394c29bbea8460489ce67c8d63015024e25fc5897a0857463"
+  },
+  {
+    "bank_id": 3,
+    "condition": "collected_unique",
+    "seed": 2,
+    "checkpoint": 3000,
+    "saved": "models/bank3_collected_unique_seed2_update3000.pt",
+    "sha256": "eecae79f590361106bd8d759a6ae957b26f2dca4ba5126eb99c88ea20f86f218",
+    "online_hash": "7798868aab742b456b383fa5db18d01b701ef44308086627b2e0ce912e9f5bce",
+    "target_hash": "02bd7e68032377392cfc40eb55e253941075e5e64cc61f1a05ea946dad3bc6c4"
+  },
+  {
+    "bank_id": 3,
+    "condition": "collected_unique",
+    "seed": 2,
+    "checkpoint": 10000,
+    "saved": "models/bank3_collected_unique_seed2_update10000.pt",
+    "sha256": "f90c16de73a89b33a4a0f7ebb5ec77250e33e1b3686808a23042e7a1e6878b50",
+    "online_hash": "1b7168ca1f6ef0b545e185d0ff5436071ab5e21b173a8212c43448ac4230e604",
+    "target_hash": "14fb8cbc08d673befdc5428e419472473946a1fea66888ea73ffdea1062f17a8"
+  },
+  {
+    "bank_id": 3,
+    "condition": "collected_unique",
+    "seed": 2,
+    "checkpoint": 30000,
+    "saved": "models/bank3_collected_unique_seed2_update30000.pt",
+    "sha256": "1b39987c187fee7d0e7741a334e2fe1ac9708d9baaa4ce1cc4d0f50c01c150fd",
+    "online_hash": "54ce3fa252217be2ae1707a97530063bcbb04d62e66987f7d0326803aa266a82",
+    "target_hash": "d8b47e1c94d4d6f2b4b7357d3c192f403d50fe492b33c7ab62f2dedf76937144"
+  },
+  {
+    "bank_id": 3,
+    "condition": "uniform_subset",
+    "seed": 0,
+    "checkpoint": 0,
+    "saved": "models/bank3_uniform_subset_seed0_update0.pt",
+    "sha256": "e4ccc6d24a82acc17fa0e5b0afa5767915d58562737c74e0f7498f3a03702381",
+    "online_hash": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c",
+    "target_hash": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c"
+  },
+  {
+    "bank_id": 3,
+    "condition": "uniform_subset",
+    "seed": 0,
+    "checkpoint": 1000,
+    "saved": "models/bank3_uniform_subset_seed0_update1000.pt",
+    "sha256": "7e8750edc2a04705f0f6bc450f2f20f89cd3ed1b857d7c0fa5af05b3f28e8e97",
+    "online_hash": "a236c629bdc45e454c0b8d4763ed77cebd4f74ae9670c8766eecf7bd3db81045",
+    "target_hash": "f75edf4bebd6b6d6ac825aa60253cd935bcf7f87d56934bc902156de412aa760"
+  },
+  {
+    "bank_id": 3,
+    "condition": "uniform_subset",
+    "seed": 0,
+    "checkpoint": 3000,
+    "saved": "models/bank3_uniform_subset_seed0_update3000.pt",
+    "sha256": "1fdf249d730aea12f208f9ace2357490ce9992a744f0e9c8451989b2395acd40",
+    "online_hash": "c2ae76fd293985160a16be94ba25eeef9f3cdebc0dab4348f66eb4b672cf62a1",
+    "target_hash": "72abf24dbf97ec8fb5851104b5b8316f1d0a47505918a0b6fd124606cdd4bdab"
+  },
+  {
+    "bank_id": 3,
+    "condition": "uniform_subset",
+    "seed": 0,
+    "checkpoint": 10000,
+    "saved": "models/bank3_uniform_subset_seed0_update10000.pt",
+    "sha256": "3c893993974fb7621d1882a7e4587a17b5654f792740312591fd2d048f7d1e5f",
+    "online_hash": "74689d4ca9ef570485588759f1f1c0023a40203135b73834c68cdd2e4a50fa3f",
+    "target_hash": "19b3064387703e3047d2276fb71e747efee61dd0d28969e192b616ee8e18878b"
+  },
+  {
+    "bank_id": 3,
+    "condition": "uniform_subset",
+    "seed": 0,
+    "checkpoint": 30000,
+    "saved": "models/bank3_uniform_subset_seed0_update30000.pt",
+    "sha256": "6381c249f2018ca322b1d7d0c2a8a1f3bd3aa457778b6d98017d103bc21998fa",
+    "online_hash": "c28487bbafd6019df21fa95ba709cad844df6af3b1d6ba2e9178cbb310157475",
+    "target_hash": "267805306600cfe1d25728b54493410734fa709559e07e781931e09534299c33"
+  },
+  {
+    "bank_id": 3,
+    "condition": "uniform_subset",
+    "seed": 1,
+    "checkpoint": 0,
+    "saved": "models/bank3_uniform_subset_seed1_update0.pt",
+    "sha256": "6f823219d1a0f5d9f076bc9d12afcb30449234786adc815a1f7cba9c1798abbd",
+    "online_hash": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b",
+    "target_hash": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b"
+  },
+  {
+    "bank_id": 3,
+    "condition": "uniform_subset",
+    "seed": 1,
+    "checkpoint": 1000,
+    "saved": "models/bank3_uniform_subset_seed1_update1000.pt",
+    "sha256": "69e047bb6e78a2522227f3e5f0c0c70b63458207447b67eb56f8a2a1f03de13a",
+    "online_hash": "0787f451896e6e347e6256d290394ace4f4c89396e759da7fd1cb9e1ccc4387e",
+    "target_hash": "fd07032c60443e52b26c11260a553bd6b32ccb99713ad3f1954d20403b167c6b"
+  },
+  {
+    "bank_id": 3,
+    "condition": "uniform_subset",
+    "seed": 1,
+    "checkpoint": 3000,
+    "saved": "models/bank3_uniform_subset_seed1_update3000.pt",
+    "sha256": "8d34e81cbcfe2490b5bbbde0f5497b41cc481b5d78e7c38ecbe23712db8b64d5",
+    "online_hash": "ec9069ddf1cab96368f395fc062277f66be73377461a000fc9f34af5a775cab9",
+    "target_hash": "0e618d1d1fcd147a12a1946b54af2934efcfc2be876f683ceed6f3bce3a6c947"
+  },
+  {
+    "bank_id": 3,
+    "condition": "uniform_subset",
+    "seed": 1,
+    "checkpoint": 10000,
+    "saved": "models/bank3_uniform_subset_seed1_update10000.pt",
+    "sha256": "b64080c8e6957bd4df62b5d14fe070671bed192be10b799854206c541af73fe1",
+    "online_hash": "7eb8eeb0ae815a6f49693c74e1a9883516ab748161a9a64c62e89ed4e6edda6e",
+    "target_hash": "bd60fb680310d9d307e58ae97c428f13764950a289dd035265949a9e64ebe4a0"
+  },
+  {
+    "bank_id": 3,
+    "condition": "uniform_subset",
+    "seed": 1,
+    "checkpoint": 30000,
+    "saved": "models/bank3_uniform_subset_seed1_update30000.pt",
+    "sha256": "bb803e2818e46ea8479dbfc1f170bbef3321cd9e4701bda90c11338db09dde95",
+    "online_hash": "80360f47b89ea784fe71e886700d2acba8026cd8625aabbe0e1bbc201c561220",
+    "target_hash": "cd6c90146ccdc52dd44fbb29d81920d33303d05928df4b14d38d4052b4d215b1"
+  },
+  {
+    "bank_id": 3,
+    "condition": "uniform_subset",
+    "seed": 2,
+    "checkpoint": 0,
+    "saved": "models/bank3_uniform_subset_seed2_update0.pt",
+    "sha256": "64e648f1097f6475465083b81d5b256914b2c96a55e461856a332f7d33dfbd87",
+    "online_hash": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4",
+    "target_hash": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4"
+  },
+  {
+    "bank_id": 3,
+    "condition": "uniform_subset",
+    "seed": 2,
+    "checkpoint": 1000,
+    "saved": "models/bank3_uniform_subset_seed2_update1000.pt",
+    "sha256": "96ff87c9bce3ab724e29c9687fa283a0ffb2234bfa22120b1b6867a999d4d905",
+    "online_hash": "fb0d8220dc04ac2a8ceb7d38a20542267cc9eafd7cee27802cd74fd00ebb421f",
+    "target_hash": "c8b6cd84b07bf2f800fab937f0e08dc0ff0f9fbcaefccd84ce910d3a15b166c0"
+  },
+  {
+    "bank_id": 3,
+    "condition": "uniform_subset",
+    "seed": 2,
+    "checkpoint": 3000,
+    "saved": "models/bank3_uniform_subset_seed2_update3000.pt",
+    "sha256": "b42a09bd48fb047509f2c1b29f943b878a4eed900d6248e244547b5251b9cd40",
+    "online_hash": "52d5d614279ac6107097e20eacde6d65cf6a28491aa5af641e9193f33d5c22b0",
+    "target_hash": "ceed0a97d2fe4874dce1e64b44784ce60b0550f17598eaede733e6c146a4f338"
+  },
+  {
+    "bank_id": 3,
+    "condition": "uniform_subset",
+    "seed": 2,
+    "checkpoint": 10000,
+    "saved": "models/bank3_uniform_subset_seed2_update10000.pt",
+    "sha256": "99a9afb66d2ad7d8dd0d141b8aa88a0d16523e261585f12e9d3b7d4b613030c1",
+    "online_hash": "c150ebdddf72841de95f1473d72222f8345673afe7a4704c6a4ec0acbdf6bd0c",
+    "target_hash": "0b08c2facc6f5110bbafdcd3884d65d5fba94312aa91987e2000165d6ed9692f"
+  },
+  {
+    "bank_id": 3,
+    "condition": "uniform_subset",
+    "seed": 2,
+    "checkpoint": 30000,
+    "saved": "models/bank3_uniform_subset_seed2_update30000.pt",
+    "sha256": "affd92d1c5a49c68c02a4cf2e89a5e028f5f703786a1003a435f445f27d55745",
+    "online_hash": "f62d97459098b18aba22671a411ee7543be5c28b6cbc64d4603f3ca91f76f97f",
+    "target_hash": "f080034e9330a2b8818c6b7483fd81f8b5816e20f09722e2746f6ff874b29c4e"
+  }
+]
