@@ -4,6 +4,7 @@ The [root README](../README.md) is the entry point for installing and running Q6
 
 ## Current experiments
 
+- [Recorded-action protocol](experiments/recorded_actions_protocol_v1.md): keep original collected states and exact replay while supervising only logged actions, testing dependence on counterfactual outcomes.
 - [Within-map composition protocol](experiments/within_map_protocol_v1.md), [result](experiments/within_map_results_v1.md) and [validation](validation/within-map-v1.md): replacing states with exact map quotas and original replay schedules improves efficiency in all three banks (+19.47/+28.65/+20.70 points); next is recorded-action supervision on the original collected supports.
 - [Equal-map replay protocol](experiments/map_replay_protocol_v1.md), [result](experiments/map_replay_results_v1.md) and [validation](validation/map-replay-v1.md): balancing map exposure works, but efficiency effects are mixed (−3.91/+7.16/+4.56 points); the subsequent within-map study preserves exact map quotas and original replay schedules.
 - [Independent bank-replication protocol](experiments/bank_replication_protocol_v1.md), [result](experiments/bank_replication_results_v1.md) and [validation](validation/bank-replication-v1.md): three new matched-size pairs replicate the uniform efficiency advantage (+17.12/+27.67/+23.31 points); the subsequent replay study tests equal map exposure on the same collected supports.

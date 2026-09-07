@@ -1,12 +1,12 @@
 // Exercise saved-study controls with DOM/canvas stubs; does not test browser layout.
-// Run from any directory: node /path/to/Q6/scripts/check_dashboard.mjs [competence-results.json] [--supervised supervised-results.json] [--missing-supervised] [--fixed fixed-targets-results.json] [--missing-fixed] [--coverage coverage-results.json] [--missing-coverage] [--equal-support results.json] [--missing-equal-support] [--panels results.json] [--missing-panels] [--banks results.json] [--missing-banks] [--map-replay results.json] [--missing-map-replay] [--within-map results.json] [--missing-within-map]
+// Run from any directory: node /path/to/Q6/scripts/check_dashboard.mjs [competence-results.json] [--supervised supervised-results.json] [--missing-supervised] [--fixed fixed-targets-results.json] [--missing-fixed] [--coverage coverage-results.json] [--missing-coverage] [--equal-support results.json] [--missing-equal-support] [--panels results.json] [--missing-panels] [--banks results.json] [--missing-banks] [--map-replay results.json] [--missing-map-replay] [--within-map results.json] [--missing-within-map] [--recorded-actions results.json] [--missing-recorded-actions]
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-let competencePath=null,supervisedPath=null,missingSupervised=false,fixedPath=null,missingFixed=false,coveragePath=null,missingCoverage=false,equalSupportPath=null,missingEqualSupport=false,panelsPath=null,missingPanels=false,banksPath=null,missingBanks=false,mapReplayPath=null,missingMapReplay=false,withinMapPath=null,missingWithinMap=false;
+let competencePath=null,supervisedPath=null,missingSupervised=false,fixedPath=null,missingFixed=false,coveragePath=null,missingCoverage=false,equalSupportPath=null,missingEqualSupport=false,panelsPath=null,missingPanels=false,banksPath=null,missingBanks=false,mapReplayPath=null,missingMapReplay=false,withinMapPath=null,missingWithinMap=false,recordedPath=null,missingRecorded=false;
 for(let i=2;i<process.argv.length;i++){
  const arg=process.argv[i];
  if(arg==='--supervised'){supervisedPath=process.argv[++i];assert(supervisedPath,'--supervised needs a real results path');}
@@ -25,6 +25,8 @@ for(let i=2;i<process.argv.length;i++){
  else if(arg==='--missing-map-replay')missingMapReplay=true;
  else if(arg==='--within-map'){withinMapPath=process.argv[++i];assert(withinMapPath,'--within-map needs a real results path');}
  else if(arg==='--missing-within-map')missingWithinMap=true;
+ else if(arg==='--recorded-actions'){recordedPath=process.argv[++i];assert(recordedPath,'--recorded-actions needs a real results path');}
+ else if(arg==='--missing-recorded-actions')missingRecorded=true;
  else if(!arg.startsWith('-')&&!competencePath)competencePath=arg;
  else throw Error('Unknown argument '+arg);
 }
@@ -63,7 +65,8 @@ const sandbox={document,location:{hash:''},history:{replaceState(){}},setInterva
  if(relative==='data/bank_replication.json'&&missingBanks)return {status:404,ok:false};
  if(relative==='data/map_replay.json'&&missingMapReplay)return {status:404,ok:false};
  if(relative==='data/within_map.json'&&missingWithinMap)return {status:404,ok:false};
- const override=relative==='data/competence.json'?competencePath:relative==='data/supervised.json'?supervisedPath:relative==='data/fixed_targets.json'?fixedPath:relative==='data/coverage.json'?coveragePath:relative==='data/equal_support.json'?equalSupportPath:relative==='data/panel_evaluation.json'?panelsPath:relative==='data/bank_replication.json'?banksPath:relative==='data/map_replay.json'?mapReplayPath:relative==='data/within_map.json'?withinMapPath:null;
+ if(relative==='data/recorded_actions.json'&&missingRecorded)return {status:404,ok:false};
+ const override=relative==='data/competence.json'?competencePath:relative==='data/supervised.json'?supervisedPath:relative==='data/fixed_targets.json'?fixedPath:relative==='data/coverage.json'?coveragePath:relative==='data/equal_support.json'?equalSupportPath:relative==='data/panel_evaluation.json'?panelsPath:relative==='data/bank_replication.json'?banksPath:relative==='data/map_replay.json'?mapReplayPath:relative==='data/within_map.json'?withinMapPath:relative==='data/recorded_actions.json'?recordedPath:null;
  const target=override||full;
  if(!fs.existsSync(target))return {status:404,ok:false};
  return {status:200,ok:true,json:async()=>JSON.parse(fs.readFileSync(target,'utf8'))};
@@ -82,13 +85,14 @@ if(missingPanels || (!panelsPath&&!fs.existsSync(path.join(root,'dashboard/data/
 if(missingBanks || (!banksPath&&!fs.existsSync(path.join(root,'dashboard/data/bank_replication.json'))))expectedMissing.push('data/bank_replication.json');
 if(missingMapReplay || (!mapReplayPath&&!fs.existsSync(path.join(root,'dashboard/data/map_replay.json'))))expectedMissing.push('data/map_replay.json');
 if(missingWithinMap || (!withinMapPath&&!fs.existsSync(path.join(root,'dashboard/data/within_map.json'))))expectedMissing.push('data/within_map.json');
+if(missingRecorded || (!recordedPath&&!fs.existsSync(path.join(root,'dashboard/data/recorded_actions.json'))))expectedMissing.push('data/recorded_actions.json');
 const unexpectedErrors=(get('load-status').textContent || '').split(' · ').filter(text=>text.includes('Could not load')&&!expectedMissing.some(path=>text.includes(path)));assert.deepEqual(unexpectedErrors,[],'No unexpected data errors');
 assert.equal(get('tab-coverage').attributes['aria-selected'],'true','Experience coverage is the default track');
-assert.equal(get('coverage-study').value,'within_map','Within-map states is the default study');
-for(const bankStudy of ['within_map','map_replay','bank_replication']){
+assert.equal(get('coverage-study').value,'recorded_actions','Recorded actions is the default study');
+for(const bankStudy of ['recorded_actions','within_map','map_replay','bank_replication']){
 get('coverage-study').value=bankStudy;get('coverage-study').listeners.change();
 if(debug.banks?.aggregate?.length){
- const data=debug.banks,records=data.banks,conditions=['collected_unique',bankStudy==='within_map'?'within_map_uniform':bankStudy==='map_replay'?'map_balanced':'uniform_subset'],panels=data.protocol.panels.map(p=>p.id),signedBank=value=>Number.isFinite(value)?`${value>0?'+':''}${(100*value).toFixed(1)} pp`:'—';
+ const data=debug.banks,records=data.banks,conditions=['collected_unique',bankStudy==='recorded_actions'?'recorded_actions':bankStudy==='within_map'?'within_map_uniform':bankStudy==='map_replay'?'map_balanced':'uniform_subset'],panels=data.protocol.panels.map(p=>p.id),signedBank=value=>Number.isFinite(value)?`${value>0?'+':''}${(100*value).toFixed(1)} pp`:'—';
  assert.equal(get('banks-view').hidden,false);assert.equal(get('banks-content').hidden,false);assert.equal(get('coverage-content').hidden,true);assert.equal(get('robustness-view').hidden,true);
  const expectedEffects=records.map(bank=>data.paired_differences.aggregate.find(r=>r.bank_id===bank.bank_id && r.panel==='all' && r.mode==='greedy')?.mean_seed_efficient_success_rate_delta);expectedEffects.push(data.pooled.paired.find(r=>r.panel==='all' && r.mode==='greedy')?.mean_bank_efficient_success_rate_delta);
  assert.deepEqual([...get('banks-effects').innerHTML.matchAll(/<strong[^>]*>([^<]*)<\/strong>/g)].map(m=>m[1]),expectedEffects.map(signedBank),'Every bank effect and equal-bank pooled effect remain individually visible');
@@ -101,8 +105,23 @@ if(debug.banks?.aggregate?.length){
   assert.equal((get('banks-map-heatmaps').innerHTML.match(/<rect /g)||[]).length,coverage.reduce((sum,c)=>sum+c.by_map.length,0),'Both banks show every training-layout membership square');
   assert.equal((get('banks-time-bars').innerHTML.match(/class="diagnostic-row"/g)||[]).length,coverage.reduce((sum,c)=>sum+c.by_time_bucket.length,0));
   for(const c of coverage){for(const r of c.by_map)assert(get('banks-map-heatmaps').innerHTML.includes(`Map ${r.map_seed.toLocaleString()}: ${r.visited_states.toLocaleString()} / ${r.states.toLocaleString()}`));assert(get('banks-composition-table').innerHTML.includes(`${c.overall.visited_winnable_states.toLocaleString()} / ${c.overall.winnable_states.toLocaleString()}`));assert(get('banks-composition-table').innerHTML.includes(`${c.successor_queries.outside_support_nonterminal_transitions.toLocaleString()} / ${c.successor_queries.nonterminal_transitions.toLocaleString()}`));}
-  if(['map_replay','within_map'].includes(bankStudy)){
-   assert.equal(get('banks-exposure-panel').hidden,false);if(bankStudy==='map_replay')assert(get('banks-intro-copy').textContent.includes('64 distinct maps'));else{assert(get('banks-intro-copy').textContent.includes('within-batch map diversity'));assert(get('banks-intro-copy').textContent.includes('included states'));}assert(get('banks-intro-copy').textContent.includes('reevaluated'));
+  if(bankStudy==='recorded_actions'){
+   assert.equal(get('banks-actions-panel').hidden,false);assert(get('banks-composition-help').textContent.includes('not the treatment’s training-query count'));
+   const actions=data.action_coverage.per_bank.find(r=>r.bank_id===bank.bank_id),targets=data.action_exposure.per_seed.filter(r=>r.bank_id===bank.bank_id);
+   assert.equal((get('banks-action-count-bars').innerHTML.match(/class="diagnostic-row"/g)||[]).length,4);
+   for(const r of actions.states_by_observed_actions)assert(get('banks-action-count-bars').innerHTML.includes(`${r.states.toLocaleString()} / ${actions.supported_states.toLocaleString()} supported states`));
+   assert(get('banks-actions-caption').textContent.includes(`${actions.recorded_edges.toLocaleString()} distinct recorded state-action edges`));assert(get('banks-actions-caption').textContent.includes(actions.all_action_edges.toLocaleString()));
+   for(const r of targets){
+    for(const key of ['updates','state_presentations','action_target_presentations'])assert(get('banks-action-target-table').innerHTML.includes(`<td>${r[key].toLocaleString()}</td>`));
+    assert(get('banks-action-query-table').innerHTML.includes(r.query_provenance));
+    for(const key of ['terminal_action_targets','nonterminal_target_queries','outside_support_target_queries'])assert(get('banks-action-query-table').innerHTML.includes(`<td>${r[key].toLocaleString()}</td>`));
+   }
+   assert(get('banks-action-query-note').textContent.includes('not four supervised action outcomes'));assert(get('banks-action-replay-check').textContent.includes(`${data.protocol.seeds.length} / ${data.protocol.seeds.length} learner streams verified`));
+   if(data.protocol.smoke)assert(get('banks-action-query-note').textContent.includes('not equal-budget evidence'));
+   const check=data.provenance.paired_map_sampling_consistency.find(r=>r.bank_id===bank.bank_id),savedFlag=check.global_digest_identical;check.global_digest_identical=false;get('banks-selected-bank').listeners.change();assert(get('banks-action-replay-check').textContent.includes('Unverified streams'));check.global_digest_identical=savedFlag;get('banks-selected-bank').listeners.change();
+  }else assert.equal(get('banks-actions-panel').hidden,true);
+  if(['map_replay','within_map','recorded_actions'].includes(bankStudy)){
+   assert.equal(get('banks-exposure-panel').hidden,false);if(bankStudy==='map_replay')assert(get('banks-intro-copy').textContent.includes('64 distinct maps'));else if(bankStudy==='recorded_actions'){assert(get('banks-intro-copy').textContent.includes('fewer supervised action targets'));}else{assert(get('banks-intro-copy').textContent.includes('within-batch map diversity'));assert(get('banks-intro-copy').textContent.includes('included states'));}assert(get('banks-intro-copy').textContent.includes('reevaluated'));
    assert(get('banks-composition-caption').textContent.includes('archived collection cost'));assert(!get('banks-summary-table').innerHTML.includes('Uniform'));
    if(bankStudy==='within_map'){
     if(Number.isFinite(data.run.replacement_supports))assert(get('banks-method').textContent.includes(`${data.run.replacement_supports.toLocaleString()} replacement supports`));

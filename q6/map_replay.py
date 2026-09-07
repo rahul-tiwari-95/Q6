@@ -202,7 +202,7 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
                         raise ConsistencyError("input archive is not complete")
                     archives_meta[name] = {"directory": artifact_path(directory), "files": {"manifest.json": sha(directory / "manifest.json")}}
                     shutil.copy2(directory / "manifest.json", output / f"{name}_manifest.json")
-                    filename = "panels.json" if name in ("panel_evaluation", "bank_replication", "map_replay") else "dataset_metadata.json"
+                    filename = "panels.json" if name in ("panel_evaluation", "bank_replication", "map_replay", "within_map") else "dataset_metadata.json"
                     checked_input(directory, manifest, filename, archives_meta[name]["files"])
                     saved = json.loads((directory / filename).read_text())
                     shutil.copy2(directory / filename, output / f"{name}_{filename}")
@@ -239,6 +239,8 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
                 write_json(output / "dataset_metadata.json", metadata)
                 if [r["map_seed"] for r in metadata["train"]] != list(range(300000, 300256)):
                     raise ConsistencyError("training bank must be the declared full 256 maps")
+                if _comparison and hasattr(_comparison, "prepare_inputs"):
+                    _comparison.prepare_inputs(directories, manifests, archives_meta, data, transitions, output, enforce)
                 excluded["training_layout"] = {r["layout_hash"] for r in metadata["train"]}
                 selection = select_panels(config, excluded, panel_count, maps_per_panel, panel_seed_start, panel_stride, enforce)
                 protocol["panels"] = selection["panels"]
@@ -293,8 +295,10 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
                 enforce()
             finally:
                 timings["preparation"] += time.monotonic() - phase
-            train_obs, unused_exact = torch.from_numpy(data["observations"]), torch.from_numpy(data["targets"].astype(np.float32))
-            tensors = {k: torch.from_numpy(v.astype(np.float32) if k == "rewards" else v) for k, v in transitions.items()}
+            custom_update = _comparison is not None and hasattr(_comparison, "update")
+            train_obs = torch.from_numpy(data["observations"])
+            unused_exact = None if custom_update else torch.from_numpy(data["targets"].astype(np.float32))
+            tensors = {} if custom_update else {k: torch.from_numpy(v.astype(np.float32) if k == "rewards" else v) for k, v in transitions.items()}
             for bank in bank_ids:
                 for seed in seeds:
                     enforce()
@@ -309,7 +313,9 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
                         for checkpoint in schedule:
                             while sampler.updates < checkpoint:
                                 enforce()
-                                loss = fixed_update(agent, train_obs, unused_exact, tensors, sampler.next_batch(), "double_dqn")
+                                indices = sampler.next_batch()
+                                loss = (_comparison.update(agent, train_obs, indices, bank, seed) if custom_update
+                                    else fixed_update(agent, train_obs, unused_exact, tensors, indices, "double_dqn"))
                                 total_updates += 1
                                 if not np.isfinite(loss):
                                     raise ConsistencyError("nonfinite optimizer loss")
@@ -424,6 +430,8 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
     for filename, arrays in (("sample_counts", counts), ("local_sample_counts", local_counts), ("map_counts", map_counts)):
         np.savez_compressed(output / f"{filename}.npz", **{f"bank{b}_{c}_seed{s}": a for (b, c, s), a in arrays.items()})
     exposure = exposure_metrics(data, transitions, supports, counts, samples) if counts else {"per_map": [], "per_clock": [], "summaries": []}
+    extra_integrity = (_comparison.finalize_exposure(data, transitions, supports, counts, samples, exposure, output)
+        if _comparison and hasattr(_comparison, "finalize_exposure") else {"complete": True})
     for row in exposure["summaries"]:
         samples[str(row["bank_id"])][row["condition"]][str(row["seed"])]["successor_queries"] = row["successor_queries"]
     if _comparison:
@@ -469,7 +477,7 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
     loss_integrity = {"expected_windows": expected_windows, "actual_windows": len(losses),
         "complete": len(losses) == expected_windows and sum(r["updates_in_window"] for r in losses) == total_updates,
         "finite": all(np.isfinite(r["mean_loss"]) and np.isfinite(r["last_loss"]) for r in losses)}
-    complete = (loss_integrity["complete"] and loss_integrity["finite"] and snapshot_integrity["complete"] and snapshot_integrity["unchanged"] and len(supports) == len(bank_ids)
+    complete = (extra_integrity["complete"] and loss_integrity["complete"] and loss_integrity["finite"] and snapshot_integrity["complete"] and snapshot_integrity["unchanged"] and len(supports) == len(bank_ids)
         and all(r["unchanged"] and r["read_only"] for r in support_integrity)
         and all(r["complete"] and r["map_digest_identical"] and r["map_counts_identical"] for r in consistency)
         and all(r["online_identical"] and r["target_identical"] for r in initialization_consistency)

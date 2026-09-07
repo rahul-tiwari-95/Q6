@@ -92,6 +92,7 @@ jobs:
           import q6.bank_replication
           import q6.map_replay
           import q6.within_map
+          import q6.recorded_actions
           import config
           import no_way_home.channels
           import orchestrator.orchestrator

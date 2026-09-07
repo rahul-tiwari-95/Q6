@@ -82,9 +82,12 @@ python scripts/audit_panel_evaluation.py
 python scripts/audit_bank_replication.py
 python scripts/audit_map_replay.py
 python scripts/audit_within_map.py
+python scripts/audit_recorded_actions.py
 ```
 
-These separately check exact targets, reconstruct minibatch sampling schedules, reproduce final dense predictions from saved weights, and reconcile raw metrics and gates. They perform forward inference and isolated environment transitions, with no training or policy rollouts. Bit-exact predictions require the recorded environment and are excluded from broader dependency-range CI. The supervised audit accepts complete, undeviating v1 studies; its smoke and incomplete artifacts can use the general verifier's `verify_supervised` function.
+These separately check exact targets, reconstruct minibatch sampling schedules, reproduce saved predictions from weights, and reconcile raw metrics and gates. They perform forward inference and isolated environment transitions, with no training or full policy reevaluation. Bit-exact predictions require the recorded environment and are excluded from broader dependency-range CI. The supervised audit accepts complete, undeviating v1 studies; its smoke and incomplete artifacts can use the general verifier's `verify_supervised` function.
+
+The recorded-action audit reconstructs masks and deduplicated outcomes from archived collection logs, checks exact original replay and actual action-target exposure, and regenerates selected recording outputs. Treatment rewards and successor choices must come from logs; structural four-action diagnostics must remain separate from actual treatment queries. Smoke's short treatment stream is compared with the matching historical prefix while retaining the control's actual 30,000-update labels.
 
 The fixed-target audit additionally checks the compact transition table, paired sampling and initialization, exact-arm identity with the preceding study, paired outcomes and efficient-success denominators. Its `--skip-forward-inference` mode is included in general artifact verification and CI: it retains saved-model hashes and all dataset/metric checks while omitting bit-exact forward reproduction. Use `--study <directory> --allow-smoke` to audit a completed smoke structurally; this never makes it eligible for research gates. Incomplete or inconsistent fixed-target artifacts require inspection of their saved stop reason and partial evidence and are not accepted as complete studies by this audit.
 
