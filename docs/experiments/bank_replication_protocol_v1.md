@@ -145,9 +145,11 @@ per-seed or per-episode blocked fractions. Successful-only length is descriptive
 because successful subsets differ. Keep success and route efficiency visible
 separately, with exploratory-mode summaries distinguished from greedy results.
 
-Each bank/condition has 1,536 greedy and 3,072 exploratory episodes. Equal
-counts make equal-bank aggregation numerically equal to complete episode
-pooling, but bank remains the replication unit. Per-panel differences share
+Each bank/condition has 1,536 greedy and 3,072 exploratory episodes. For
+success, efficient success and mean steps, equal counts make equal-bank
+aggregation numerically equal to complete episode pooling. Blocked-step ratios
+retain their explicitly labeled denominators. Bank remains the replication
+unit. Per-panel differences share
 trained policies; per-learner differences share banks. Save **4,608 greedy
 per-layout pairs**, **72 bank/panel/seed** pairs, **24 bank/panel** pairs,
 **nine bank/all-panel/seed** pairs and **three bank/all-panel** effects, plus

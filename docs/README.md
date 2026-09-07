@@ -4,6 +4,7 @@ The [root README](../README.md) is the entry point for installing and running Q6
 
 ## Current experiments
 
+- [Independent bank-replication protocol](experiments/bank_replication_protocol_v1.md): three new fixed-budget exploratory banks, each paired with an equal-size uniform subset, with unchanged DDQN and prospective final-policy evaluation.
 - [Frozen-policy panel protocol](experiments/panel_evaluation_protocol_v1.md), [result](experiments/panel_evaluation_results_v1.md) and [validation](validation/panel-evaluation-v1.md): uniform support improves efficient success on all eight prospective panel means (+15.30 points pooled), while success reverses on one. No training or collection; next is independent support-bank replication.
 - [Equal-size bank protocol](experiments/equal_support_protocol_v1.md), [result](experiments/equal_support_results_v1.md) and [validation](validation/equal-support-v1.md): primary fresh success is close, while uniform support improves route efficiency. Identical collected weights score differently across panels; the subsequent frozen-policy study measures robustness across eight new panels.
 - [Experience-coverage protocol](experiments/coverage_protocol_v1.md), [result](experiments/coverage_results_v1.md) and [validation](validation/coverage-v1.md): exhaustive DDQN reaches 80.21% fresh success versus 68.23% from collected unique states, despite better familiar-start success in the collected arm. The subsequent equal-size study separates row count from combined composition.

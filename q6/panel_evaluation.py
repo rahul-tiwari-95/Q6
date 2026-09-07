@@ -103,14 +103,14 @@ def reduce_episodes(rows, planner):
         "successful_noop_rate": sum(r["noop_steps"] for r in successful) / successful_steps if successful_steps else None}
 
 
-def summarize_panels(rows, refs, panels, seeds):
+def summarize_panels(rows, refs, panels, seeds, *, conditions=CONDITIONS, comparisons=COMPARISONS):
     rows = [r for r in rows if r["checkpoint_complete"]]
     refs = [r for r in refs if r["checkpoint_complete"]]
     planner = {(r["panel"], r["map_seed"]): r["steps"] for r in refs if r["policy"] == "shortest_path"}
     seed_results, aggregate, references = [], [], []
     for panel in [p["id"] for p in panels] + ["all"]:
         selected = [r for r in rows if panel == "all" or r["panel"] == panel]
-        for condition in CONDITIONS:
+        for condition in conditions:
             for mode in ("greedy", "epsilon_0_1"):
                 group = [r for r in selected if r["condition"] == condition and r["mode"] == mode]
                 if not group:
@@ -129,11 +129,11 @@ def summarize_panels(rows, refs, panels, seeds):
             group = [r for r in refs if r["policy"] == policy and (panel == "all" or r["panel"] == panel)]
             if group:
                 references.append({"condition": "shared", "policy": policy, "panel": panel, "mode": "reference", **reduce_episodes(group, planner)})
-    paired = {"comparisons": list(COMPARISONS), "scope": "greedy only; right minus left on matched panel, seed and map",
+    paired = {"comparisons": list(comparisons), "scope": "greedy only; right minus left on matched panel, seed and map",
         "per_seed": [], "aggregate": [], "per_layout": []}
     lookup = {(r["condition"], r["panel"], r["seed"], r["mode"]): r for r in seed_results}
     pooled_lookup = {(r["condition"], r["panel"], r["mode"]): r for r in aggregate}
-    for comparison in COMPARISONS:
+    for comparison in comparisons:
         for panel in [p["id"] for p in panels] + ["all"]:
             for mode in ("greedy",):
                 values = []
@@ -170,7 +170,7 @@ def summarize_panels(rows, refs, panels, seeds):
     return seed_results, aggregate, references, paired
 
 
-def descriptive_summaries(seed_results, aggregate, references, paired, panels, seeds, eligible):
+def descriptive_summaries(seed_results, aggregate, references, paired, panels, seeds, eligible, *, conditions=CONDITIONS, comparisons=COMPARISONS):
     thresholds = {"classification": "descriptive historical threshold counts, not new competence gates",
         "eligible": eligible, "success_reference": .7, "efficient_success_reference": .8,
         "per_seed": [], "per_condition": []}
@@ -184,7 +184,7 @@ def descriptive_summaries(seed_results, aggregate, references, paired, panels, s
             "panel_random_success": random.get(row["panel"]),
             "success_reference_met": bool(eligible and row["success_rate"] >= .7 and row["panel"] in random and row["success_rate"] > random[row["panel"]]),
             "efficiency_reference_met": bool(eligible and efficiency is not None and efficiency >= .8)})
-    for condition in CONDITIONS:
+    for condition in conditions:
         outcomes = []
         for panel in panels:
             group = [r for r in thresholds["per_seed"] if r["condition"] == condition and r["panel"] == panel["id"]]
@@ -198,7 +198,7 @@ def descriptive_summaries(seed_results, aggregate, references, paired, panels, s
         "primary_comparison": "uniform_minus_collected", "primary_metric": "efficient_success_rate_delta", "primary_mode": "greedy",
         "paired_metric_aggregation": "arithmetic mean of seed-wise deltas; pooled no-op-rate differences are recorded separately in paired aggregates",
         "per_comparison": [], "per_condition": []}
-    for comparison in COMPARISONS:
+    for comparison in comparisons:
         for mode in ("greedy",):
             groups = [r for r in paired["aggregate"] if r["comparison"] == comparison["id"] and r["panel"] != "all" and r["mode"] == mode]
             item = {"comparison": comparison["id"], "mode": mode, "panels": len(groups), "metrics": {}}
@@ -209,7 +209,7 @@ def descriptive_summaries(seed_results, aggregate, references, paired, panels, s
                         "positive_panels": sum(v > 1e-12 for v in values), "negative_panels": sum(v < -1e-12 for v in values),
                         "zero_panels": sum(abs(v) <= 1e-12 for v in values), "panels": len(values), "sign_zero_tolerance": 1e-12}
             robustness["per_comparison"].append(item)
-    for condition in CONDITIONS:
+    for condition in conditions:
         for mode in ("greedy", "epsilon_0_1"):
             groups = [r for r in aggregate if r["condition"] == condition and r["panel"] != "all" and r["mode"] == mode]
             robustness["per_condition"].append({"condition": condition, "mode": mode, "panels": len(groups),
@@ -218,9 +218,9 @@ def descriptive_summaries(seed_results, aggregate, references, paired, panels, s
     return thresholds, robustness
 
 
-def verify_expected_cells(rows, refs, panels, seeds):
+def verify_expected_cells(rows, refs, panels, seeds, *, conditions=CONDITIONS):
     expected = {(condition, panel["id"], seed, layout["map_seed"], mode, rep)
-        for condition in CONDITIONS for panel in panels for seed in seeds for layout in panel["layouts"]
+        for condition in conditions for panel in panels for seed in seeds for layout in panel["layouts"]
         for mode in ("greedy", "epsilon_0_1") for rep in range(1 if mode == "greedy" else 2)}
     actual = [(r["condition"], r["panel"], r["seed"], r["map_seed"], r["mode"], r["repetition"])
         for r in rows if r["checkpoint_complete"]]

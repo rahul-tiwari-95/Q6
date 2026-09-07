@@ -110,7 +110,7 @@ def select_coverage_layouts(config, train_seeds, fresh_count, fresh_start, prior
     return result
 
 
-def collect_support(config, data, transitions, output, *, episodes_per_map=16, deadline=float("inf"), enforce=None):
+def collect_support(config, data, transitions, output, *, episodes_per_map=16, deadline=float("inf"), enforce=None, rng_suffix=()):
     """Collect once with random actions; no learner or oracle is consulted."""
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
@@ -130,7 +130,7 @@ def collect_support(config, data, transitions, output, *, episodes_per_map=16, d
                 for repetition in range(episodes_per_map):
                     enforce()
                     env.reset(seed=int(seed))
-                    rng = np.random.default_rng(np.random.SeedSequence([int(seed), repetition, 77301]))
+                    rng = np.random.default_rng(np.random.SeedSequence([int(seed), repetition, 77301, *rng_suffix]))
                     current = {"map_seed": int(seed), "repetition": repetition, "steps": 0, "success": 0,
                         "terminated": 0, "truncated": 0, "complete": 0, "base_return": 0., "shaped_return": 0., "noop_steps": 0}
                     while not (env.terminated or env.truncated):
@@ -169,7 +169,8 @@ def collect_support(config, data, transitions, output, *, episodes_per_map=16, d
     arrays = {"visited_counts": visited, "support_indices": np.flatnonzero(visited).astype(np.int32)}
     np.savez_compressed(output / "collection.npz", **arrays)
     coverage = {"status": status, "stop_reason": reason, "collection_policy": "uniform random actions",
-        "collection_rng": "SeedSequence([map_seed,repetition,77301])", "episodes_per_map": episodes_per_map,
+        "collection_rng": "SeedSequence([map_seed,repetition,77301])" if not rng_suffix else f"SeedSequence([map_seed,repetition,77301,{','.join(map(str, rng_suffix))}])",
+        "episodes_per_map": episodes_per_map,
         "collection_episodes": len(episodes), "complete_collection_episodes": sum(r["complete"] for r in episodes),
         "collection_steps": total_steps, "collection_successes": sum(r["success"] for r in episodes),
         "collection_noop_steps": sum(r["noop_steps"] for r in episodes),

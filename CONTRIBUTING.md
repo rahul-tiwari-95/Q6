@@ -79,6 +79,7 @@ python scripts/audit_fixed_targets_study.py
 python scripts/audit_coverage_study.py
 python scripts/audit_equal_support_study.py
 python scripts/audit_panel_evaluation.py
+python scripts/audit_bank_replication.py
 ```
 
 These separately check exact targets, reconstruct minibatch sampling schedules, reproduce final dense predictions from saved weights, and reconcile raw metrics and gates. They perform forward inference and isolated environment transitions, with no training or policy rollouts. Bit-exact predictions require the recorded environment and are excluded from broader dependency-range CI. The supervised audit accepts complete, undeviating v1 studies; its smoke and incomplete artifacts can use the general verifier's `verify_supervised` function.
@@ -95,6 +96,13 @@ episode, paired and panel summaries. Its forward check uses only preselected
 saved replay observations; it does not repeat the full policy evaluation.
 `--skip-forward-inference` preserves the portable artifact/arithmetic checks.
 No new training-fit or competence gate belongs to this evaluation-only study.
+
+The bank-replication audit reconstructs three separately randomized collector
+histories and their matched-size uniform draws, verifies within-pair local
+sampling and each bank's direct/successor exposure, and reconciles final
+per-bank outcomes before equal-bank pooling. It checks saved replay observations
+without rerunning training or the complete final-policy evaluation. The three
+banks share training layouts; learner seeds are not extra bank replications.
 
 ## Build a package
 

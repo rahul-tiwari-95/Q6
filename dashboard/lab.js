@@ -31,7 +31,7 @@ const fixedMode=()=>$('fixed-epsilon').value;
 const latestFixedUpdate=()=>Math.max(0,...(fixed?.aggregate || []).map(r=>r.checkpoint).filter(Number.isFinite));
 let coverage=null, coverageTrajectory=null, coverageFrame=0, coverageTimer=null;
 let coverageConditions=['collected_unique','uniform_subset'];
-const coverageStudies={coverage:null,equal_support:null,panel_evaluation:null};
+const coverageStudies={coverage:null,equal_support:null,panel_evaluation:null,bank_replication:null};
 const coverageIsEqual=()=>$('coverage-study').value==='equal_support';
 const coverageDirection=()=>coverageIsEqual()?'uniform subset minus collected unique states':'collected unique states minus exhaustive states';
 const coverageColors={exhaustive:'#a6e5c1',collected_unique:'#98b8d1',uniform_subset:'#e7b985'};
@@ -51,7 +51,7 @@ function robustnessPanels(){
   return Array.isArray(declared)?declared.map(p=>typeof p==='string'?p:p.id || p.panel).filter(Boolean):[...new Set((study?.aggregate || []).map(r=>r.panel).filter(p=>p!=='all'))].sort((a,b)=>Number(a.split('_').at(-1))-Number(b.split('_').at(-1)));
 }
 function renderRobustness(){
-  stopRobustnessPlayback();
+  stopRobustnessPlayback();stopBanksPlayback();
   const study=robustnessData(),ready=Boolean(study?.aggregate?.length),run=study?.run || {};
   $('robustness-empty').hidden=ready;$('robustness-content').hidden=!ready;
   if(!ready){
@@ -114,7 +114,7 @@ function renderRobustnessComparison(){
 }
 function stopRobustnessPlayback(){if(robustnessTimer)clearInterval(robustnessTimer);robustnessTimer=null;$('robustness-replay-play').textContent='▶ Play';$('robustness-replay-play').setAttribute('aria-label','Play frozen-policy recording');}
 function selectRobustnessTrajectory(){
-  stopRobustnessPlayback();const study=robustnessData(),rows=(study?.trajectories || []).filter(r=>r.policy!=='learner' || r.mode===robustnessMode());
+  stopRobustnessPlayback();stopBanksPlayback();const study=robustnessData(),rows=(study?.trajectories || []).filter(r=>r.policy!=='learner' || r.mode===robustnessMode());
   selectOptions('robustness-replay-panel',robustnessPanels().filter(p=>rows.some(r=>r.panel===p)).map(p=>[p,robustnessPanelLabel(p)]),robustnessPanels()[0]);
   const atPanel=rows.filter(r=>r.panel===$('robustness-replay-panel').value),controller=r=>r.policy==='learner'?r.condition:r.policy;
   selectOptions('robustness-replay-controller',[...new Set(atPanel.map(controller))].map(c=>[c,robustnessConditions.includes(c)?coverageLabel(c):policyLabel(c)]),'collected_unique');
@@ -135,9 +135,85 @@ function renderRobustnessReferences(){
 }
 $('robustness-epsilon').addEventListener('change',renderRobustnessComparison);
 for(const id of ['robustness-replay-panel','robustness-replay-controller','robustness-replay-seed'])$(id).addEventListener('change',selectRobustnessTrajectory);
-$('robustness-replay-play').addEventListener('click',()=>{if(robustnessTimer){stopRobustnessPlayback();return;}if(!robustnessTrajectory)return;if(robustnessFrame>=robustnessTrajectory.steps.length)robustnessFrame=0;$('robustness-replay-play').textContent='Ⅱ Pause';$('robustness-replay-play').setAttribute('aria-label','Pause frozen-policy recording');robustnessTimer=setInterval(()=>{robustnessFrame=Math.min(robustnessFrame+1,robustnessTrajectory.steps.length);$('robustness-replay-scrub').value=String(robustnessFrame);drawRobustnessWorld();if(robustnessFrame>=robustnessTrajectory.steps.length)stopRobustnessPlayback();},160);});
-$('robustness-replay-reset').addEventListener('click',()=>{stopRobustnessPlayback();robustnessFrame=0;$('robustness-replay-scrub').value='0';drawRobustnessWorld();});
-$('robustness-replay-scrub').addEventListener('input',event=>{stopRobustnessPlayback();robustnessFrame=Number(event.target.value);drawRobustnessWorld();});
+$('robustness-replay-play').addEventListener('click',()=>{if(robustnessTimer){stopRobustnessPlayback();stopBanksPlayback();return;}if(!robustnessTrajectory)return;if(robustnessFrame>=robustnessTrajectory.steps.length)robustnessFrame=0;$('robustness-replay-play').textContent='Ⅱ Pause';$('robustness-replay-play').setAttribute('aria-label','Pause frozen-policy recording');robustnessTimer=setInterval(()=>{robustnessFrame=Math.min(robustnessFrame+1,robustnessTrajectory.steps.length);$('robustness-replay-scrub').value=String(robustnessFrame);drawRobustnessWorld();if(robustnessFrame>=robustnessTrajectory.steps.length)stopRobustnessPlayback();stopBanksPlayback();},160);});
+$('robustness-replay-reset').addEventListener('click',()=>{stopRobustnessPlayback();stopBanksPlayback();robustnessFrame=0;$('robustness-replay-scrub').value='0';drawRobustnessWorld();});
+$('robustness-replay-scrub').addEventListener('input',event=>{stopRobustnessPlayback();stopBanksPlayback();robustnessFrame=Number(event.target.value);drawRobustnessWorld();});
+
+function banksData(){return coverageStudies.bank_replication;}
+const banksConditions=['collected_unique','uniform_subset'];
+let banksTrajectory=null,banksFrame=0,banksTimer=null;
+const banksMode=()=>$('banks-epsilon').value;
+const banksEligible=()=>banksData()?.descriptive_thresholds?.eligible===true && banksData()?.run?.status==='complete' && banksData()?.protocol?.smoke!==true && !(banksData()?.protocol?.deviations?.length);
+const banksRecords=()=>banksData()?.banks || [];
+const banksPanels=()=>(banksData()?.protocol?.panels || []).map(p=>typeof p==='string'?p:p.id);
+function renderBanks(){
+  stopBanksPlayback();const study=banksData(),run=study?.run || {},ready=Boolean(study?.aggregate?.length);
+  $('banks-empty').hidden=ready;$('banks-content').hidden=!ready;
+  if(!ready){$('banks-empty-title').textContent=run.status?.startsWith('inconsistent')?'Consistency check failed.':study?'No complete bank result available.':'No saved bank-replication result yet.';$('banks-empty-message').textContent=study?`Status: ${(run.status || 'unavailable').replaceAll('_',' ')}. ${run.stop_reason || study.provenance?.stop_reason || 'No completed result is substituted.'}`:'Earlier studies remain available through the study selector.';for(const id of ['banks-effects','banks-success-chart','banks-efficient-chart','banks-steps-chart','banks-difference-chart'])$(id).innerHTML='';return;}
+  const eligible=banksEligible();
+  $('banks-note').textContent=run.status?.startsWith('inconsistent')?`Consistency check failed. No replication conclusion is available. ${run.stop_reason || study.provenance?.stop_reason || ''}`:run.status!=='complete'?'Incomplete bank comparison. Inspect completed measurements; missing bank pairs cannot be replaced by the pooled result.':!eligible?'Smoke or protocol-deviation run. Measurements verify execution and do not establish bank replication.':'Inspect each independently constructed bank pair and its paired learner seeds. The equal-bank mean summarizes these pairs; it does not hide individual directions, create new competence gates, or establish significance or equivalence.';
+  $('banks-stats').innerHTML=[[number(banksRecords().length),'New bank pairs','Each uniform bank matches its collected bank’s size'],[number(study.protocol?.seeds?.length),'Learner seeds per condition','Paired within each bank'],[number(banksPanels().length),'Shared fresh panels','Final policies evaluated on the same maps'],[number(banksRecords().length*2*(study.protocol?.seeds?.length || 0)),'Declared model fits','Same Double DQN setup; final-only evaluation']].map(([value,label,detail])=>`<div class="stat-card"><span>${label}</span><strong>${value}</strong><small>${detail}</small></div>`).join('');
+  const paired=study.paired_differences?.aggregate || [],mean=study.pooled?.paired?.find(r=>r.panel==='all' && r.mode==='greedy');
+  const bankEffect=bank=>paired.find(r=>r.bank_id===bank.bank_id && r.panel==='all' && r.mode==='greedy');
+  const effects=banksRecords().map(bank=>({label:`Bank ${bank.bank_id}`,value:bankEffect(bank)?.mean_seed_efficient_success_rate_delta,detail:`${number(bank.support_size)} states in each condition`}));
+  effects.push({label:'Equal-bank mean',value:mean?.mean_bank_efficient_success_rate_delta,detail:'Each bank has the same weight'});
+  $('banks-effects').innerHTML=effects.map(r=>`<div class="stat-card"><span>${r.label}</span><strong style="color:${!Number.isFinite(r.value)?'#8a978f':r.value>1e-12?'#a6e5c1':r.value < -1e-12?'#e7b985':'#8a978f'}">${signed(r.value,100,' pp')}</strong><small>${r.detail}</small></div>`).join('');
+  const final=(bank,condition)=>study.aggregate.find(r=>r.bank_id===bank && r.condition===condition && r.panel==='all' && r.mode==='greedy');
+  const summaryRow=(label,left,right,delta)=>`<tr><td>${label}</td><td>${percent(left?.success_rate)}</td><td>${percent(right?.success_rate)}</td><td>${percent(left?.efficient_success_rate)}</td><td>${percent(right?.efficient_success_rate)}</td><td>${decimal(left?.mean_steps)}</td><td>${decimal(right?.mean_steps)}</td><td>${signed(delta,100,' pp')}</td></tr>`;
+  $('banks-summary-table').innerHTML='<thead><tr><th>Bank scope</th><th>Collected success</th><th>Uniform success</th><th>Collected efficient</th><th>Uniform efficient</th><th>Collected steps</th><th>Uniform steps</th><th>Efficient Δ</th></tr></thead><tbody>'+banksRecords().map(bank=>summaryRow(`Bank ${bank.bank_id}`,final(bank.bank_id,'collected_unique'),final(bank.bank_id,'uniform_subset'),bankEffect(bank)?.mean_seed_efficient_success_rate_delta)).join('')+summaryRow('Equal-bank mean',study.pooled?.aggregate?.find(r=>r.condition==='collected_unique' && r.panel==='all' && r.mode==='greedy'),study.pooled?.aggregate?.find(r=>r.condition==='uniform_subset' && r.panel==='all' && r.mode==='greedy'),mean?.mean_bank_efficient_success_rate_delta)+'</tbody>';
+  const values=effects.slice(0,-1).map(r=>r.value).filter(Number.isFinite);
+  $('banks-effects-caption').textContent=eligible?`Bank-mean efficiency differences: ${number(values.filter(v=>v>1e-12).length)} positive, ${number(values.filter(v=>v < -1e-12).length)} negative, ${number(values.filter(v=>Math.abs(v)<=1e-12).length)} tied (zero tolerance 10⁻¹²). These descriptive bank counts are not a significance test. All values above use final greedy evaluations; the mode toggle below does not change this primary comparison.`:'This run is not eligible for a bank-replication interpretation. Saved primary measurements remain visible; no incomplete or smoke result is promoted by pooling.';
+  selectOptions('banks-selected-bank',banksRecords().map(bank=>[String(bank.bank_id),`Bank ${bank.bank_id} · ${number(bank.support_size)} states / condition`]),String(banksRecords()[0]?.bank_id));
+  $('banks-method').textContent=`${number(run.wall_seconds)} seconds elapsed. New collected banks and matching uniform subsets are fitted with the same learner setup. Only final policies are evaluated on fresh panels. Intermediate model snapshots and training losses are archived for reproduction; they are not intermediate evaluation results.`;
+  if(Number.isFinite(run.peak_rss_bytes))$('banks-method').textContent+=` Peak process memory ${(run.peak_rss_bytes/1024**3).toFixed(2)} GiB.`;
+  listItems('banks-limitations',run.limitations);
+  $('banks-evidence-links').innerHTML='<a href="data/bank_replication.json" download>Download displayed data ↓</a>'+[['protocol_document','Study design'],['protocol','Saved protocol'],['report','Measured findings'],['evaluations','Raw final episodes'],['training','Training loss log'],['losses','Training loss log'],['banks','Bank composition'],['sampling','Sampling provenance'],['paired_differences','Paired differences'],['manifest','Artifact checksums']].flatMap(([key,label])=>{const path=study.artifacts?.[key];return typeof path==='string' && /^(docs|experiments)\/[a-zA-Z0-9_./-]+$/.test(path) && !path.split('/').includes('..')?[`<a href="../${escape(path)}">${label} ↗</a>`]:[];}).join('');
+  renderBanksComparison();
+}
+function renderBanksComparison(){
+  const study=banksData();if(!study?.aggregate?.length)return;
+  const bank=Number($('banks-selected-bank').value),mode=banksMode(),panels=banksPanels(),rows=study.aggregate.filter(r=>r.bank_id===bank && r.mode===mode && r.panel!=='all');
+  const series=key=>banksConditions.map(condition=>({label:coverageLabel(condition),color:coverageColors[condition],rows:rows.filter(r=>r.condition===condition).map(r=>({panel:r.panel,value:r[key]}))}));
+  renderPanelChart('banks-success-chart',series('success_rate'),panels,{title:`Bank ${bank} success`,rates:true,reference:.7});renderPanelChart('banks-efficient-chart',series('efficient_success_rate'),panels,{title:`Bank ${bank} efficient success`,rates:true,reference:.8});renderPanelChart('banks-steps-chart',series('mean_steps'),panels,{title:`Bank ${bank} mean steps`});
+  $('banks-legend').innerHTML=banksConditions.map(c=>`<span><i style="background:${coverageColors[c]}"></i>${coverageLabel(c)}</span>`).join('');
+  $('banks-mode-note').textContent=`Bank ${bank} · ${mode==='greedy'?'greedy actions':'ε = 0.1 exploration'}. Points are final-policy evaluations across panels, not a learning curve. Historical threshold counts and the top primary comparison remain greedy.`;
+  const pairs=(study.paired_differences?.aggregate || []).filter(r=>r.bank_id===bank && r.mode===mode && r.panel!=='all');
+  renderPanelChart('banks-difference-chart',[{label:'Uniform minus collected',color:'#a6e5c1',rows:pairs.map(r=>({panel:r.panel,value:r.mean_seed_efficient_success_rate_delta}))}],panels,{title:`Bank ${bank} paired efficient-success difference`,difference:true});
+  const values=pairs.map(r=>r.mean_seed_efficient_success_rate_delta).filter(Number.isFinite);
+  $('banks-difference-caption').textContent=mode!=='greedy'?'Paired effects were declared for greedy episodes only. Exploration outcomes and replays remain available.':banksEligible()?`Bank ${bank}: uniform minus collected efficiency is positive in ${number(values.filter(v=>v>1e-12).length)} panels, negative in ${number(values.filter(v=>v < -1e-12).length)}, tied in ${number(values.filter(v=>Math.abs(v)<=1e-12).length)}. Panel range ${values.length?`${signed(Math.min(...values),100,' pp')} to ${signed(Math.max(...values),100,' pp')}`:'—'}. Descriptive only; panels reuse the same learners.`:'Panel sign counts are not evidence for this ineligible run.';
+  const selected=(study.seed_results || []).filter(r=>r.bank_id===bank && r.mode===mode);
+  $('banks-learner-table').innerHTML='<thead><tr><th>Condition</th><th>Seed</th><th>Panel</th><th>Success</th><th>Efficient success</th><th>Mean steps</th><th>No-op rate</th><th>Episodes</th></tr></thead><tbody>'+selected.map(r=>`<tr><td>${coverageLabel(r.condition)}</td><td>${number(r.seed)}</td><td>${robustnessPanelLabel(r.panel)}</td><td>${percent(r.success_rate)}</td><td>${percent(r.efficient_success_rate)}</td><td>${decimal(r.mean_steps)}</td><td>${percent(r.noop_rate)}</td><td>${number(r.episodes)}</td></tr>`).join('')+'</tbody>';
+  $('banks-paired-table').innerHTML='<thead><tr><th>Bank</th><th>Panel</th><th>Success Δ</th><th>Efficient Δ</th><th>Mean steps Δ</th><th>Mean seed no-op Δ</th></tr></thead><tbody>'+(study.paired_differences?.aggregate || []).filter(r=>r.mode==='greedy').map(r=>`<tr><td>${number(r.bank_id)}</td><td>${robustnessPanelLabel(r.panel)}</td><td>${signed(r.mean_seed_success_rate_delta,100,' pp')}</td><td>${signed(r.mean_seed_efficient_success_rate_delta,100,' pp')}</td><td>${signed(r.mean_seed_mean_steps_delta)}</td><td>${signed(r.mean_seed_noop_rate_delta,100,' pp')}</td></tr>`).join('')+'</tbody>';
+  const thresholds=study.descriptive_thresholds || {},counts=thresholds.per_condition || (thresholds.per_bank || []).flatMap(b=>(b.per_condition || []).map(c=>({...c,bank_id:b.bank_id})));
+  $('banks-threshold-table').innerHTML='<thead><tr><th>Bank / condition</th><th>Panels: every seed ≥70% success and above random</th><th>Panels: every seed ≥80% efficient success</th></tr></thead><tbody>'+counts.filter(r=>r.bank_id===bank).map(r=>`<tr><td>${number(r.bank_id)} · ${coverageLabel(r.condition)}</td><td>${banksEligible()?`${number(r.success_reference_panels)} / ${number(r.panels)}`:'Not eligible'}</td><td>${banksEligible()?`${number(r.efficiency_reference_panels)} / ${number(r.panels)}`:'Not eligible'}</td></tr>`).join('')+'</tbody>';
+  renderBanksComposition();selectBanksTrajectory();
+}
+function supportMapSVG(maps,color='#98b8d1'){
+  if(!maps.length)return '<p class="help-text">No saved layout coverage.</p>';
+  const cols=Math.min(16,maps.length),cell=24,w=cols*cell,h=Math.ceil(maps.length/cols)*cell;
+  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><title>Included states across ${number(maps.length)} training layouts</title>${maps.map((r,i)=>`<rect x="${(i%cols)*cell}" y="${Math.floor(i/cols)*cell}" width="21" height="21" rx="2" fill="${color}" fill-opacity="${.08+.92*(Number.isFinite(r.coverage_rate)?Math.max(0,Math.min(1,r.coverage_rate)):0)}"><title>Map ${number(r.map_seed)}: ${number(r.visited_states)} / ${number(r.states)} included states (${percent(r.coverage_rate)})</title></rect>`).join('')}</svg>`;
+}
+function renderBanksComposition(){
+  const bank=banksRecords().find(r=>r.bank_id===Number($('banks-selected-bank').value));if(!bank)return;
+  const records=bank.coverage?.per_condition || [],intersection=bank.intersection || bank.coverage?.intersection || {},collection=bank.collection || {};
+  $('banks-composition-caption').textContent=`Bank ${bank.bank_id}: ${number(bank.support_size)} included states per condition. Collection cost: ${number(collection.collection_episodes)} episodes and ${number(collection.collection_steps)} actual action steps. Uniform states are selected from the exhaustive universe; they are not additional collected visits. Support intersection: ${number(intersection.states)}; union ${number(intersection.union_states)}; Jaccard ${percent(intersection.jaccard)}.`;
+  $('banks-composition-table').innerHTML='<thead><tr><th>Condition</th><th>Included states</th><th>State coverage</th><th>Winnable coverage</th><th>Goal-near coverage (physical distance ≤2, all clocks)</th><th>Nonterminal edges outside support</th></tr></thead><tbody>'+records.map(r=>`<tr><td>${coverageLabel(r.condition)}</td><td>${number(r.unique_current_states)}</td><td>${percent(r.current_state_fraction)}</td><td>${percent(r.winnable_current_state_fraction)} · ${number(r.overall?.visited_winnable_states)} / ${number(r.overall?.winnable_states)}</td><td>${percent(r.goal_near_current_state_fraction)} · ${number(r.overall?.visited_goal_near_states)} / ${number(r.overall?.goal_near_states)}</td><td>${percent(r.successor_queries?.outside_support_fraction)} · ${number(r.successor_queries?.outside_support_nonterminal_transitions)} / ${number(r.successor_queries?.nonterminal_transitions)}</td></tr>`).join('')+'</tbody>';
+  $('banks-map-heatmaps').innerHTML=records.map(r=>`<div><strong style="color:${coverageColors[r.condition]}">${coverageLabel(r.condition)}</strong>${supportMapSVG(r.by_map || [],coverageColors[r.condition])}</div>`).join('');
+  $('banks-time-bars').innerHTML=records.flatMap(r=>(r.by_time_bucket || []).map(row=>`<div class="diagnostic-row"><span>${coverageLabel(r.condition)}<small>${row.time_bucket==='all'?'All clocks':escape(row.time_bucket)+' remaining'} · ${number(row.visited_states)} / ${number(row.states)}</small></span><div class="diagnostic-track"><div class="diagnostic-fill" style="width:${100*(row.coverage_rate || 0)}%;background:${coverageColors[r.condition]}"></div></div><strong>${percent(row.coverage_rate)}</strong></div>`)).join('');
+}
+function stopBanksPlayback(){if(banksTimer)clearInterval(banksTimer);banksTimer=null;$('banks-replay-play').textContent='▶ Play';$('banks-replay-play').setAttribute('aria-label','Play bank-replication recording');}
+function selectBanksTrajectory(){
+  stopBanksPlayback();const study=banksData(),bank=Number($('banks-selected-bank').value),rows=(study?.trajectories || []).filter(r=>r.policy==='learner'?r.bank_id===bank && r.mode===banksMode():true);
+  selectOptions('banks-replay-panel',banksPanels().filter(p=>rows.some(r=>r.panel===p)).map(p=>[p,robustnessPanelLabel(p)]),banksPanels()[0]);const atPanel=rows.filter(r=>r.panel===$('banks-replay-panel').value),controller=r=>r.policy==='learner'?r.condition:r.policy;
+  selectOptions('banks-replay-controller',[...new Set(atPanel.map(controller))].map(c=>[c,banksConditions.includes(c)?coverageLabel(c):policyLabel(c)]),'collected_unique');const available=atPanel.filter(r=>controller(r)===$('banks-replay-controller').value);
+  selectOptions('banks-replay-seed',[...new Set(available.map(r=>r.seed))].sort((a,b)=>a-b).map(s=>[String(s),String(s)]),'0');banksTrajectory=available.find(r=>r.seed===Number($('banks-replay-seed').value)) || null;banksFrame=0;$('banks-replay-scrub').value='0';$('banks-replay-scrub').max=banksTrajectory?.steps.length || 0;for(const id of ['banks-replay-play','banks-replay-reset','banks-replay-scrub'])$(id).disabled=!banksTrajectory;drawBanksWorld();renderBanksReferences();
+}
+function drawBanksWorld(){const t=banksTrajectory;drawRecordedWorld('banks',t,banksFrame,t?`${t.policy==='learner'?`Bank ${t.bank_id} · ${coverageLabel(t.condition)} · final policy`:'Shared '+policyLabel(t.policy)} · ${robustnessPanelLabel(t.panel)} · seed ${t.seed} · map ${t.map_seed}. ${t.policy==='learner'?(t.mode==='greedy'?'Greedy actions.':'ε = 0.1 exploration.'):''} The first map of each panel was selected before outcomes; no learning occurs during replay.`:'',t?`${robustnessPanelLabel(t.panel)}, ${t.policy==='learner'?coverageLabel(t.condition):policyLabel(t.policy)}`:'');}
+function renderBanksReferences(){const study=banksData();if(!study)return;const bank=Number($('banks-selected-bank').value),panel=$('banks-replay-panel').value,rows=banksConditions.map(c=>[study.aggregate.find(r=>r.bank_id===bank && r.condition===c && r.panel===panel && r.mode===banksMode()),coverageLabel(c),coverageColors[c]]);for(const [policy,color] of [['random_actions','#b5a7d2'],['shortest_path','#ddd5b0']])rows.push([study.references?.find(r=>r.policy===policy && r.panel===panel),policyLabel(policy),color]);$('banks-reference-title').textContent=`Bank ${bank} · ${robustnessPanelLabel(panel)}`;$('banks-reference-bars').innerHTML=rows.filter(([r])=>r).map(([r,label,color])=>`<div class="diagnostic-row"><span>${label}</span><div class="diagnostic-track"><div class="diagnostic-fill" style="width:${100*r.success_rate}%;background:${color}"></div></div><strong>${percent(r.success_rate)}</strong></div>`).join('');$('banks-reference-caption').textContent=`Selected bank and panel; networks use ${banksMode()==='greedy'?'greedy actions':'ε = 0.1'}. Random and planner references are shared across bank pairs and retain their own policies.`;}
+$('banks-selected-bank').addEventListener('change',renderBanksComparison);$('banks-epsilon').addEventListener('change',renderBanksComparison);
+for(const id of ['banks-replay-panel','banks-replay-controller','banks-replay-seed'])$(id).addEventListener('change',selectBanksTrajectory);
+$('banks-replay-play').addEventListener('click',()=>{if(banksTimer){stopBanksPlayback();return;}if(!banksTrajectory)return;if(banksFrame>=banksTrajectory.steps.length)banksFrame=0;$('banks-replay-play').textContent='Ⅱ Pause';$('banks-replay-play').setAttribute('aria-label','Pause bank-replication recording');banksTimer=setInterval(()=>{banksFrame=Math.min(banksFrame+1,banksTrajectory.steps.length);$('banks-replay-scrub').value=String(banksFrame);drawBanksWorld();if(banksFrame>=banksTrajectory.steps.length)stopBanksPlayback();},160);});
+$('banks-replay-reset').addEventListener('click',()=>{stopBanksPlayback();banksFrame=0;$('banks-replay-scrub').value='0';drawBanksWorld();});$('banks-replay-scrub').addEventListener('input',event=>{stopBanksPlayback();banksFrame=Number(event.target.value);drawBanksWorld();});
 
 let loadInProgress = false;
 const replayRows = () => [...(adaptation?.trajectories || []),...(diagnostics?.trajectories || [])];
@@ -163,7 +239,7 @@ function activateTab(name) {
   stopCompetencePlayback();
   stopSupervisedPlayback();
   stopFixedPlayback();
-  stopCoveragePlayback();stopRobustnessPlayback();
+  stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();
   history.replaceState(null,'',`#${name}`);
 }
 for (const [index,name] of tracks.entries()) {
@@ -179,16 +255,17 @@ for (const [index,name] of tracks.entries()) {
 if (tracks.includes(location.hash.slice(1))) activateTab(location.hash.slice(1));
 
 function selectCoverageStudy(){
-  stopCoveragePlayback();stopRobustnessPlayback();coverage=coverageStudies[$('coverage-study').value] || null;
+  stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();coverage=coverageStudies[$('coverage-study').value] || null;
   coverageConditions=coverageIsEqual()?['collected_unique','uniform_subset']:['exhaustive','collected_unique'];
-  for(const id of ['coverage-replay-condition','coverage-replay-controller','coverage-replay-checkpoint','coverage-replay-panel','coverage-replay-seed','coverage-support-condition','robustness-replay-panel','robustness-replay-controller','robustness-replay-seed'])$(id).value='';
+  for(const id of ['coverage-replay-condition','coverage-replay-controller','coverage-replay-checkpoint','coverage-replay-panel','coverage-replay-seed','coverage-support-condition','robustness-replay-panel','robustness-replay-controller','robustness-replay-seed','banks-selected-bank','banks-replay-panel','banks-replay-controller','banks-replay-seed'])$(id).value='';
   renderCoverage();
 }
 $('coverage-study').addEventListener('change',selectCoverageStudy);
 function renderCoverage(){
-  stopCoveragePlayback();stopRobustnessPlayback();
-  const frozen=$('coverage-study').value==='panel_evaluation';
-  $('robustness-view').hidden=!frozen;$('coverage-learning-intro').hidden=frozen;
+  stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();
+  const frozen=$('coverage-study').value==='panel_evaluation',replicated=$('coverage-study').value==='bank_replication';
+  $('banks-view').hidden=!replicated;$('robustness-view').hidden=!frozen;$('coverage-learning-intro').hidden=frozen || replicated;
+  if(replicated){$('coverage-study-context').textContent='New bank pairs and final-policy evaluation; inspect each bank before the equal-bank mean.';$('coverage-empty').hidden=true;$('coverage-content').hidden=true;renderBanks();return;}
   if(frozen){$('coverage-study-context').textContent='Frozen policies on several new panels; no training or new competence gate.';$('coverage-empty').hidden=true;$('coverage-content').hidden=true;renderRobustness();return;}
   renderCoveragePanelSensitivity();
   const equal=coverageIsEqual();
@@ -298,10 +375,7 @@ function renderCoverageSupport(){
     [precisePercent(support.goal_near_current_state_fraction),'Goal-near state coverage',`${number(overall.visited_goal_near_states)} / ${number(overall.goal_near_states)} states · physical shortest path ≤ 2 moves; all remaining clocks`],
     [precisePercent(queries.outside_support_fraction),'Successor edges outside support',`${number(queries.outside_support_nonterminal_transitions)} / ${number(queries.nonterminal_transitions)} nonterminal action edges`],
   ].map(([value,label,detail])=>`<div><span>${label}</span><strong>${value}</strong><small>${detail}</small></div>`).join('');
-  if(maps.length){
-    const cols=Math.min(16,maps.length),cell=24,gap=3,w=cols*cell,h=Math.ceil(maps.length/cols)*cell;
-    $('coverage-map-heatmap').innerHTML=`<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><title>Included current-state coverage across ${number(maps.length)} training layouts</title>${maps.map((row,i)=>{const x=(i%cols)*cell,y=Math.floor(i/cols)*cell,ratio=Number.isFinite(row.coverage_rate)?Math.max(0,Math.min(1,row.coverage_rate)):0;return `<rect x="${x}" y="${y}" width="${cell-gap}" height="${cell-gap}" rx="2" fill="#98b8d1" fill-opacity="${.08+.92*ratio}"><title>Map ${number(row.map_seed)}: ${number(row.visited_states)} / ${number(row.states)} unique current states (${percent(row.coverage_rate)})</title></rect>`;}).join('')}</svg>`;
-  }else $('coverage-map-heatmap').innerHTML='<p class="help-text">No saved per-layout coverage measurements.</p>';
+  $('coverage-map-heatmap').innerHTML=supportMapSVG(maps);
   $('coverage-time-bars').innerHTML=buckets.map(row=>`<div class="diagnostic-row"><span>${row.time_bucket==='all'?'All remaining times':`${escape(row.time_bucket)} steps left`}<small>${number(row.visited_states)} / ${number(row.states)} states</small></span><div class="diagnostic-track">${Number.isFinite(row.coverage_rate)?`<div class="diagnostic-fill" style="width:${100*Math.max(0,Math.min(1,row.coverage_rate))}%;background:#98b8d1"></div>`:''}</div><strong>${percent(row.coverage_rate)}</strong></div>`).join('') || '<p class="help-text">No saved remaining-time coverage measurements.</p>';
   $('coverage-successor-caption').textContent=`Across all four transitions from each included current state, ${number(queries.outside_support_nonterminal_transitions)} of ${number(queries.nonterminal_transitions)} nonterminal successors (${percent(queries.outside_support_fraction)}) lie outside its current-state support. These are static bank counts, not optimizer samples or newly collected experience. Terminal transitions use their reward directly.`;
   $('coverage-support-table').innerHTML='<thead><tr><th>Scope</th><th>Layout / remaining time</th><th>Included states</th><th>Exhaustive states</th><th>Coverage</th><th>Included winnable states</th><th>Exhaustive winnable states</th><th>Winnable coverage</th></tr></thead><tbody>'+[[maps,'Layout','map_seed'],[buckets,'Time bucket','time_bucket']].flatMap(([rows,label,key])=>rows.map(row=>`<tr><td>${label}</td><td>${escape(row[key])}</td><td>${number(row.visited_states)}</td><td>${number(row.states)}</td><td>${percent(row.coverage_rate)}</td><td>${number(row.visited_winnable_states)}</td><td>${number(row.winnable_states)}</td><td>${percent(row.winnable_coverage_rate)}</td></tr>`)).join('')+'</tbody>';
@@ -342,7 +416,7 @@ function renderCoverageComparison(){
 }
 function stopCoveragePlayback(){if(coverageTimer)clearInterval(coverageTimer);coverageTimer=null;$('coverage-replay-play').textContent='▶ Play';$('coverage-replay-play').setAttribute('aria-label','Play saved experience-coverage trajectory');}
 function selectCoverageTrajectory(){
-  stopCoveragePlayback();stopRobustnessPlayback();
+  stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();
   const rows=(coverage?.trajectories || []).filter(r=>r.policy!=='learner' || r.mode===coverageMode());
   selectOptions('coverage-replay-condition',[...new Set(rows.map(r=>r.condition))].map(c=>[c,coverageLabel(c)]),coverageConditions[0]);
   const atCondition=rows.filter(r=>r.condition===$('coverage-replay-condition').value);
@@ -373,9 +447,9 @@ function renderCoverageReferences(){
 }
 $('coverage-epsilon').addEventListener('change',renderCoverageComparison);
 for(const id of ['coverage-replay-condition','coverage-replay-controller','coverage-replay-checkpoint','coverage-replay-panel','coverage-replay-seed'])$(id).addEventListener('change',selectCoverageTrajectory);
-$('coverage-replay-play').addEventListener('click',()=>{if(coverageTimer){stopCoveragePlayback();stopRobustnessPlayback();return;}if(!coverageTrajectory)return;if(coverageFrame>=coverageTrajectory.steps.length)coverageFrame=0;$('coverage-replay-play').textContent='Ⅱ Pause';$('coverage-replay-play').setAttribute('aria-label','Pause saved experience-coverage trajectory');coverageTimer=setInterval(()=>{coverageFrame=Math.min(coverageFrame+1,coverageTrajectory.steps.length);$('coverage-replay-scrub').value=String(coverageFrame);drawCoverageWorld();if(coverageFrame>=coverageTrajectory.steps.length)stopCoveragePlayback();stopRobustnessPlayback();},160);});
-$('coverage-replay-reset').addEventListener('click',()=>{stopCoveragePlayback();stopRobustnessPlayback();coverageFrame=0;$('coverage-replay-scrub').value='0';drawCoverageWorld();});
-$('coverage-replay-scrub').addEventListener('input',event=>{stopCoveragePlayback();stopRobustnessPlayback();coverageFrame=Number(event.target.value);drawCoverageWorld();});
+$('coverage-replay-play').addEventListener('click',()=>{if(coverageTimer){stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();return;}if(!coverageTrajectory)return;if(coverageFrame>=coverageTrajectory.steps.length)coverageFrame=0;$('coverage-replay-play').textContent='Ⅱ Pause';$('coverage-replay-play').setAttribute('aria-label','Pause saved experience-coverage trajectory');coverageTimer=setInterval(()=>{coverageFrame=Math.min(coverageFrame+1,coverageTrajectory.steps.length);$('coverage-replay-scrub').value=String(coverageFrame);drawCoverageWorld();if(coverageFrame>=coverageTrajectory.steps.length)stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();},160);});
+$('coverage-replay-reset').addEventListener('click',()=>{stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();coverageFrame=0;$('coverage-replay-scrub').value='0';drawCoverageWorld();});
+$('coverage-replay-scrub').addEventListener('input',event=>{stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();coverageFrame=Number(event.target.value);drawCoverageWorld();});
 
 function renderFixed(){
   stopFixedPlayback();
@@ -1009,9 +1083,9 @@ async function getData(path) {
 }
 async function loadData() {
   if(loadInProgress)return;loadInProgress=true;$('refresh').disabled=true;$('study-run').disabled=true;
-  stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();stopCoveragePlayback();stopRobustnessPlayback();
+  stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();
   const adaptationPath=$('study-run').value==='pilot_v1'?'../experiments/adaptation/pilot_v1/results.json':'data/adaptation.json';
-  const results=await Promise.allSettled([getData(adaptationPath),getData('data/provenance.json'),getData('data/competence.json'),getData('data/supervised.json'),getData('data/fixed_targets.json'),getData('data/coverage.json'),getData('data/equal_support.json'),getData('data/panel_evaluation.json')]);
+  const results=await Promise.allSettled([getData(adaptationPath),getData('data/provenance.json'),getData('data/competence.json'),getData('data/supervised.json'),getData('data/fixed_targets.json'),getData('data/coverage.json'),getData('data/equal_support.json'),getData('data/panel_evaluation.json'),getData('data/bank_replication.json')]);
   const errors=[];
   diagnostics=null;
   if(results[0].status==='fulfilled') {
@@ -1034,16 +1108,17 @@ async function loadData() {
   if(results[5].status==='fulfilled')coverageStudies.coverage=results[5].value;else {coverageStudies.coverage=null;errors.push(results[5].reason.message);}
   if(results[6].status==='fulfilled')coverageStudies.equal_support=results[6].value;else {coverageStudies.equal_support=null;errors.push(results[6].reason.message);}
   if(results[7].status==='fulfilled')coverageStudies.panel_evaluation=results[7].value;else {coverageStudies.panel_evaluation=null;errors.push(results[7].reason.message);}
+  if(results[8].status==='fulfilled')coverageStudies.bank_replication=results[8].value;else {coverageStudies.bank_replication=null;errors.push(results[8].reason.message);}
   coverage=coverageStudies[$('coverage-study').value] || null;coverageConditions=coverageIsEqual()?['collected_unique','uniform_subset']:['exhaustive','collected_unique'];
   renderCoverage();
   if(errors.length) $('load-status').textContent=errors.join(' · ');
   else {
-    const loaded=[coverageStudies.panel_evaluation&&'Panel robustness',coverageStudies.equal_support&&'Equal-size banks',coverageStudies.coverage&&'Experience coverage',fixed&&'Fixed-data targets',supervised&&'Exact targets',competence&&'Competence',adaptation&&'Adaptation',provenance&&'Provenance'].filter(Boolean);
+    const loaded=[coverageStudies.bank_replication&&'Bank replications',coverageStudies.panel_evaluation&&'Panel robustness',coverageStudies.equal_support&&'Equal-size banks',coverageStudies.coverage&&'Experience coverage',fixed&&'Fixed-data targets',supervised&&'Exact targets',competence&&'Competence',adaptation&&'Adaptation',provenance&&'Provenance'].filter(Boolean);
     $('load-status').textContent=`${loaded.join(' + ') || 'No'} saved ${loaded.length===1?'study':'studies'} loaded · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
   }
   $('refresh').disabled=false;$('study-run').disabled=false;loadInProgress=false;
 }
 $('refresh').addEventListener('click',loadData);
 $('study-run').addEventListener('change',loadData);
-document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();stopCoveragePlayback();stopRobustnessPlayback();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();}});
 await loadData();
