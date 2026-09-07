@@ -1,0 +1,887 @@
+{
+  "classification": "exact logged-action graph, not full-world optimal values",
+  "per_bank": [
+    {
+      "bank_id": 1,
+      "supported_states": 59839,
+      "observed_edges": 84305,
+      "terminal_edges": 3684,
+      "nonterminal_edges": 80621,
+      "graph_preparation_successor_backups": 80621,
+      "neural_successor_queries": 0,
+      "clock_levels": 32,
+      "gamma": 0.97,
+      "all_successors_closed": true,
+      "per_clock": [
+        {
+          "remaining": 1,
+          "supported_states": 1806,
+          "observed_edges": 2267,
+          "terminal_edges": 2267,
+          "nonterminal_edges": 0,
+          "successor_backups": 0
+        },
+        {
+          "remaining": 2,
+          "supported_states": 1849,
+          "observed_edges": 2298,
+          "terminal_edges": 37,
+          "nonterminal_edges": 2261,
+          "successor_backups": 2261
+        },
+        {
+          "remaining": 3,
+          "supported_states": 1844,
+          "observed_edges": 2328,
+          "terminal_edges": 32,
+          "nonterminal_edges": 2296,
+          "successor_backups": 2296
+        },
+        {
+          "remaining": 4,
+          "supported_states": 1872,
+          "observed_edges": 2347,
+          "terminal_edges": 41,
+          "nonterminal_edges": 2306,
+          "successor_backups": 2306
+        },
+        {
+          "remaining": 5,
+          "supported_states": 1887,
+          "observed_edges": 2393,
+          "terminal_edges": 40,
+          "nonterminal_edges": 2353,
+          "successor_backups": 2353
+        },
+        {
+          "remaining": 6,
+          "supported_states": 1910,
+          "observed_edges": 2419,
+          "terminal_edges": 33,
+          "nonterminal_edges": 2386,
+          "successor_backups": 2386
+        },
+        {
+          "remaining": 7,
+          "supported_states": 1927,
+          "observed_edges": 2454,
+          "terminal_edges": 29,
+          "nonterminal_edges": 2425,
+          "successor_backups": 2425
+        },
+        {
+          "remaining": 8,
+          "supported_states": 1942,
+          "observed_edges": 2462,
+          "terminal_edges": 36,
+          "nonterminal_edges": 2426,
+          "successor_backups": 2426
+        },
+        {
+          "remaining": 9,
+          "supported_states": 1985,
+          "observed_edges": 2526,
+          "terminal_edges": 41,
+          "nonterminal_edges": 2485,
+          "successor_backups": 2485
+        },
+        {
+          "remaining": 10,
+          "supported_states": 1987,
+          "observed_edges": 2547,
+          "terminal_edges": 41,
+          "nonterminal_edges": 2506,
+          "successor_backups": 2506
+        },
+        {
+          "remaining": 11,
+          "supported_states": 2015,
+          "observed_edges": 2583,
+          "terminal_edges": 53,
+          "nonterminal_edges": 2530,
+          "successor_backups": 2530
+        },
+        {
+          "remaining": 12,
+          "supported_states": 2035,
+          "observed_edges": 2615,
+          "terminal_edges": 29,
+          "nonterminal_edges": 2586,
+          "successor_backups": 2586
+        },
+        {
+          "remaining": 13,
+          "supported_states": 2026,
+          "observed_edges": 2655,
+          "terminal_edges": 43,
+          "nonterminal_edges": 2612,
+          "successor_backups": 2612
+        },
+        {
+          "remaining": 14,
+          "supported_states": 2045,
+          "observed_edges": 2673,
+          "terminal_edges": 43,
+          "nonterminal_edges": 2630,
+          "successor_backups": 2630
+        },
+        {
+          "remaining": 15,
+          "supported_states": 2060,
+          "observed_edges": 2702,
+          "terminal_edges": 44,
+          "nonterminal_edges": 2658,
+          "successor_backups": 2658
+        },
+        {
+          "remaining": 16,
+          "supported_states": 2070,
+          "observed_edges": 2750,
+          "terminal_edges": 56,
+          "nonterminal_edges": 2694,
+          "successor_backups": 2694
+        },
+        {
+          "remaining": 17,
+          "supported_states": 2074,
+          "observed_edges": 2775,
+          "terminal_edges": 53,
+          "nonterminal_edges": 2722,
+          "successor_backups": 2722
+        },
+        {
+          "remaining": 18,
+          "supported_states": 2081,
+          "observed_edges": 2786,
+          "terminal_edges": 42,
+          "nonterminal_edges": 2744,
+          "successor_backups": 2744
+        },
+        {
+          "remaining": 19,
+          "supported_states": 2094,
+          "observed_edges": 2837,
+          "terminal_edges": 36,
+          "nonterminal_edges": 2801,
+          "successor_backups": 2801
+        },
+        {
+          "remaining": 20,
+          "supported_states": 2060,
+          "observed_edges": 2874,
+          "terminal_edges": 50,
+          "nonterminal_edges": 2824,
+          "successor_backups": 2824
+        },
+        {
+          "remaining": 21,
+          "supported_states": 2086,
+          "observed_edges": 2914,
+          "terminal_edges": 48,
+          "nonterminal_edges": 2866,
+          "successor_backups": 2866
+        },
+        {
+          "remaining": 22,
+          "supported_states": 2096,
+          "observed_edges": 2944,
+          "terminal_edges": 43,
+          "nonterminal_edges": 2901,
+          "successor_backups": 2901
+        },
+        {
+          "remaining": 23,
+          "supported_states": 2080,
+          "observed_edges": 2963,
+          "terminal_edges": 56,
+          "nonterminal_edges": 2907,
+          "successor_backups": 2907
+        },
+        {
+          "remaining": 24,
+          "supported_states": 2068,
+          "observed_edges": 3028,
+          "terminal_edges": 61,
+          "nonterminal_edges": 2967,
+          "successor_backups": 2967
+        },
+        {
+          "remaining": 25,
+          "supported_states": 2027,
+          "observed_edges": 3016,
+          "terminal_edges": 48,
+          "nonterminal_edges": 2968,
+          "successor_backups": 2968
+        },
+        {
+          "remaining": 26,
+          "supported_states": 1955,
+          "observed_edges": 3023,
+          "terminal_edges": 46,
+          "nonterminal_edges": 2977,
+          "successor_backups": 2977
+        },
+        {
+          "remaining": 27,
+          "supported_states": 1898,
+          "observed_edges": 3014,
+          "terminal_edges": 64,
+          "nonterminal_edges": 2950,
+          "successor_backups": 2950
+        },
+        {
+          "remaining": 28,
+          "supported_states": 1817,
+          "observed_edges": 2958,
+          "terminal_edges": 60,
+          "nonterminal_edges": 2898,
+          "successor_backups": 2898
+        },
+        {
+          "remaining": 29,
+          "supported_states": 1678,
+          "observed_edges": 2933,
+          "terminal_edges": 63,
+          "nonterminal_edges": 2870,
+          "successor_backups": 2870
+        },
+        {
+          "remaining": 30,
+          "supported_states": 1434,
+          "observed_edges": 2811,
+          "terminal_edges": 72,
+          "nonterminal_edges": 2739,
+          "successor_backups": 2739
+        },
+        {
+          "remaining": 31,
+          "supported_states": 875,
+          "observed_edges": 2401,
+          "terminal_edges": 56,
+          "nonterminal_edges": 2345,
+          "successor_backups": 2345
+        },
+        {
+          "remaining": 32,
+          "supported_states": 256,
+          "observed_edges": 1009,
+          "terminal_edges": 21,
+          "nonterminal_edges": 988,
+          "successor_backups": 988
+        }
+      ],
+      "bellman_residual_max": 0.0,
+      "bellman_residual_mean": 0.0,
+      "bellman_residual_tolerance": 1e-12,
+      "residual_validation_successor_lookups": 80621,
+      "optimizer_access": "float32 cast of fixed logged-only float64 DP labels; absent actions excluded",
+      "arrays": {
+        "targets_float64": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "float64",
+          "sha256": "6178d9494955f5a77f9759ff4ba2d29efae6941b82f42a04528e49ee6c2405f3"
+        },
+        "targets_float32": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "float32",
+          "sha256": "e6952f938c0c448ccfc49f819e060ead7394b7e8ee2eb76b4503774482f7e800"
+        }
+      },
+      "preparation_wall_seconds": 0.02433545794337988
+    },
+    {
+      "bank_id": 2,
+      "supported_states": 59984,
+      "observed_edges": 84091,
+      "terminal_edges": 3676,
+      "nonterminal_edges": 80415,
+      "graph_preparation_successor_backups": 80415,
+      "neural_successor_queries": 0,
+      "clock_levels": 32,
+      "gamma": 0.97,
+      "all_successors_closed": true,
+      "per_clock": [
+        {
+          "remaining": 1,
+          "supported_states": 1851,
+          "observed_edges": 2273,
+          "terminal_edges": 2273,
+          "nonterminal_edges": 0,
+          "successor_backups": 0
+        },
+        {
+          "remaining": 2,
+          "supported_states": 1841,
+          "observed_edges": 2315,
+          "terminal_edges": 28,
+          "nonterminal_edges": 2287,
+          "successor_backups": 2287
+        },
+        {
+          "remaining": 3,
+          "supported_states": 1868,
+          "observed_edges": 2348,
+          "terminal_edges": 37,
+          "nonterminal_edges": 2311,
+          "successor_backups": 2311
+        },
+        {
+          "remaining": 4,
+          "supported_states": 1898,
+          "observed_edges": 2370,
+          "terminal_edges": 35,
+          "nonterminal_edges": 2335,
+          "successor_backups": 2335
+        },
+        {
+          "remaining": 5,
+          "supported_states": 1909,
+          "observed_edges": 2398,
+          "terminal_edges": 42,
+          "nonterminal_edges": 2356,
+          "successor_backups": 2356
+        },
+        {
+          "remaining": 6,
+          "supported_states": 1927,
+          "observed_edges": 2424,
+          "terminal_edges": 30,
+          "nonterminal_edges": 2394,
+          "successor_backups": 2394
+        },
+        {
+          "remaining": 7,
+          "supported_states": 1938,
+          "observed_edges": 2469,
+          "terminal_edges": 37,
+          "nonterminal_edges": 2432,
+          "successor_backups": 2432
+        },
+        {
+          "remaining": 8,
+          "supported_states": 1968,
+          "observed_edges": 2500,
+          "terminal_edges": 34,
+          "nonterminal_edges": 2466,
+          "successor_backups": 2466
+        },
+        {
+          "remaining": 9,
+          "supported_states": 1953,
+          "observed_edges": 2505,
+          "terminal_edges": 32,
+          "nonterminal_edges": 2473,
+          "successor_backups": 2473
+        },
+        {
+          "remaining": 10,
+          "supported_states": 1967,
+          "observed_edges": 2528,
+          "terminal_edges": 31,
+          "nonterminal_edges": 2497,
+          "successor_backups": 2497
+        },
+        {
+          "remaining": 11,
+          "supported_states": 1963,
+          "observed_edges": 2560,
+          "terminal_edges": 39,
+          "nonterminal_edges": 2521,
+          "successor_backups": 2521
+        },
+        {
+          "remaining": 12,
+          "supported_states": 1985,
+          "observed_edges": 2582,
+          "terminal_edges": 40,
+          "nonterminal_edges": 2542,
+          "successor_backups": 2542
+        },
+        {
+          "remaining": 13,
+          "supported_states": 2022,
+          "observed_edges": 2638,
+          "terminal_edges": 53,
+          "nonterminal_edges": 2585,
+          "successor_backups": 2585
+        },
+        {
+          "remaining": 14,
+          "supported_states": 2034,
+          "observed_edges": 2688,
+          "terminal_edges": 46,
+          "nonterminal_edges": 2642,
+          "successor_backups": 2642
+        },
+        {
+          "remaining": 15,
+          "supported_states": 2039,
+          "observed_edges": 2704,
+          "terminal_edges": 38,
+          "nonterminal_edges": 2666,
+          "successor_backups": 2666
+        },
+        {
+          "remaining": 16,
+          "supported_states": 2072,
+          "observed_edges": 2733,
+          "terminal_edges": 47,
+          "nonterminal_edges": 2686,
+          "successor_backups": 2686
+        },
+        {
+          "remaining": 17,
+          "supported_states": 2068,
+          "observed_edges": 2761,
+          "terminal_edges": 55,
+          "nonterminal_edges": 2706,
+          "successor_backups": 2706
+        },
+        {
+          "remaining": 18,
+          "supported_states": 2062,
+          "observed_edges": 2774,
+          "terminal_edges": 35,
+          "nonterminal_edges": 2739,
+          "successor_backups": 2739
+        },
+        {
+          "remaining": 19,
+          "supported_states": 2094,
+          "observed_edges": 2809,
+          "terminal_edges": 38,
+          "nonterminal_edges": 2771,
+          "successor_backups": 2771
+        },
+        {
+          "remaining": 20,
+          "supported_states": 2061,
+          "observed_edges": 2851,
+          "terminal_edges": 46,
+          "nonterminal_edges": 2805,
+          "successor_backups": 2805
+        },
+        {
+          "remaining": 21,
+          "supported_states": 2115,
+          "observed_edges": 2881,
+          "terminal_edges": 57,
+          "nonterminal_edges": 2824,
+          "successor_backups": 2824
+        },
+        {
+          "remaining": 22,
+          "supported_states": 2083,
+          "observed_edges": 2936,
+          "terminal_edges": 52,
+          "nonterminal_edges": 2884,
+          "successor_backups": 2884
+        },
+        {
+          "remaining": 23,
+          "supported_states": 2112,
+          "observed_edges": 2959,
+          "terminal_edges": 58,
+          "nonterminal_edges": 2901,
+          "successor_backups": 2901
+        },
+        {
+          "remaining": 24,
+          "supported_states": 2057,
+          "observed_edges": 2971,
+          "terminal_edges": 53,
+          "nonterminal_edges": 2918,
+          "successor_backups": 2918
+        },
+        {
+          "remaining": 25,
+          "supported_states": 2038,
+          "observed_edges": 3007,
+          "terminal_edges": 49,
+          "nonterminal_edges": 2958,
+          "successor_backups": 2958
+        },
+        {
+          "remaining": 26,
+          "supported_states": 1987,
+          "observed_edges": 2992,
+          "terminal_edges": 49,
+          "nonterminal_edges": 2943,
+          "successor_backups": 2943
+        },
+        {
+          "remaining": 27,
+          "supported_states": 1932,
+          "observed_edges": 2976,
+          "terminal_edges": 55,
+          "nonterminal_edges": 2921,
+          "successor_backups": 2921
+        },
+        {
+          "remaining": 28,
+          "supported_states": 1841,
+          "observed_edges": 2983,
+          "terminal_edges": 62,
+          "nonterminal_edges": 2921,
+          "successor_backups": 2921
+        },
+        {
+          "remaining": 29,
+          "supported_states": 1724,
+          "observed_edges": 2947,
+          "terminal_edges": 77,
+          "nonterminal_edges": 2870,
+          "successor_backups": 2870
+        },
+        {
+          "remaining": 30,
+          "supported_states": 1447,
+          "observed_edges": 2825,
+          "terminal_edges": 58,
+          "nonterminal_edges": 2767,
+          "successor_backups": 2767
+        },
+        {
+          "remaining": 31,
+          "supported_states": 872,
+          "observed_edges": 2379,
+          "terminal_edges": 69,
+          "nonterminal_edges": 2310,
+          "successor_backups": 2310
+        },
+        {
+          "remaining": 32,
+          "supported_states": 256,
+          "observed_edges": 1005,
+          "terminal_edges": 21,
+          "nonterminal_edges": 984,
+          "successor_backups": 984
+        }
+      ],
+      "bellman_residual_max": 0.0,
+      "bellman_residual_mean": 0.0,
+      "bellman_residual_tolerance": 1e-12,
+      "residual_validation_successor_lookups": 80415,
+      "optimizer_access": "float32 cast of fixed logged-only float64 DP labels; absent actions excluded",
+      "arrays": {
+        "targets_float64": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "float64",
+          "sha256": "cca9d12104ada6c8f12850c676bf331af07b92e12d013c5d2dd6d892d4eed600"
+        },
+        "targets_float32": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "float32",
+          "sha256": "7da6156ddb4efc787ff0c40d9aedd8b39f8c26b1988c4db5bce74f5727193e74"
+        }
+      },
+      "preparation_wall_seconds": 0.02364704094361514
+    },
+    {
+      "bank_id": 3,
+      "supported_states": 59838,
+      "observed_edges": 83933,
+      "terminal_edges": 3674,
+      "nonterminal_edges": 80259,
+      "graph_preparation_successor_backups": 80259,
+      "neural_successor_queries": 0,
+      "clock_levels": 32,
+      "gamma": 0.97,
+      "all_successors_closed": true,
+      "per_clock": [
+        {
+          "remaining": 1,
+          "supported_states": 1839,
+          "observed_edges": 2261,
+          "terminal_edges": 2261,
+          "nonterminal_edges": 0,
+          "successor_backups": 0
+        },
+        {
+          "remaining": 2,
+          "supported_states": 1868,
+          "observed_edges": 2321,
+          "terminal_edges": 26,
+          "nonterminal_edges": 2295,
+          "successor_backups": 2295
+        },
+        {
+          "remaining": 3,
+          "supported_states": 1851,
+          "observed_edges": 2309,
+          "terminal_edges": 30,
+          "nonterminal_edges": 2279,
+          "successor_backups": 2279
+        },
+        {
+          "remaining": 4,
+          "supported_states": 1873,
+          "observed_edges": 2364,
+          "terminal_edges": 33,
+          "nonterminal_edges": 2331,
+          "successor_backups": 2331
+        },
+        {
+          "remaining": 5,
+          "supported_states": 1906,
+          "observed_edges": 2398,
+          "terminal_edges": 33,
+          "nonterminal_edges": 2365,
+          "successor_backups": 2365
+        },
+        {
+          "remaining": 6,
+          "supported_states": 1900,
+          "observed_edges": 2429,
+          "terminal_edges": 49,
+          "nonterminal_edges": 2380,
+          "successor_backups": 2380
+        },
+        {
+          "remaining": 7,
+          "supported_states": 1935,
+          "observed_edges": 2434,
+          "terminal_edges": 35,
+          "nonterminal_edges": 2399,
+          "successor_backups": 2399
+        },
+        {
+          "remaining": 8,
+          "supported_states": 1954,
+          "observed_edges": 2495,
+          "terminal_edges": 40,
+          "nonterminal_edges": 2455,
+          "successor_backups": 2455
+        },
+        {
+          "remaining": 9,
+          "supported_states": 1980,
+          "observed_edges": 2518,
+          "terminal_edges": 46,
+          "nonterminal_edges": 2472,
+          "successor_backups": 2472
+        },
+        {
+          "remaining": 10,
+          "supported_states": 1985,
+          "observed_edges": 2555,
+          "terminal_edges": 36,
+          "nonterminal_edges": 2519,
+          "successor_backups": 2519
+        },
+        {
+          "remaining": 11,
+          "supported_states": 2026,
+          "observed_edges": 2589,
+          "terminal_edges": 42,
+          "nonterminal_edges": 2547,
+          "successor_backups": 2547
+        },
+        {
+          "remaining": 12,
+          "supported_states": 2026,
+          "observed_edges": 2620,
+          "terminal_edges": 42,
+          "nonterminal_edges": 2578,
+          "successor_backups": 2578
+        },
+        {
+          "remaining": 13,
+          "supported_states": 2051,
+          "observed_edges": 2644,
+          "terminal_edges": 33,
+          "nonterminal_edges": 2611,
+          "successor_backups": 2611
+        },
+        {
+          "remaining": 14,
+          "supported_states": 2026,
+          "observed_edges": 2666,
+          "terminal_edges": 35,
+          "nonterminal_edges": 2631,
+          "successor_backups": 2631
+        },
+        {
+          "remaining": 15,
+          "supported_states": 2041,
+          "observed_edges": 2695,
+          "terminal_edges": 47,
+          "nonterminal_edges": 2648,
+          "successor_backups": 2648
+        },
+        {
+          "remaining": 16,
+          "supported_states": 2099,
+          "observed_edges": 2727,
+          "terminal_edges": 47,
+          "nonterminal_edges": 2680,
+          "successor_backups": 2680
+        },
+        {
+          "remaining": 17,
+          "supported_states": 2073,
+          "observed_edges": 2777,
+          "terminal_edges": 43,
+          "nonterminal_edges": 2734,
+          "successor_backups": 2734
+        },
+        {
+          "remaining": 18,
+          "supported_states": 2070,
+          "observed_edges": 2809,
+          "terminal_edges": 52,
+          "nonterminal_edges": 2757,
+          "successor_backups": 2757
+        },
+        {
+          "remaining": 19,
+          "supported_states": 2079,
+          "observed_edges": 2836,
+          "terminal_edges": 52,
+          "nonterminal_edges": 2784,
+          "successor_backups": 2784
+        },
+        {
+          "remaining": 20,
+          "supported_states": 2072,
+          "observed_edges": 2862,
+          "terminal_edges": 41,
+          "nonterminal_edges": 2821,
+          "successor_backups": 2821
+        },
+        {
+          "remaining": 21,
+          "supported_states": 2088,
+          "observed_edges": 2876,
+          "terminal_edges": 46,
+          "nonterminal_edges": 2830,
+          "successor_backups": 2830
+        },
+        {
+          "remaining": 22,
+          "supported_states": 2053,
+          "observed_edges": 2891,
+          "terminal_edges": 46,
+          "nonterminal_edges": 2845,
+          "successor_backups": 2845
+        },
+        {
+          "remaining": 23,
+          "supported_states": 2042,
+          "observed_edges": 2911,
+          "terminal_edges": 47,
+          "nonterminal_edges": 2864,
+          "successor_backups": 2864
+        },
+        {
+          "remaining": 24,
+          "supported_states": 2039,
+          "observed_edges": 2952,
+          "terminal_edges": 56,
+          "nonterminal_edges": 2896,
+          "successor_backups": 2896
+        },
+        {
+          "remaining": 25,
+          "supported_states": 2009,
+          "observed_edges": 2962,
+          "terminal_edges": 53,
+          "nonterminal_edges": 2909,
+          "successor_backups": 2909
+        },
+        {
+          "remaining": 26,
+          "supported_states": 2001,
+          "observed_edges": 2979,
+          "terminal_edges": 66,
+          "nonterminal_edges": 2913,
+          "successor_backups": 2913
+        },
+        {
+          "remaining": 27,
+          "supported_states": 1885,
+          "observed_edges": 2985,
+          "terminal_edges": 57,
+          "nonterminal_edges": 2928,
+          "successor_backups": 2928
+        },
+        {
+          "remaining": 28,
+          "supported_states": 1801,
+          "observed_edges": 2950,
+          "terminal_edges": 58,
+          "nonterminal_edges": 2892,
+          "successor_backups": 2892
+        },
+        {
+          "remaining": 29,
+          "supported_states": 1668,
+          "observed_edges": 2902,
+          "terminal_edges": 70,
+          "nonterminal_edges": 2832,
+          "successor_backups": 2832
+        },
+        {
+          "remaining": 30,
+          "supported_states": 1464,
+          "observed_edges": 2808,
+          "terminal_edges": 67,
+          "nonterminal_edges": 2741,
+          "successor_backups": 2741
+        },
+        {
+          "remaining": 31,
+          "supported_states": 878,
+          "observed_edges": 2394,
+          "terminal_edges": 64,
+          "nonterminal_edges": 2330,
+          "successor_backups": 2330
+        },
+        {
+          "remaining": 32,
+          "supported_states": 256,
+          "observed_edges": 1014,
+          "terminal_edges": 21,
+          "nonterminal_edges": 993,
+          "successor_backups": 993
+        }
+      ],
+      "bellman_residual_max": 0.0,
+      "bellman_residual_mean": 0.0,
+      "bellman_residual_tolerance": 1e-12,
+      "residual_validation_successor_lookups": 80259,
+      "optimizer_access": "float32 cast of fixed logged-only float64 DP labels; absent actions excluded",
+      "arrays": {
+        "targets_float64": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "float64",
+          "sha256": "6463e503226da087808db419f4269f3066505cf55958a5319f061e5206c27d91"
+        },
+        "targets_float32": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "float32",
+          "sha256": "c98eb33ef6e5b5fd5bc19e4f2477bf70505fa13661483f009b53aaa0538bc13c"
+        }
+      },
+      "preparation_wall_seconds": 0.022380667040124536
+    }
+  ]
+}
