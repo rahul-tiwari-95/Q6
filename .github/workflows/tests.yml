@@ -94,6 +94,7 @@ jobs:
           import q6.within_map
           import q6.recorded_actions
           import q6.constrained_bootstrap
+          import q6.logged_graph
           import config
           import no_way_home.channels
           import orchestrator.orchestrator

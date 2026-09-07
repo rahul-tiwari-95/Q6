@@ -203,7 +203,7 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
                         raise ConsistencyError("input archive is not complete")
                     archives_meta[name] = {"directory": artifact_path(directory), "files": {"manifest.json": sha(directory / "manifest.json")}}
                     shutil.copy2(directory / "manifest.json", output / f"{name}_manifest.json")
-                    filename = "panels.json" if name in ("panel_evaluation", "bank_replication", "map_replay", "within_map", "recorded_actions") else "dataset_metadata.json"
+                    filename = "panels.json" if name in ("panel_evaluation", "bank_replication", "map_replay", "within_map", "recorded_actions", "constrained_bootstrap") else "dataset_metadata.json"
                     checked_input(directory, manifest, filename, archives_meta[name]["files"])
                     saved = json.loads((directory / filename).read_text())
                     shutil.copy2(directory / filename, output / f"{name}_{filename}")
@@ -355,6 +355,8 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
             for record in model_records:
                 enforce()
                 models[(record["bank_id"], record["condition"], record["seed"])] = FrozenPolicy(torch.load(output / record["saved"], map_location="cpu", weights_only=True))
+            if _comparison and hasattr(_comparison, "final_fit_diagnostics"):
+                _comparison.final_fit_diagnostics(models, model_records, data, output, enforce)
             oracle = VisibleOptimalQ(config, max_cached_maps=panel_count * maps_per_panel)
             for panel in selection["panels"]:
                 phase = time.monotonic()

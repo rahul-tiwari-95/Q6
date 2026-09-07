@@ -4,6 +4,7 @@ The [root README](../README.md) is the entry point for installing and running Q6
 
 ## Current experiments
 
+- [Exact logged-graph protocol](experiments/logged_graph_protocol_v1.md): compute fixed targets using only recorded transitions and allowed actions, preserving replay and target presentations while separating preparation and neural query costs.
 - [Constrained-bootstrap protocol](experiments/constrained_bootstrap_protocol_v1.md), [result](experiments/constrained_bootstrap_results_v1.md) and [validation](validation/constrained-bootstrap-v1.md): logged successor choices improve efficient success 22.66% → 49.52% with identical data, replay and target counts; all 24 bank-panel means improve in efficiency. Next is exact target computation on the same recorded graph.
 - [Recorded-action protocol](experiments/recorded_actions_protocol_v1.md), [result](experiments/recorded_actions_results_v1.md) and [validation](validation/recorded-actions-v1.md): exact state replay with logged-only action outcomes reduces efficient success 43.03% → 21.29%, with declines in all three banks; the subsequent constrained-bootstrap control uses the same recorded data.
 - [Within-map composition protocol](experiments/within_map_protocol_v1.md), [result](experiments/within_map_results_v1.md) and [validation](validation/within-map-v1.md): replacing states with exact map quotas and original replay schedules improves efficiency in all three banks (+19.47/+28.65/+20.70 points); the subsequent recorded-action study uses the original collected supports.

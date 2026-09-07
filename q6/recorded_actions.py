@@ -128,6 +128,7 @@ class RecordedActionsComparison(WithinMapComparison):
     module, panel_seed_start, extra_archives = "q6.recorded_actions", 1080000, ("map_replay", "within_map")
 
     control_uses_recorded = False
+    uses_neural_successors = True
 
     def __init__(self):
         super().__init__()
@@ -189,7 +190,7 @@ class RecordedActionsComparison(WithinMapComparison):
         table = self.tables[bank]
         observed = table["observed"][indices]
         live = observed & ~table["ends"][indices]
-        targets, queries = int(observed.sum()), int(live.sum())
+        targets, queries = int(observed.sum()), int(live.sum()) if self.uses_neural_successors else 0
         key = bank, seed
         if key not in self.optimizer_counts:
             self.optimizer_counts[key] = {"updates": 0, "state_presentations": 0, "action_target_presentations": 0, "nonterminal_target_queries": 0}
@@ -199,7 +200,8 @@ class RecordedActionsComparison(WithinMapComparison):
         counts["state_presentations"] += len(indices)
         counts["action_target_presentations"] += targets
         counts["nonterminal_target_queries"] += queries
-        np.add.at(self.query_counts[key], table["successor_indices"][indices][live], 1)
+        if self.uses_neural_successors:
+            np.add.at(self.query_counts[key], table["successor_indices"][indices][live], 1)
         return self.compute_update(agent, observations, self.tensors[bank], indices, bank, seed)
 
     def compute_update(self, agent, observations, recorded, indices, bank, seed):
@@ -233,11 +235,13 @@ class RecordedActionsComparison(WithinMapComparison):
             live = mask & ~ended
             outside = live & ~membership[np.maximum(successor, 0)]
             target_count = int(np.dot(count.astype(np.uint64), mask.sum(1).astype(np.uint64)))
-            query_count = int(np.dot(count.astype(np.uint64), live.sum(1).astype(np.uint64)))
-            outside_count = int(np.dot(count.astype(np.uint64), outside.sum(1).astype(np.uint64)))
+            nonterminal_count = int(np.dot(count.astype(np.uint64), live.sum(1).astype(np.uint64)))
+            neural_queries = condition == self.conditions[0] or self.uses_neural_successors
+            query_count = nonterminal_count if neural_queries else 0
+            outside_count = int(np.dot(count.astype(np.uint64), outside.sum(1).astype(np.uint64))) if neural_queries else 0
             record = {"bank_id": bank, "condition": condition, "seed": seed, "source": "archived_baseline" if condition == self.conditions[0] else "new_treatment",
                 "updates": samples[str(bank)][condition][str(seed)]["updates"], "state_presentations": int(count.sum()), "action_target_presentations": target_count,
-                "terminal_action_targets": target_count - query_count, "nonterminal_action_targets": query_count, "nonterminal_target_queries": query_count,
+                "terminal_action_targets": target_count - nonterminal_count, "nonterminal_action_targets": nonterminal_count, "nonterminal_target_queries": query_count,
                 "outside_support_target_queries": outside_count, "outside_support_fraction": outside_count / query_count if query_count else None,
                 "action_target_definition": "four outcomes perstate" if not recorded_condition else "distinct logged outcomes perstate; perstate mean loss",
                 "query_provenance": "historical counterfactual all-action transitions" if not recorded_condition else "only nonterminal successors from manifest-verified logged edges"}
@@ -246,7 +250,8 @@ class RecordedActionsComparison(WithinMapComparison):
                 actual = self.optimizer_counts.get((bank, seed), {})
                 expected_queries = np.zeros(len(count), np.uint64)
                 source_rows, actions = np.nonzero(live)
-                np.add.at(expected_queries, successor[source_rows, actions], count[source_rows].astype(np.uint64))
+                if neural_queries:
+                    np.add.at(expected_queries, successor[source_rows, actions], count[source_rows].astype(np.uint64))
                 check = {"bank_id": bank, "seed": seed,
                     "tracked_exposure_matches": all(actual.get(k) == record[k] for k in ("updates", "state_presentations", "action_target_presentations", "nonterminal_target_queries")),
                     "recorded_query_counts_match": np.array_equal(self.query_counts.get((bank, seed)), expected_queries),
