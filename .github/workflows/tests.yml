@@ -90,6 +90,7 @@ jobs:
           import q6.equal_support
           import q6.panel_evaluation
           import q6.bank_replication
+          import q6.map_replay
           import config
           import no_way_home.channels
           import orchestrator.orchestrator

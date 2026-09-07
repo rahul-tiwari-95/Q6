@@ -78,14 +78,14 @@ def prepare_banks(config, data, transitions, output, bank_ids, episodes_per_map,
     return banks, supports, "complete", None
 
 
-def aggregate_banks(rows, refs, panels, seeds, bank_ids):
+def aggregate_banks(rows, refs, panels, seeds, bank_ids, *, conditions=CONDITIONS, comparisons=COMPARISONS):
     seed_results, aggregate, references = [], [], []
-    paired = {"comparisons": list(COMPARISONS), "scope": "greedy uniform minus collected within bank, seed and layout",
+    paired = {"comparisons": list(comparisons), "scope": "greedy uniform minus collected within bank, seed and layout" if comparisons == COMPARISONS else "greedy right minus left within bank, seed and layout",
         "per_seed": [], "aggregate": [], "per_layout": []}
     for bank_id in bank_ids:
         subset = [r for r in rows if r["bank_id"] == bank_id]
         local_seed, local_aggregate, references, local_pairs = summarize_panels(subset, refs, panels, seeds,
-            conditions=CONDITIONS, comparisons=COMPARISONS)
+            conditions=conditions, comparisons=comparisons)
         seed_results.extend({"bank_id": bank_id, **r} for r in local_seed)
         aggregate.extend({"bank_id": bank_id, **r} for r in local_aggregate)
         for key in ("per_seed", "aggregate", "per_layout"):
@@ -94,7 +94,7 @@ def aggregate_banks(rows, refs, panels, seeds, bank_ids):
         "aggregate": [], "paired": []}
     for panel in [r["id"] for r in panels] + ["all"]:
         for mode in ("greedy", "epsilon_0_1"):
-            for condition in CONDITIONS:
+            for condition in conditions:
                 group = [r for r in aggregate if r["panel"] == panel and r["mode"] == mode and r["condition"] == condition]
                 if group:
                     noop_steps, total_steps = sum(r["noop_steps"] for r in group), sum(r["evaluation_steps"] for r in group)

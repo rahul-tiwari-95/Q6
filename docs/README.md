@@ -4,6 +4,7 @@ The [root README](../README.md) is the entry point for installing and running Q6
 
 ## Current experiments
 
+- [Equal-map replay protocol](experiments/map_replay_protocol_v1.md): reuse three collected supports and archived control policies, changing map exposure and batch diversity while preserving the network and training budget.
 - [Independent bank-replication protocol](experiments/bank_replication_protocol_v1.md), [result](experiments/bank_replication_results_v1.md) and [validation](validation/bank-replication-v1.md): three new matched-size pairs replicate the uniform efficiency advantage (+17.12/+27.67/+23.31 points); next is map-balanced replay on the same collected supports.
 - [Frozen-policy panel protocol](experiments/panel_evaluation_protocol_v1.md), [result](experiments/panel_evaluation_results_v1.md) and [validation](validation/panel-evaluation-v1.md): uniform support improves efficient success on all eight prospective panel means (+15.30 points pooled), while success reverses on one. No training or collection; the subsequent bank study tests independent support draws.
 - [Equal-size bank protocol](experiments/equal_support_protocol_v1.md), [result](experiments/equal_support_results_v1.md) and [validation](validation/equal-support-v1.md): primary fresh success is close, while uniform support improves route efficiency. Identical collected weights score differently across panels; the subsequent frozen-policy study measures robustness across eight new panels.

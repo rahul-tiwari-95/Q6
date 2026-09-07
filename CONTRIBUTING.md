@@ -80,6 +80,7 @@ python scripts/audit_coverage_study.py
 python scripts/audit_equal_support_study.py
 python scripts/audit_panel_evaluation.py
 python scripts/audit_bank_replication.py
+python scripts/audit_map_replay.py
 ```
 
 These separately check exact targets, reconstruct minibatch sampling schedules, reproduce final dense predictions from saved weights, and reconcile raw metrics and gates. They perform forward inference and isolated environment transitions, with no training or policy rollouts. Bit-exact predictions require the recorded environment and are excluded from broader dependency-range CI. The supervised audit accepts complete, undeviating v1 studies; its smoke and incomplete artifacts can use the general verifier's `verify_supervised` function.
@@ -103,6 +104,12 @@ sampling and each bank's direct/successor exposure, and reconciles final
 per-bank outcomes before equal-bank pooling. It checks saved replay observations
 without rerunning training or the complete final-policy evaluation. The three
 banks share training layouts; learner seeds are not extra bank replications.
+
+The map-replay audit checks reuse of those exact collected supports and archived
+baseline policies, reconstructs independent map/within-map sampling streams,
+and verifies exposure summaries and final paired behavior. It distinguishes
+new treatment updates from historical baseline training and performs no new
+collection, retraining or complete policy evaluation.
 
 ## Build a package
 
