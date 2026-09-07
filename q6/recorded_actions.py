@@ -127,6 +127,8 @@ class RecordedActionsComparison(WithinMapComparison):
     conditions, comparisons = CONDITIONS, COMPARISONS
     module, panel_seed_start, extra_archives = "q6.recorded_actions", 1080000, ("map_replay", "within_map")
 
+    control_uses_recorded = False
+
     def __init__(self):
         super().__init__()
         self.tables, self.tensors, self.table_summaries, self.original_supports = {}, {}, [], {}
@@ -178,7 +180,7 @@ class RecordedActionsComparison(WithinMapComparison):
     def prepare_support(self, bank, support, data, enforce):
         if not np.array_equal(support, self.original_supports[bank]):
             raise ConsistencyError("recorded action table support differs from original control")
-        return {condition: support for condition in CONDITIONS}
+        return {condition: support for condition in self.conditions}
 
     def bank_metadata(self, bank, pair, data):
         return {"recorded_actions": next(r for r in self.table_summaries if r["bank_id"] == bank), "identical_state_support": True}
@@ -198,7 +200,10 @@ class RecordedActionsComparison(WithinMapComparison):
         counts["action_target_presentations"] += targets
         counts["nonterminal_target_queries"] += queries
         np.add.at(self.query_counts[key], table["successor_indices"][indices][live], 1)
-        return recorded_update(agent, observations, self.tensors[bank], indices)
+        return self.compute_update(agent, observations, self.tensors[bank], indices, bank, seed)
+
+    def compute_update(self, agent, observations, recorded, indices, bank, seed):
+        return recorded_update(agent, observations, recorded, indices)
 
     def consistency(self, samplers, bank_ids, seeds, updates):
         # Reuse the quota study's tested local/map checks under its expected key.
@@ -206,7 +211,7 @@ class RecordedActionsComparison(WithinMapComparison):
         rows = super().consistency(translated, bank_ids, seeds, updates)
         for row in rows:
             bank, seed = row["bank_id"], row["seed"]
-            sampler, prefix = samplers.get((bank, "recorded_actions", seed)), self.prefixes.get((bank, seed))
+            sampler, prefix = samplers.get((bank, self.conditions[1], seed)), self.prefixes.get((bank, seed))
             row["global_digest_identical"] = bool(sampler and prefix and sampler.digest.hexdigest() == prefix["global_digest"])
             row["global_counts_identical"] = bool(sampler and prefix and np.array_equal(sampler.counts[sampler.support], prefix["local_counts"]) and int(sampler.counts.sum()) == int(prefix["local_counts"].sum()))
             row["complete"] = row["complete"] and row["global_digest_identical"] and row["global_counts_identical"]
@@ -220,7 +225,8 @@ class RecordedActionsComparison(WithinMapComparison):
             membership = np.zeros(len(count), bool)
             membership[support] = True
             table = self.tables[bank]
-            if condition == "recorded_actions":
+            recorded_condition = condition == self.conditions[1] or self.control_uses_recorded
+            if recorded_condition:
                 mask, ended, successor = table["observed"], table["ends"], table["successor_indices"]
             else:
                 mask, ended, successor = np.ones_like(transitions["ends"]), transitions["ends"], transitions["successor_indices"]
@@ -229,14 +235,14 @@ class RecordedActionsComparison(WithinMapComparison):
             target_count = int(np.dot(count.astype(np.uint64), mask.sum(1).astype(np.uint64)))
             query_count = int(np.dot(count.astype(np.uint64), live.sum(1).astype(np.uint64)))
             outside_count = int(np.dot(count.astype(np.uint64), outside.sum(1).astype(np.uint64)))
-            record = {"bank_id": bank, "condition": condition, "seed": seed, "source": "archived_baseline" if condition == "collected_unique" else "new_treatment",
+            record = {"bank_id": bank, "condition": condition, "seed": seed, "source": "archived_baseline" if condition == self.conditions[0] else "new_treatment",
                 "updates": samples[str(bank)][condition][str(seed)]["updates"], "state_presentations": int(count.sum()), "action_target_presentations": target_count,
                 "terminal_action_targets": target_count - query_count, "nonterminal_action_targets": query_count, "nonterminal_target_queries": query_count,
                 "outside_support_target_queries": outside_count, "outside_support_fraction": outside_count / query_count if query_count else None,
-                "action_target_definition": "four outcomes perstate" if condition == "collected_unique" else "distinct logged outcomes perstate; perstate mean loss",
-                "query_provenance": "historical counterfactual all-action transitions" if condition == "collected_unique" else "only nonterminal successors from manifest-verified logged edges"}
+                "action_target_definition": "four outcomes perstate" if not recorded_condition else "distinct logged outcomes perstate; perstate mean loss",
+                "query_provenance": "historical counterfactual all-action transitions" if not recorded_condition else "only nonterminal successors from manifest-verified logged edges"}
             records.append(record)
-            if condition == "recorded_actions":
+            if condition == self.conditions[1]:
                 actual = self.optimizer_counts.get((bank, seed), {})
                 expected_queries = np.zeros(len(count), np.uint64)
                 source_rows, actions = np.nonzero(live)
@@ -246,6 +252,7 @@ class RecordedActionsComparison(WithinMapComparison):
                     "recorded_query_counts_match": np.array_equal(self.query_counts.get((bank, seed)), expected_queries),
                     "no_outside_support_queries": outside_count == 0}
                 checks.append(check)
+            if recorded_condition:
                 summary = next(r for r in exposure["summaries"] if (r["bank_id"], r["condition"], r["seed"]) == (bank, condition, seed))
                 summary["all_action_structural_successor_queries"] = summary["successor_queries"]
                 summary["successor_queries"] = {"nonterminal_queries": query_count, "outside_support_queries": outside_count,
@@ -259,7 +266,7 @@ class RecordedActionsComparison(WithinMapComparison):
             self.table_integrity.append({"bank_id": bank, "before": before, "after": after, "unchanged": before == after,
                 "read_only": all(not v.flags.writeable for v in table.values()), "tensor_before": self.tensor_before[bank],
                 "tensor_after": tensor_after, "optimizer_tables_unchanged": self.tensor_before[bank] == tensor_after})
-        np.savez_compressed(output / "recorded_query_counts.npz", **{f"bank{b}_recorded_actions_seed{s}": v for (b, s), v in self.query_counts.items()})
+        np.savez_compressed(output / "recorded_query_counts.npz", **{f"bank{b}_{self.conditions[1]}_seed{s}": v for (b, s), v in self.query_counts.items()})
         write_json(output / "action_exposure.json", self.action_exposure)
         return {"complete": len(self.tables) == len(self.bank_ids) and all(all(r[k] for k in ("tracked_exposure_matches", "recorded_query_counts_match", "no_outside_support_queries")) for r in checks)
             and all(r["unchanged"] and r["read_only"] and r["optimizer_tables_unchanged"] for r in self.table_integrity)}
@@ -271,8 +278,8 @@ class RecordedActionsComparison(WithinMapComparison):
     def configure_result(self, result):
         result["run"]["support_draws"] = 0
         result["run"]["baseline_reconstructed_updates"] = sum(r["reconstructed_updates"] for r in self.reconstruction)
-        result["run"]["action_target_presentations"] = sum(r["action_target_presentations"] for r in self.action_exposure["per_seed"] if r["condition"] == "recorded_actions")
-        result["run"]["nonterminal_target_queries"] = sum(r["nonterminal_target_queries"] for r in self.action_exposure["per_seed"] if r["condition"] == "recorded_actions")
+        result["run"]["action_target_presentations"] = sum(r["action_target_presentations"] for r in self.action_exposure["per_seed"] if r["condition"] == self.conditions[1])
+        result["run"]["nonterminal_target_queries"] = sum(r["nonterminal_target_queries"] for r in self.action_exposure["per_seed"] if r["condition"] == self.conditions[1])
         result["run"]["limitations"] = ["Offline deduplicated state replay with observed-action masks; no new collection, online adaptation or memory.",
             "State supports, replay draws and optimizer budgets match; supervised action counts and effective per-action weights change.",
             "DDQN argmax predicts all four actions at recorded successors, including actions without recorded outcomes there.",

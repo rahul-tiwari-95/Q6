@@ -13,3 +13,4 @@ dashboard/data/bank_replication.json linguist-generated=true
 dashboard/data/map_replay.json linguist-generated=true
 dashboard/data/within_map.json linguist-generated=true
 dashboard/data/recorded_actions.json linguist-generated=true
+dashboard/data/constrained_bootstrap.json linguist-generated=true

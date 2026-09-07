@@ -1,0 +1,1019 @@
+"""Independent audit of recorded-successor action restrictions in DDQN targets.
+
+Reconstructs logged edges and sampler exposure, verifies frozen controls and
+raw outcomes, and checks preselected recordings without fitting a model or
+repeating the full learned-policy evaluation. Portable mode skips only neural
+forward regeneration for saved recordings and fixed diagnostic probes.
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import hashlib
+import json
+import sys
+import time
+from collections import deque
+from dataclasses import asdict
+from pathlib import Path
+
+import numpy as np
+import torch
+
+sys.dont_write_bytecode = True
+import audit_fixed_targets_study as common
+import audit_bank_replication as bank_audit
+import audit_map_replay as shared
+import audit_within_map as within_audit
+import audit_panel_evaluation as replay_audit
+from audit_fixed_targets_study import close, csv_rows, read_json
+
+CONDITIONS = ("recorded_actions", "constrained_bootstrap")
+
+
+def reconstruct_recorded_edges(path, data, transitions, support):
+    """Read the archived evidence, preserving exact deterministic edge identity."""
+    n = len(data["observations"])
+    arrays = {"observed": np.zeros((n, 4), bool), "rewards": np.full((n, 4), np.nan, np.float64),
+              "ends": np.ones((n, 4), bool), "terminated": np.zeros((n, 4), bool),
+              "truncated": np.zeros((n, 4), bool), "successor_indices": np.full((n, 4), -1, np.int32),
+              "occurrences": np.zeros((n, 4), np.uint32)}
+    allowed = np.zeros(n, bool)
+    allowed[support] = True
+    flags = {}
+    with path.open(newline="") as handle:
+        for item in csv.DictReader(handle):
+            row, action, following = (int(item[k]) for k in ("current_row", "action", "next_row"))
+            terminated, truncated = int(item["terminated"]), int(item["truncated"])
+            assert 0 <= row < n and allowed[row] and 0 <= action < 4
+            assert terminated in (0, 1) and truncated in (0, 1) and not (terminated and truncated)
+            reward, ended = float(item["reward"]), bool(terminated or truncated)
+            assert np.isfinite(reward) and int(item["map_seed"]) == int(data["map_seeds"][row])
+            assert int(item["remaining"]) == int(data["remaining"][row])
+            assert reward == float(transitions["rewards"][row, action])
+            assert ended == bool(transitions["ends"][row, action])
+            assert following == int(transitions["successor_indices"][row, action])
+            if ended:
+                assert following == -1
+                if truncated:
+                    assert data["remaining"][row] == 1
+            else:
+                assert 0 <= following < n
+                assert data["map_seeds"][following] == data["map_seeds"][row]
+                assert data["remaining"][following] == data["remaining"][row] - 1
+            if arrays["observed"][row, action]:
+                assert arrays["rewards"][row, action] == reward
+                assert arrays["ends"][row, action] == ended and arrays["successor_indices"][row, action] == following
+                assert flags[row, action] == (terminated, truncated)
+            else:
+                arrays["observed"][row, action] = True
+                arrays["rewards"][row, action] = reward
+                arrays["ends"][row, action] = ended
+                arrays["terminated"][row, action] = bool(terminated)
+                arrays["truncated"][row, action] = bool(truncated)
+                arrays["successor_indices"][row, action] = following
+                flags[row, action] = terminated, truncated
+            arrays["occurrences"][row, action] += 1
+    assert np.array_equal(np.flatnonzero(arrays["observed"].any(1)), support)
+    assert np.array_equal(arrays["occurrences"] > 0, arrays["observed"])
+    assert np.isnan(arrays["rewards"][~arrays["observed"]]).all()
+    assert arrays["ends"][~arrays["observed"]].all()
+    assert not arrays["terminated"][~arrays["observed"]].any() and not arrays["truncated"][~arrays["observed"]].any()
+    assert (arrays["successor_indices"][~arrays["observed"]] == -1).all()
+    return arrays
+
+
+def recorded_exposure(recorded, support, counts):
+    """Membership, collector frequency, and replay presentations are distinct."""
+    mask = recorded["observed"]
+    action_counts = mask.sum(1)
+    live = mask & ~recorded["ends"]
+    weights = counts.astype(np.uint64)
+    supported = np.zeros(len(mask), bool)
+    supported[support] = True
+    outside = live & ~supported[np.maximum(recorded["successor_indices"], 0)]
+    assert (action_counts[support] >= 1).all() and (action_counts[support] <= 4).all()
+    return {"supported_states": len(support), "observed_edges": int(mask.sum()),
+        "logged_occurrences": int(recorded["occurrences"].sum()),
+        "states_by_action_count": {str(k): int((action_counts[support] == k).sum()) for k in range(1, 5)},
+        "edges_by_action": mask.sum(0).astype(int).tolist(),
+        "terminal_edges": int((mask & recorded["ends"]).sum()), "nonterminal_edges": int(live.sum()),
+        "outside_support_edges": int(outside.sum()),
+        "state_presentations": int(weights.sum()),
+        "supervised_action_presentations": int(np.dot(weights, action_counts.astype(np.uint64))),
+        "nonterminal_action_presentations": int(np.dot(weights, live.sum(1).astype(np.uint64))),
+        "outside_support_successor_presentations": int(np.dot(weights, outside.sum(1).astype(np.uint64))),
+        "action_presentations": (weights[:, None] * mask).sum(0).astype(np.uint64).tolist()}
+
+
+def validate_inputs(study, archives, protocol):
+    metadata = read_json(study / "dataset_metadata.json")
+    arrays = dict(np.load(study / "dataset.npz", allow_pickle=False))
+    transitions = dict(np.load(study / "transitions.npz", allow_pickle=False))
+    assert metadata["status"] == "complete" and set(arrays) == set(metadata["arrays"])
+    for name, value in arrays.items():
+        assert name.startswith("train_")
+        bank_audit.check_array(value, metadata["arrays"][name])
+    assert set(transitions) == set(metadata["transition_arrays"])
+    for name, value in transitions.items():
+        bank_audit.check_array(value, metadata["transition_arrays"][name])
+    for archive in (archives["coverage"], archives["bank_replication"]):
+        old_metadata = read_json(shared.checked_archive_file(archive, "dataset_metadata.json"))
+        assert metadata["train"] == old_metadata["train"]
+        with np.load(shared.checked_archive_file(archive, "dataset.npz"), allow_pickle=False) as old:
+            assert all(np.array_equal(value, old[name]) for name, value in arrays.items())
+        with np.load(shared.checked_archive_file(archive, "transitions.npz"), allow_pickle=False) as old:
+            assert all(np.array_equal(value, old[name]) for name, value in transitions.items())
+    assert [r["map_seed"] for r in metadata["train"]] == list(range(300000, 300256))
+    data = {k.removeprefix("train_"): v for k, v in arrays.items()}
+    assert len(data["observations"]) == 163840
+    saved = dict(np.load(study / "supports.npz", allow_pickle=False))
+    old = dict(np.load(shared.checked_archive_file(archives["bank_replication"], "supports.npz"), allow_pickle=False))
+    assert set(saved) == {f"{c}_bank{b}" for c in CONDITIONS for b in protocol["bank_ids"]}
+    supports = {}
+    for bank, size in zip((1, 2, 3), (59839, 59984, 59838)):
+        original = old[f"collected_unique_bank{bank}"]
+        assert len(original) == size and original.dtype == np.int32 and np.all(np.diff(original) > 0)
+        for condition in CONDITIONS:
+            actual = saved[f"{condition}_bank{bank}"]
+            assert actual.dtype == np.int32 and np.array_equal(actual, original)
+            supports[bank, condition] = actual
+    for name in ("q6/world.py", "q6/learning.py", "q6/fixed_targets.py", "q6/competence.py", "q6/supervised.py", "q6/optimal.py"):
+        for archive in (archives["coverage"], archives["bank_replication"]):
+            old_protocol = read_json(shared.checked_archive_file(archive, "protocol.json"))
+            assert protocol["source_sha256"][name] == old_protocol["source_sha256"][name]
+            assert common.sha(shared.checked_archive_file(archive, "source/" + name)) == old_protocol["source_sha256"][name]
+    return data, arrays, metadata, transitions, supports
+
+
+def validate_membership(summary, table, support):
+    actual = recorded_exposure(table, support, np.zeros(len(table["observed"]), np.uint32))
+    assert summary["supported_states"] == actual["supported_states"]
+    assert summary["recorded_edges"] == actual["observed_edges"]
+    assert summary["all_action_edges"] == 4 * len(support)
+    close(summary["observed_action_fraction"], actual["observed_edges"] / (4 * len(support)))
+    assert summary["collector_steps"] == actual["logged_occurrences"]
+    assert summary["duplicate_records"] == actual["logged_occurrences"] - actual["observed_edges"]
+    assert summary["states_by_observed_actions"] == [{"actions": k, "states": actual["states_by_action_count"][str(k)]} for k in range(1, 5)]
+    assert summary["nonterminal_recorded_edges"] == actual["nonterminal_edges"]
+    assert summary["terminal_recorded_edges"] == actual["terminal_edges"]
+    assert summary["nonterminal_successors_outside_support"] == actual["outside_support_edges"] == 0
+    assert summary["nonterminal_successors_in_support"] == actual["nonterminal_edges"]
+    assert summary["all_nonterminal_successors_in_support_verified"] is True
+    live = table["observed"] & ~table["ends"]
+    assert summary["distinct_nonterminal_successor_states"] == len(np.unique(table["successor_indices"][live]))
+    assert set(summary["arrays"]) == set(table)
+    for name, array in table.items():
+        bank_audit.check_array(array, summary["arrays"][name])
+    return actual
+
+
+def reconstruct_panels(study, archives, protocol, result, metadata, World, config):
+    excluded = {}
+    for name, directory in archives.items():
+        if name in ("panel_evaluation", "bank_replication", "map_replay", "within_map", "recorded_actions"):
+            selection = read_json(shared.checked_archive_file(directory, "panels.json"))
+            layouts = [r for p in selection["panels"] for r in p["layouts"]]
+        else:
+            saved = read_json(shared.checked_archive_file(directory, "dataset_metadata.json"))
+            layouts = saved["heldout"]
+        excluded[f"previous_{name}_fresh_layout"] = {r["layout_hash"] for r in layouts}
+        if name == "coverage":
+            excluded["training_layout"] = {r["layout_hash"] for r in metadata["train"]}
+    selection = read_json(study / "panels.json")
+    assert selection["status"] == "complete" and selection["selection_uses_outcomes"] is False
+    assert selection["panels"] == result["panels"] == protocol["panels"]
+    spec = protocol["panel_selection"]
+    env, used, panels, rejected, task_hashes, planner = World(config), set(), [], [], {}, {}
+    for index in range(spec["count"]):
+        panel = {"id": f"panel_{index}", "scan_start": spec["start"] + index * spec["stride"], "layouts": [], "map_seeds": []}
+        candidate = panel["scan_start"]
+        while len(panel["layouts"]) < spec["maps_per_panel"]:
+            env.reset(seed=candidate)
+            key = common.layout_hash(env)
+            reason = next((name for name, values in excluded.items() if key in values), None)
+            if reason is None and key in used:
+                reason = "earlier_selected_layout"
+            record = {"map_seed": candidate, "layout_hash": key, "original_start": list(env.position)}
+            if reason:
+                rejected.append({"panel": panel["id"], **record, "reason": reason})
+            else:
+                panel["layouts"].append(record)
+                panel["map_seeds"].append(candidate)
+                used.add(key)
+                payload = {"walls": env.walls.astype(int).tolist(), "pellets": env.pellets.astype(int).tolist(),
+                           "position": list(env.position), "config": asdict(config)}
+                task_hashes[candidate] = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+                goal = tuple(map(int, np.argwhere(env.pellets)[0]))
+                distance, queue = {goal: 0}, deque([goal])
+                while queue:
+                    p = queue.popleft()
+                    for dr, dc in replay_audit.DELTAS:
+                        q = p[0] + dr, p[1] + dc
+                        if 0 <= q[0] < config.size and 0 <= q[1] < config.size and not env.walls[q] and q not in distance:
+                            distance[q] = distance[p] + 1
+                            queue.append(q)
+                planner[candidate] = distance[env.position]
+            candidate += 1
+        panels.append(panel)
+    assert panels == selection["panels"] and rejected == selection["collision_skips"]
+    assert len(used) == selection["unique_selected_layouts"] == spec["count"] * spec["maps_per_panel"]
+    assert selection["excluded_layout_counts"] == {k: len(v) for k, v in excluded.items()}
+    return selection, task_hashes, planner
+
+
+def validate_models(study, archive, result):
+    protocol = result["protocol"]
+    banks, seeds, schedule = protocol["bank_ids"], protocol["seeds"], protocol["checkpoints"]
+    final = max(schedule)
+    root = Path(__file__).resolve().parents[1]
+    resolve = lambda p: Path(p).resolve() if Path(p).is_absolute() else (root / p).resolve()
+    conditions = [r["id"] for r in protocol["conditions"]]
+    snapshot_rows = read_json(study / "snapshots.json")
+    expected_snapshots = {(b, "constrained_bootstrap", s, cp) for b in banks for s in seeds for cp in schedule}
+    expected_snapshots |= {(b, "recorded_actions", s, 30000) for b in banks for s in seeds}
+    assert {(r["bank_id"], r["condition"], r["seed"], r["checkpoint"]) for r in snapshot_rows} == expected_snapshots
+    assert len(snapshot_rows) == len(expected_snapshots)
+    files = {f"models/bank{b}_{c}_seed{s}_update{cp}.pt" for b, c, s, cp in expected_snapshots}
+    assert {p.relative_to(study).as_posix() for p in (study / "models").glob("*.pt")} == files
+    initial, states, agents = {}, {}, {}
+    for bank in banks:
+        for seed in seeds:
+            path = shared.checked_archive_file(archive, f"models/bank{bank}_recorded_actions_seed{seed}_update0.pt")
+            state = torch.load(path, map_location="cpu", weights_only=True)
+            assert state["optimizer_updates"] == 0 and state["observation_size"] == 92
+            assert replay_audit.tensor_hash(state["online"]) == state["parameter_hash"]
+            assert replay_audit.tensor_hash(state["target"]) == state["target_parameter_hash"] == state["parameter_hash"]
+            initial[bank, seed] = state
+    for row in snapshot_rows:
+        bank, condition, seed, checkpoint = row["bank_id"], row["condition"], row["seed"], row["checkpoint"]
+        name = f"models/bank{bank}_{condition}_seed{seed}_update{checkpoint}.pt"
+        path = study / name
+        assert row["saved"] == name and common.sha(path) == row["sha256"]
+        assert row["historical"] == (condition == "recorded_actions")
+        state = torch.load(path, map_location="cpu", weights_only=True)
+        assert state["optimizer_updates"] == checkpoint and state["observation_size"] == 92
+        assert replay_audit.tensor_hash(state["online"]) == state["parameter_hash"] == row["online_hash"]
+        assert replay_audit.tensor_hash(state["target"]) == state["target_parameter_hash"] == row["target_hash"]
+        if condition == "recorded_actions":
+            assert common.sha(path) == common.sha(shared.checked_archive_file(archive, name))
+        elif checkpoint == 0:
+            assert state["parameter_hash"] == initial[bank, seed]["parameter_hash"]
+            assert state["target_parameter_hash"] == initial[bank, seed]["target_parameter_hash"]
+        if condition == "recorded_actions" or checkpoint == final:
+            states[bank, condition, seed] = state
+            agents[bank, condition, seed] = bank_audit.bare_network(state["online"])
+    records = read_json(study / "models.json")
+    assert records == result["provenance"]["models"]
+    expected_models = {(b, c, s) for b in banks for c in conditions for s in seeds}
+    assert {(r["bank_id"], r["condition"], r["seed"]) for r in records} == expected_models and len(records) == len(expected_models)
+    for row in records:
+        bank, condition, seed = row["bank_id"], row["condition"], row["seed"]
+        state = states[bank, condition, seed]
+        assert row["checkpoint"] == state["optimizer_updates"] == (30000 if condition == "recorded_actions" else final)
+        assert row["initial_online_hash"] == initial[bank, seed]["parameter_hash"]
+        assert row["initial_target_hash"] == initial[bank, seed]["target_parameter_hash"]
+        source = archive / row["saved"] if condition == "recorded_actions" else study / row["saved"]
+        assert resolve(row["source"]) == source.resolve()
+        file_hash = common.sha(study / row["saved"])
+        assert row["source_before"] == row["source_after"] == row["file_before"] == row["file_after"] == file_hash == common.sha(source)
+        assert row["online_before"] == row["online_after"] == state["parameter_hash"]
+        assert row["target_before"] == row["target_after"] == state["target_parameter_hash"]
+        assert row["unchanged_during_evaluation"]
+        assert {r["panel"] for r in row["panel_checks"]} == {p["id"] for p in result["panels"]}
+        assert len(row["panel_checks"]) == len(result["panels"])
+        for check in row["panel_checks"]:
+            assert check["unchanged"]
+            for field in ("source", "file", "online", "target"):
+                assert check[field + "_before"] == check[field + "_after"] == row[field + "_before"]
+    return states, agents, initial, snapshot_rows
+
+
+def validate_losses(study, result):
+    protocol = result["protocol"]
+    final = max(protocol["checkpoints"])
+    checkpoints = sorted(set(range(100, final + 1, 100)) | {cp for cp in protocol["checkpoints"] if cp})
+    rows = csv_rows(study / "losses.csv")
+    expected = {(b, s, cp) for b in protocol["bank_ids"] for s in protocol["seeds"] for cp in checkpoints}
+    key = lambda r: (int(r["bank_id"]), int(r["seed"]), int(r["checkpoint"]))
+    assert {key(r) for r in rows} == expected and len(rows) == len(expected)
+    for bank in protocol["bank_ids"]:
+        for seed in protocol["seeds"]:
+            group = [r for r in rows if int(r["bank_id"]) == bank and int(r["seed"]) == seed]
+            assert [int(r["checkpoint"]) for r in group] == checkpoints
+            previous = 0
+            for row in group:
+                assert row["condition"] == "constrained_bootstrap"
+                checkpoint = int(row["checkpoint"])
+                assert int(row["updates_in_window"]) == checkpoint - previous
+                assert int(row["training_examples"]) == checkpoint * 64
+                for field in ("mean_loss", "last_loss"):
+                    assert np.isfinite(float(row[field])) and float(row[field]) >= 0
+                previous = checkpoint
+    assert {(r["bank_id"], r["checkpoint"]) for r in result["loss_aggregate"]} == {(b, cp) for b in protocol["bank_ids"] for cp in checkpoints}
+    assert len(result["loss_aggregate"]) == len(protocol["bank_ids"]) * len(checkpoints)
+    for row in result["loss_aggregate"]:
+        group = [r for r in rows if (int(r["bank_id"]), int(r["checkpoint"])) == (row["bank_id"], row["checkpoint"])]
+        assert row["condition"] == "constrained_bootstrap" and row["seeds"] == len(group) == len(protocol["seeds"])
+        assert all(row["updates_in_window"] == int(r["updates_in_window"]) for r in group)
+        close(row["mean_loss"], np.mean([float(r["mean_loss"]) for r in group]))
+    assert result["provenance"]["loss_integrity"] == {"expected_windows": len(expected), "actual_windows": len(rows), "complete": True, "finite": True}
+    return len(rows)
+
+
+def validate_sampling(study, archive, result, data, supports):
+    sampling = read_json(study / "sampling.json")
+    assert sampling == result["sampling"]
+    old_sampling = read_json(shared.checked_archive_file(archive, "sampling.json"))
+    saved = {kind: dict(np.load(study / filename, allow_pickle=False)) for kind, filename in
+             (("global", "sample_counts.npz"), ("local", "local_sample_counts.npz"), ("map", "map_counts.npz"))}
+    old = {kind: dict(np.load(shared.checked_archive_file(archive, filename), allow_pickle=False)) for kind, filename in
+           (("global", "sample_counts.npz"), ("local", "local_sample_counts.npz"))}
+    protocol = result["protocol"]
+    banks, seeds, updates = protocol["bank_ids"], protocol["seeds"], max(protocol["checkpoints"])
+    expected = {f"bank{b}_{c}_seed{s}" for b in banks for c in CONDITIONS for s in seeds}
+    assert all(set(arrays) == expected for arrays in saved.values())
+    assert set(sampling) == set(map(str, banks))
+    provenance = result["provenance"]
+    reconstruction = provenance["baseline_sampling_reconstruction"]
+    paired = provenance["paired_map_sampling_consistency"]
+    key = lambda r: (r["bank_id"], r["seed"])
+    fits = {(b, s) for b in banks for s in seeds}
+    assert {key(r) for r in reconstruction} == {key(r) for r in paired} == fits
+    assert len(reconstruction) == len(paired) == len(fits)
+    counts = {}
+    fields = {"local_batch_index_sha256": "local", "global_batch_index_sha256": "global", "map_index_sha256": "map"}
+    for bank in banks:
+        assert set(sampling[str(bank)]) == set(CONDITIONS)
+        for condition in CONDITIONS:
+            assert set(sampling[str(bank)][condition]) == set(map(str, seeds))
+        for seed in seeds:
+            baseline, treatment, prefix = within_audit.reconstruct_streams(supports[bank, CONDITIONS[0]], supports[bank, CONDITIONS[1]], data["map_seeds"], seed, updates)
+            for condition, actual in ((CONDITIONS[0], baseline), (CONDITIONS[1], treatment)):
+                record = sampling[str(bank)][condition][str(seed)]
+                name = f"bank{bank}_{condition}_seed{seed}"
+                support = supports[bank, condition]
+                for kind in ("global", "local", "map"):
+                    value = saved[kind][name]
+                    assert value.dtype == np.uint32 and np.array_equal(value, actual[kind + "_counts"]), (bank, condition, seed, kind)
+                for field, kind in fields.items():
+                    assert record[field] == actual["digests"][kind], (bank, condition, seed, field)
+                assert record["rng_seed_tuple"] == [seed, 66301]
+                assert record["map_ids"] == list(range(300000, 300256))
+                assert record["support_states"] == len(support) and record["outside_support_direct_samples"] == 0
+                assert record["unique_states_sampled"] == int(np.count_nonzero(actual["global_counts"]))
+                assert record["examples_seen"] == int(actual["global_counts"].sum())
+                assert np.array_equal(actual["global_counts"][support], actual["local_counts"])
+                assert int(actual["global_counts"].sum()) == int(actual["global_counts"][support].sum())
+                if condition == CONDITIONS[0]:
+                    original = old_sampling[str(bank)][condition][str(seed)]
+                    assert all(record[k] == v for k, v in original.items() if k not in ("historical", "new_updates")), "archived baseline metadata changed"
+                    assert record["updates"] == 30000 and record["new_updates"] == 0 and record["historical"] is True
+                    assert np.array_equal(saved["global"][name], old["global"][name])
+                    assert np.array_equal(saved["local"][name], old["local"][name])
+                    compared = record["compared_prefix"]
+                    assert compared["updates"] == updates
+                    for field, kind in fields.items():
+                        assert compared[field] == prefix[kind]
+                    for kind in ("local", "map"):
+                        bank_audit.check_array(treatment[kind + "_counts"], compared["count_arrays"][kind])
+                else:
+                    assert record["updates"] == record["new_updates"] == updates and record["historical"] is False
+                counts[bank, condition, seed] = actual["global_counts"]
+            reconstructed = next(r for r in reconstruction if key(r) == (bank, seed))
+            assert reconstructed["reconstructed_updates"] == 30000 and reconstructed["verified"]
+            for field in ("local_digest_identical", "global_digest_identical", "local_counts_identical", "global_counts_identical"):
+                assert reconstructed[field]
+            assert reconstructed["map_index_sha256"] == baseline["digests"]["map"]
+            assert set(reconstructed["count_arrays"]) == {"global", "local", "map"}
+            for kind in ("global", "local", "map"):
+                bank_audit.check_array(baseline[kind + "_counts"], reconstructed["count_arrays"][kind])
+            agreement = next(r for r in paired if key(r) == (bank, seed))
+            assert agreement["compared_updates"] == updates and agreement["baseline_updates"] == 30000
+            assert all(agreement[k] for k in ("map_digest_identical", "map_counts_identical", "local_digest_identical", "local_counts_identical", "global_digest_identical", "global_counts_identical", "complete"))
+    return counts
+
+
+def validate_provenance(study, archives, result, data, transitions, supports, initial, snapshots, counts, rows, refs):
+    protocol, provenance = result["protocol"], result["provenance"]
+    assert read_json(study / "provenance.json") == provenance
+    assert set(provenance["archives"]) == set(archives)
+    source_records = {}
+    for name, directory in archives.items():
+        record = provenance["archives"][name]
+        manifest = read_json(directory / "manifest.json")
+        assert common.sha(study / f"{name}_manifest.json") == common.sha(directory / "manifest.json") == record["files"]["manifest.json"]
+        for filename, digest in record["files"].items():
+            assert common.sha(directory / filename) == digest
+            if filename != "manifest.json":
+                assert manifest["files"][filename] == digest
+            source_records[name, filename] = digest
+        metadata_name = "panels.json" if name in ("panel_evaluation", "bank_replication", "map_replay", "within_map", "recorded_actions") else "dataset_metadata.json"
+        assert common.sha(study / f"{name}_{metadata_name}") == common.sha(directory / metadata_name)
+        if name in ("coverage", "bank_replication"):
+            for filename in ("protocol.json", "protocol.md"):
+                assert common.sha(study / f"{name}_{filename}") == common.sha(directory / filename)
+    assert {(r["archive"], r["file"]) for r in provenance["source_integrity"]} == set(source_records)
+    assert len(provenance["source_integrity"]) == len(source_records)
+    for row in provenance["source_integrity"]:
+        assert row["before"] == row["after"] == source_records[row["archive"], row["file"]] and row["unchanged"]
+    assert provenance["training_arrays_identical"] and provenance["transition_arrays_identical"]
+    assert provenance["all_supports_frozen_before_training"] and provenance["all_treatment_fits_finished_before_evaluation"]
+    assert provenance["snapshot_integrity"] == {"expected": len(snapshots), "actual": len(snapshots), "complete": True, "unchanged": True}
+    banks = read_json(study / "banks.json")
+    assert banks == result["banks"] and [b["bank_id"] for b in banks] == protocol["bank_ids"]
+    old_banks = read_json(shared.checked_archive_file(archives["bank_replication"], "banks.json"))
+    distance = np.min(np.where(data["winnable"], data["remaining"], 33).reshape(-1, 32), axis=1)
+    near = np.repeat(distance <= 2, 32)
+    for bank in banks:
+        bank_id = bank["bank_id"]
+        original = supports[bank_id, CONDITIONS[0]]
+        old = next(r for r in old_banks if r["bank_id"] == bank_id)
+        assert bank["collection"] == {**old["collection"], "source": "inherited_archive_not_new_collection"}
+        assert bank["status"] == "complete" and bank["support_size"] == len(original)
+        assert bank["intersection"] == {"states": len(original), "union_states": len(original), "fraction_of_each": 1., "jaccard": 1.}
+        assert {r["condition"] for r in bank["coverage"]["per_condition"]} == set(CONDITIONS)
+        assert len(bank["coverage"]["per_condition"]) == len(CONDITIONS)
+        for condition in CONDITIONS:
+            bank_audit.check_array(supports[bank_id, condition], bank["arrays"][condition])
+            current = next(r for r in bank["coverage"]["per_condition"] if r["condition"] == condition)
+            bank_audit.check_composition(current, data, transitions, original, near)
+            old_coverage = next(r for r in old["coverage"]["per_condition"] if r["condition"] == "collected_unique")
+            assert {k: v for k,v in current.items() if k != "condition"} == {k: v for k,v in old_coverage.items() if k != "condition"}
+    assert {r["bank_id"] for r in provenance["support_integrity"]} == set(protocol["bank_ids"])
+    assert len(provenance["support_integrity"]) == len(protocol["bank_ids"])
+    for row in provenance["support_integrity"]:
+        assert row["unchanged"] and row["read_only"] and row["before"] == row["after"]
+        assert set(row["before"]) == set(CONDITIONS)
+        for condition, spec in row["before"].items():
+            bank_audit.check_array(supports[row["bank_id"], condition], spec)
+    expected_init = {(b, s) for b in protocol["bank_ids"] for s in protocol["seeds"]}
+    assert set(provenance["prior_initial_models"]) == {f"{b}:{s}" for b, s in expected_init}
+    for bank, seed in expected_init:
+        row = provenance["prior_initial_models"][f"{bank}:{seed}"]
+        assert row["online_hash"] == initial[bank, seed]["parameter_hash"] and row["target_hash"] == initial[bank, seed]["target_parameter_hash"]
+        assert row["sha256"] == common.sha(archives["recorded_actions"] / f"models/bank{bank}_recorded_actions_seed{seed}_update0.pt")
+    assert {(r["bank_id"], r["seed"]) for r in provenance["initialization_consistency"]} == expected_init
+    assert len(provenance["initialization_consistency"]) == len(expected_init)
+    for row in provenance["initialization_consistency"]:
+        assert row["models"] == 2 and row["online_identical"] and row["target_identical"]
+    assert {(r["bank_id"], r["condition"], r["seed"]) for r in provenance["count_integrity"]} == set(counts)
+    assert len(provenance["count_integrity"]) == len(counts)
+    for row in provenance["count_integrity"]:
+        assert all(row[k] for k in ("sum_matches", "local_matches", "map_sum_matches", "on_support"))
+    cells = provenance["expected_cells"]
+    assert {r["bank_id"] for r in cells} == set(protocol["bank_ids"]) and len(cells) == len(protocol["bank_ids"])
+    for row in cells:
+        assert row["complete"]
+        assert row["expected_learner_cells"] == row["complete_learner_cells"] == row["unique_complete_learner_cells"] == len(rows) // len(protocol["bank_ids"])
+        assert row["expected_reference_cells"] == row["complete_reference_cells"] == row["unique_complete_reference_cells"] == len(refs)
+    return len(source_records)
+
+
+def validate_exposure(study, result, data, transitions, supports, counts, recorded):
+    exposure = read_json(study / "exposure.json")
+    assert exposure == result["exposure"]
+    key = lambda r: (r["bank_id"], r["condition"], r["seed"])
+    expected = set(counts)
+    assert {key(r) for r in exposure["summaries"]} == expected and len(exposure["summaries"]) == len(expected)
+    assert {key(r) + (r["map_seed"],) for r in exposure["per_map"]} == {k + (m,) for k in expected for m in range(300000, 300256)}
+    assert len(exposure["per_map"]) == len(expected) * 256
+    buckets = {"all": "all", "1_8": "1-8", "9_16": "9-16", "17_24": "17-24", "25_32": "25-32"}
+    assert {key(r) + (r["bucket"],) for r in exposure["per_clock"]} == {k + (b,) for k in expected for b in buckets}
+    assert len(exposure["per_clock"]) == len(expected) * len(buckets)
+    for summary in exposure["summaries"]:
+        group_key = key(summary)
+        bank, condition, seed = group_key
+        actual = shared.independent_exposure(data, transitions, supports[bank, condition], counts[group_key])
+        total = actual["presentations"]
+        assert summary["source"] == ("archived_baseline" if condition == CONDITIONS[0] else "new_treatment")
+        assert summary["updates"] == result["sampling"][str(bank)][condition][str(seed)]["updates"]
+        assert summary["presentations"] == total and summary["unique_states_sampled"] == actual["unique_sampled_states"]
+        close(summary["map_fraction_min"], actual["map_min"] / total)
+        close(summary["map_fraction_max"], actual["map_max"] / total)
+        close(summary["map_fraction_cv"], actual["map_cv"])
+        state_counts = counts[group_key][supports[bank, condition]]
+        distribution = summary["state_count_distribution"]
+        assert distribution["denominator"] == "all supported current states, including zero presentations"
+        assert distribution["states"] == len(state_counts) and distribution["zero_states"] == int((state_counts == 0).sum())
+        for field, value in (("minimum", state_counts.min()), ("maximum", state_counts.max()), ("mean", state_counts.mean()),
+                             ("median", np.median(state_counts)), ("q95", np.quantile(state_counts, .95))):
+            close(distribution[field], value)
+        assert summary["outside_support_direct_samples"] == 0
+        structural = summary["all_action_structural_successor_queries"]
+        for field in ("nonterminal_queries", "outside_support_queries", "outside_support_fraction"):
+            close(structural[field], actual[field])
+        if condition in CONDITIONS:
+            observed = recorded_exposure(recorded[bank], supports[bank, condition], counts[group_key])
+            live, outside = observed["nonterminal_action_presentations"], observed["outside_support_successor_presentations"]
+            assert summary["successor_queries"]["nonterminal_queries"] == live
+            assert summary["successor_queries"]["outside_support_queries"] == outside == 0
+            close(summary["successor_queries"]["outside_support_fraction"], outside / live)
+        assert result["sampling"][str(bank)][condition][str(seed)]["successor_queries"] == summary["successor_queries"]
+        def check_category(row, calculated):
+            assert row["presentations"] == calculated["presentations"]
+            assert row["supported_states"] == calculated["support_states"]
+            assert row["unique_states_sampled"] == calculated["unique_sampled_states"]
+            close(row["presentation_fraction"], calculated["presentations"] / total)
+        assert set(summary["category_exposure"]) == {"winnable", "impossible", "goal_near", "goal_far"}
+        for category, row in summary["category_exposure"].items():
+            check_category(row, actual[category])
+        for row in (r for r in exposure["per_clock"] if key(r) == group_key):
+            check_category(row, actual["by_time_bucket"][buckets[row["bucket"]]])
+        for row in (r for r in exposure["per_map"] if key(r) == group_key):
+            mask = data["map_seeds"] == row["map_seed"]
+            check_category(row, {"presentations": int(counts[group_key][mask].sum()), "support_states": int(np.count_nonzero(mask[supports[bank, condition]])),
+                                 "unique_sampled_states": int(np.count_nonzero(counts[group_key][mask]))})
+        for row in [r for r in exposure["per_clock"] + exposure["per_map"] if key(r) == group_key]:
+            assert row["source"] == summary["source"] and row["updates"] == summary["updates"]
+    return len(exposure["per_map"]), len(exposure["per_clock"])
+
+
+def validate_recorded_tables(study, archives, result, data, metadata, transitions, supports):
+    coverage = read_json(study / "action_coverage.json")
+    assert coverage == result["action_coverage"]
+    banks = result["protocol"]["bank_ids"]
+    assert [r["bank_id"] for r in coverage["per_bank"]] == banks
+    saved = dict(np.load(study / "recorded_transitions.npz", allow_pickle=False))
+    fields = {"observed", "rewards", "ends", "terminated", "truncated", "successor_indices", "occurrences"}
+    assert set(saved) == {f"bank{b}_{k}" for b in banks for k in fields}
+    integrity = result["provenance"]["recorded_table_integrity"]
+    assert {r["bank_id"] for r in integrity} == set(banks) and len(integrity) == len(banks)
+    root = Path(__file__).resolve().parents[1]
+    tables, collector_reports = {}, []
+    for summary in coverage["per_bank"]:
+        bank = summary["bank_id"]
+        archive = archives["bank_replication"]
+        filename = f"banks/bank{bank}/collection_steps.csv"
+        source = shared.checked_archive_file(archive, filename)
+        assert summary["copied"] == filename
+        assert (root / summary["source"]).resolve() == source.resolve()
+        assert common.sha(study / filename) == common.sha(source) == summary["source_sha256"] == summary["copied_sha256"]
+        for filename in (f"banks/bank{bank}/collection_episodes.csv", f"banks/bank{bank}/collection.npz"):
+            shared.checked_archive_file(archive, filename)
+        # Replay the already recorded collector action/RNG/state sequence as an
+        # integrity check, using independently validated world transitions.
+        visits, original, collector = bank_audit.reconstruct_bank(archive / f"banks/bank{bank}", bank, data, metadata["train"], transitions, 16)
+        assert np.array_equal(original, supports[bank, CONDITIONS[0]])
+        table = reconstruct_recorded_edges(source, data, transitions, original)
+        assert np.array_equal(table["occurrences"].sum(1), visits)
+        for name, value in table.items():
+            actual = saved[f"bank{bank}_{name}"]
+            assert actual.dtype == value.dtype and actual.shape == value.shape
+            assert np.array_equal(actual, value, equal_nan=True), (bank, name)
+        expected = validate_membership(summary, table, original)
+        assert expected["logged_occurrences"] == collector["collection_steps"]
+        assert summary["observed_outcomes_match_integrity_reference"]
+        bank_info = next(b for b in result["banks"] if b["bank_id"] == bank)
+        assert bank_info["recorded_actions"] == summary and bank_info["identical_state_support"]
+        row = next(r for r in integrity if r["bank_id"] == bank)
+        assert row["before"] == row["after"] == summary["arrays"]
+        assert row["unchanged"] and row["read_only"] and row["optimizer_tables_unchanged"]
+        assert row["tensor_before"] == row["tensor_after"] and set(row["tensor_before"]) == fields
+        for name, value in table.items():
+            bank_audit.check_array(value.astype(np.float32) if name == "rewards" else value, row["tensor_before"][name])
+        tables[bank] = table
+        collector_reports.append({**collector, "deduplicated_recorded_edges": expected["observed_edges"],
+                                  "states_by_action_count": expected["states_by_action_count"]})
+    return tables, collector_reports
+
+
+def validate_action_exposure(study, result, data, transitions, supports, counts, tables):
+    exposure = read_json(study / "action_exposure.json")
+    assert exposure == result["action_exposure"]
+    expected = set(counts)
+    key = lambda r: (r["bank_id"], r["condition"], r["seed"])
+    assert {key(r) for r in exposure["per_seed"]} == expected and len(exposure["per_seed"]) == len(expected)
+    fits = {(b, s) for b, c, s in expected if c == CONDITIONS[1]}
+    saved_queries = dict(np.load(study / "recorded_query_counts.npz", allow_pickle=False))
+    assert set(saved_queries) == {f"bank{b}_{c}_seed{s}" for b, s in fits for c in CONDITIONS}
+    assert {(r["bank_id"], r["seed"]) for r in exposure["integrity"]} == fits and len(exposure["integrity"]) == len(fits)
+    assert result["provenance"]["recorded_query_integrity"] == exposure["integrity"]
+    totals = {"action_target_presentations": 0, "terminal_action_targets": 0, "nonterminal_action_targets": 0,
+              "nonterminal_target_queries": 0, "outside_support_target_queries": 0}
+    for row in exposure["per_seed"]:
+        bank, condition, seed = key(row)
+        count, support = counts[key(row)], supports[bank, condition]
+        allowed = np.zeros(len(count), bool)
+        allowed[support] = True
+        table = tables[bank]
+        observed, ended, successor = table["observed"], table["ends"], table["successor_indices"]
+        live = observed & ~ended
+        outside = live & ~allowed[np.maximum(successor, 0)]
+        weights = count.astype(np.uint64)
+        targets = int(np.dot(weights, observed.sum(1).astype(np.uint64)))
+        queries = int(np.dot(weights, live.sum(1).astype(np.uint64)))
+        outside_queries = int(np.dot(weights, outside.sum(1).astype(np.uint64)))
+        assert row["source"] == ("archived_baseline" if condition == CONDITIONS[0] else "new_treatment")
+        assert row["updates"] == result["sampling"][str(bank)][condition][str(seed)]["updates"]
+        assert row["state_presentations"] == int(count.sum()) == row["updates"] * 64
+        assert row["action_target_presentations"] == targets
+        assert row["terminal_action_targets"] == targets - queries
+        assert row["nonterminal_action_targets"] == row["nonterminal_target_queries"] == queries
+        assert row["outside_support_target_queries"] == outside_queries
+        close(row["outside_support_fraction"], outside_queries / queries)
+        assert outside_queries == 0
+        source_rows, actions = np.nonzero(live)
+        query_counts = np.zeros(len(count), np.uint64)
+        np.add.at(query_counts, successor[source_rows, actions], count[source_rows].astype(np.uint64))
+        actual = saved_queries[f"bank{bank}_{condition}_seed{seed}"]
+        assert actual.dtype == np.uint32 and np.array_equal(actual, query_counts)
+        assert int(actual.sum()) == queries and not actual[~allowed].any()
+        if condition == CONDITIONS[1]:
+            for field in totals:
+                totals[field] += row[field]
+        else:
+            assert targets < int(count.sum()) * 4
+    for row in exposure["integrity"]:
+        assert row["tracked_exposure_matches"] and row["recorded_query_counts_match"] and row["no_outside_support_queries"]
+    assert result["run"]["action_target_presentations"] == totals["action_target_presentations"]
+    assert result["run"]["nonterminal_target_queries"] == totals["nonterminal_target_queries"]
+    return totals
+
+COUNTS = ("query_count", "outside_count", "positive_target_deltas", "negative_target_deltas", "zero_target_deltas")
+SUMS = ("online_gap_sum", "online_gap_squared_sum", "target_delta_sum", "target_delta_squared_sum")
+EXTREMA = ("online_gap_min", "online_gap_max", "target_delta_min", "target_delta_max")
+
+
+def independent_diagnostics(rows):
+    result = {k: sum(r[k] for r in rows) for k in COUNTS + SUMS}
+    for key in EXTREMA:
+        values = [r[key] for r in rows if r[key] is not None]
+        result[key] = (min(values) if key.endswith("_min") else max(values)) if values else None
+    n = result["query_count"]
+    result.update(outside_fraction=result["outside_count"] / n if n else None,
+                  online_gap_mean=result["online_gap_sum"] / n if n else None,
+                  target_delta_mean=result["target_delta_sum"] / n if n else None, sign_tolerance=1e-12)
+    return result
+
+
+def check_diagnostics(actual, expected=None):
+    assert all(isinstance(actual[k], int) and actual[k] >= 0 for k in COUNTS)
+    n = actual["query_count"]
+    assert actual["outside_count"] <= n
+    assert sum(actual[k] for k in COUNTS[2:]) == n
+    assert actual["positive_target_deltas"] + actual["negative_target_deltas"] <= actual["outside_count"]
+    assert actual["sign_tolerance"] == 1e-12
+    for key in SUMS:
+        assert np.isfinite(actual[key])
+    if not n:
+        assert all(actual[k] == 0 for k in COUNTS + SUMS)
+        assert all(actual[k] is None for k in EXTREMA + ("outside_fraction", "online_gap_mean", "target_delta_mean"))
+    else:
+        for kind in ("online_gap", "target_delta"):
+            low, high, total, squared = [actual[f"{kind}_{suffix}"] for suffix in ("min", "max", "sum", "squared_sum")]
+            assert np.isfinite([low, high, total, squared]).all() and low <= high and squared >= 0
+            assert low * n - 1e-7 <= total <= high * n + 1e-7
+            assert squared * n + 1e-7 >= total * total
+            if kind == "online_gap":
+                assert low >= 0 and total >= 0
+        close(actual["outside_fraction"], actual["outside_count"] / n)
+        close(actual["online_gap_mean"], actual["online_gap_sum"] / n)
+        close(actual["target_delta_mean"], actual["target_delta_sum"] / n)
+    if expected is not None:
+        for key, value in expected.items():
+            if value is None:
+                assert actual[key] is None, key
+            elif key in COUNTS:
+                assert actual[key] == value, key
+            else:
+                close(actual[key], value, key)
+
+
+def validate_control_identity(study, archive, result, tables, supports, counts):
+    names = ("recorded_transitions.npz", "recorded_query_counts.npz", "map_counts.npz", "action_exposure.json",
+             "action_coverage.json", "supports.npz", "protocol.json", "protocol.md")
+    for name in names:
+        source = shared.checked_archive_file(archive, name)
+        assert common.sha(source) == common.sha(study / ("control_" + name))
+        assert result["provenance"]["archives"]["recorded_actions"]["files"][name] == common.sha(source)
+    old_tables = dict(np.load(study / "control_recorded_transitions.npz", allow_pickle=False))
+    old_supports = dict(np.load(study / "control_supports.npz", allow_pickle=False))
+    old_queries = dict(np.load(study / "control_recorded_query_counts.npz", allow_pickle=False))
+    old_maps = dict(np.load(study / "control_map_counts.npz", allow_pickle=False))
+    queries = dict(np.load(study / "recorded_query_counts.npz", allow_pickle=False))
+    maps = dict(np.load(study / "map_counts.npz", allow_pickle=False))
+    old_exposure = read_json(study / "control_action_exposure.json")["per_seed"]
+    provenance = result["provenance"]
+    assert provenance["control_archive"] == "recorded_actions/pilot_v1"
+    banks, seeds = result["protocol"]["bank_ids"], result["protocol"]["seeds"]
+    assert len(provenance["control_table_identity"]) == len(banks)
+    assert {r["bank_id"] for r in provenance["control_table_identity"]} == set(banks)
+    for bank in banks:
+        for name, value in tables[bank].items():
+            assert np.array_equal(value, old_tables[f"bank{bank}_{name}"], equal_nan=True)
+        assert np.array_equal(old_supports[f"recorded_actions_bank{bank}"], supports[bank, CONDITIONS[0]])
+        row = next(r for r in provenance["control_table_identity"] if r["bank_id"] == bank)
+        assert row["recorded_arrays_identical"] and row["support_identical"]
+    fits = {(b, s) for b in banks for s in seeds}
+    identity = provenance["paired_target_query_identity"]
+    assert len(identity) == len(fits) and {(r["bank_id"], r["seed"]) for r in identity} == fits
+    exposure = result["action_exposure"]["per_seed"]
+    target_fields = ("state_presentations", "action_target_presentations", "terminal_action_targets", "nonterminal_target_queries")
+    for bank, seed in fits:
+        control_name = f"bank{bank}_recorded_actions_seed{seed}"
+        treatment_name = f"bank{bank}_constrained_bootstrap_seed{seed}"
+        assert np.array_equal(queries[control_name], old_queries[control_name])
+        assert np.array_equal(maps[control_name], old_maps[control_name])
+        key = lambda row: (row["bank_id"], row["condition"], row["seed"])
+        old = next(r for r in old_exposure if key(r) == (bank, CONDITIONS[0], seed))
+        control = next(r for r in exposure if key(r) == (bank, CONDITIONS[0], seed))
+        treatment = next(r for r in exposure if key(r) == (bank, CONDITIONS[1], seed))
+        assert all(old[k] == control[k] for k in target_fields)
+        row = next(r for r in identity if (r["bank_id"], r["seed"]) == (bank, seed))
+        assert row["control_action_counts_match_archive"] and row["control_query_vector_matches_archive"]
+        same_budget = result["protocol"]["budget"]["updates_per_fit"] == 30000
+        assert row["same_budget"] == same_budget
+        if same_budget:
+            assert all(control[k] == treatment[k] for k in target_fields)
+            assert np.array_equal(queries[control_name], queries[treatment_name])
+            assert np.array_equal(counts[bank, CONDITIONS[0], seed], counts[bank, CONDITIONS[1], seed])
+            assert row["same_budget_target_counts_identical"] and row["same_budget_query_vector_identical"]
+        else:
+            assert row["same_budget_target_counts_identical"] is None and row["same_budget_query_vector_identical"] is None
+    return len(names)
+
+
+def validate_bootstrap_windows(study, result, supports, tables):
+    diagnostics = read_json(study / "bootstrap_diagnostics.json")
+    assert diagnostics == result["bootstrap_diagnostics"]
+    saved_rows = csv_rows(study / "bootstrap_diagnostics.csv")
+    windows = diagnostics["windows"]
+    assert len(saved_rows) == len(windows)
+    for saved, row in zip(saved_rows, windows):
+        assert set(saved) == set(row)
+        for key, value in row.items():
+            if value is None:
+                assert saved[key] == ""
+            elif isinstance(value, str):
+                assert saved[key] == value
+            elif isinstance(value, int):
+                assert int(saved[key]) == value
+            else:
+                close(float(saved[key]), value)
+    protocol = result["protocol"]
+    fits = {(b, s) for b in protocol["bank_ids"] for s in protocol["seeds"]}
+    updates = protocol["budget"]["updates_per_fit"]
+    schedule = list(range(100, updates + 1, 100))
+    if updates % 100:
+        schedule.append(updates)
+    expected_cells = {(b, s, cp) for b, s in fits for cp in schedule}
+    assert len(windows) == len(expected_cells)
+    assert {(r["bank_id"], r["seed"], r["checkpoint"]) for r in windows} == expected_cells
+    assert all(r["condition"] == CONDITIONS[1] for r in windows)
+    per_seed = diagnostics["per_seed"]
+    assert {(r["bank_id"], r["seed"]) for r in per_seed} == fits and len(per_seed) == len(fits)
+    for bank, seed in fits:
+        fit_rows = [r for r in windows if (r["bank_id"], r["seed"]) == (bank, seed)]
+        assert [r["checkpoint"] for r in fit_rows] == schedule
+        support = supports[bank, CONDITIONS[1]]
+        cardinality = (tables[bank]["observed"] & ~tables[bank]["ends"]).sum(1)
+        rng = np.random.default_rng(np.random.SeedSequence([seed, 66301]))
+        query_count, previous, cell = 0, 0, 0
+        for update in range(1, updates + 1):
+            indices = support[rng.choice(len(support), 64, replace=False)]
+            query_count += int(cardinality[indices].sum())
+            if update == schedule[cell]:
+                row = fit_rows[cell]
+                assert row["updates_in_window"] == update - previous and row["query_count"] == query_count
+                check_diagnostics(row)
+                cell += 1
+                previous, query_count = update, 0
+                if cell == len(schedule):
+                    break
+        summary = next(r for r in per_seed if (r["bank_id"], r["seed"]) == (bank, seed))
+        assert summary["condition"] == CONDITIONS[1] and summary["updates"] == updates
+        check_diagnostics(summary, independent_diagnostics(fit_rows))
+        exposure = next(r for r in result["action_exposure"]["per_seed"] if (r["bank_id"], r["condition"], r["seed"]) == (bank, CONDITIONS[1], seed))
+        assert summary["query_count"] == exposure["nonterminal_target_queries"]
+    total = sum(r["query_count"] for r in per_seed)
+    assert total == result["run"]["nonterminal_target_queries"]
+    assert result["provenance"]["bootstrap_diagnostic_integrity"] == {
+        "expected_windows": len(expected_cells), "actual_windows": len(windows), "query_count": total,
+        "optimizer_query_count": total, "complete": True}
+    return len(windows), total
+
+
+def validate_bootstrap_probes(study, result, data, tables, supports, *, skip_forward):
+    probes = read_json(study / "bootstrap_probes.json")
+    assert probes == result["bootstrap_probes"]
+    protocol = result["protocol"]
+    fits = {(b, s) for b in protocol["bank_ids"] for s in protocol["seeds"]}
+    expected = {(b, s, cp) for b, s in fits for cp in protocol["checkpoints"]}
+    rows = probes["per_checkpoint"]
+    assert len(rows) == len(expected) and {(r["bank_id"], r["seed"], r["checkpoint"]) for r in rows} == expected
+    saved_indices = dict(np.load(study / "probe_indices.npz", allow_pickle=False))
+    assert set(saved_indices) == {f"bank{b}_seed{s}" for b, s in fits}
+    indices_by_fit = {}
+    for bank, seed in fits:
+        support = supports[bank, CONDITIONS[0]]
+        rng = np.random.default_rng(np.random.SeedSequence([seed, 66301]))
+        indices = support[rng.choice(len(support), 64, replace=False)]
+        assert len(np.unique(indices)) == 64
+        assert np.array_equal(saved_indices[f"bank{bank}_seed{seed}"], indices)
+        indices_by_fit[bank, seed] = indices
+    total_queries = 0
+    for row in rows:
+        bank, seed, cp = row["bank_id"], row["seed"], row["checkpoint"]
+        assert row["condition"] == CONDITIONS[1]
+        indices, table = indices_by_fit[bank, seed], tables[bank]
+        assert row["state_rows"] == indices.tolist()
+        path = study / f"models/bank{bank}_{CONDITIONS[1]}_seed{seed}_update{cp}.pt"
+        assert row["snapshot"] == path.relative_to(study).as_posix() and row["snapshot_sha256"] == common.sha(path)
+        snapshot = torch.load(path, map_location="cpu", weights_only=True)
+        identity = {"online": replay_audit.tensor_hash(snapshot["online"]), "target": replay_audit.tensor_hash(snapshot["target"]), "updates": cp}
+        assert row["before"] == row["after"] == identity and row["parameters_rng_counters_unchanged"]
+        positions, actions = np.nonzero(table["observed"][indices] & ~table["ends"][indices])
+        sources = indices[positions]
+        successors = table["successor_indices"][sources, actions]
+        masks = table["observed"][successors]
+        assert (successors >= 0).all() and masks.any(1).all()
+        edges = row["edges"]
+        assert len(edges) == len(sources)
+        for i, edge in enumerate(edges):
+            assert edge["current_row"] == int(sources[i]) and edge["action"] == int(actions[i])
+            assert edge["successor_row"] == int(successors[i]) and edge["successor_mask"] == masks[i].tolist()
+            assert edge["reward"] == float(np.float32(table["rewards"][sources[i], actions[i]]))
+        if len(edges):
+            online = np.asarray([e["online_q"] for e in edges], np.float32)
+            target = np.asarray([e["target_q"] for e in edges], np.float32)
+            assert online.shape == target.shape == (len(edges), 4) and np.isfinite(online).all() and np.isfinite(target).all()
+            if not skip_forward:
+                online_network = bank_audit.bare_network(snapshot["online"]).online
+                target_network = bank_audit.bare_network(snapshot["target"]).online
+                observations = torch.from_numpy(data["observations"][successors])
+                with torch.inference_mode():
+                    recomputed_online, recomputed_target = online_network(observations).numpy(), target_network(observations).numpy()
+                assert np.array_equal(online, recomputed_online), (bank, seed, cp, "probe online forward")
+                assert np.array_equal(target, recomputed_target), (bank, seed, cp, "probe target forward")
+            unrestricted = online.argmax(1)
+            restricted = np.where(masks, online, -np.inf).argmax(1)
+            query_rows = np.arange(len(edges))
+            rewards = table["rewards"][sources, actions].astype(np.float32)
+            unrestricted_target = rewards + np.float32(.97) * target[query_rows, unrestricted]
+            restricted_target = rewards + np.float32(.97) * target[query_rows, restricted]
+            gap = (online[query_rows, unrestricted] - online[query_rows, restricted]).astype(np.float64)
+            delta = (restricted_target - unrestricted_target).astype(np.float64)
+            outside = ~masks[query_rows, unrestricted]
+            assert (gap >= 0).all() and not delta[~outside].any()
+            for i, edge in enumerate(edges):
+                assert edge["unrestricted_action"] == int(unrestricted[i]) and edge["restricted_action"] == int(restricted[i])
+                assert edge["unrestricted_argmax_outside"] == bool(outside[i])
+                for key, value in (("online_gap", gap[i]), ("target_delta", delta[i]), ("unrestricted_target", unrestricted_target[i]), ("restricted_target", restricted_target[i])):
+                    assert edge[key] == float(value), (bank, seed, cp, key)
+            computed = {"query_count": len(edges), "outside_count": int(outside.sum()),
+                        "positive_target_deltas": int((delta > 1e-12).sum()), "negative_target_deltas": int((delta < -1e-12).sum()),
+                        "zero_target_deltas": int((abs(delta) <= 1e-12).sum())}
+            for name, values in (("online_gap", gap), ("target_delta", delta)):
+                computed.update({f"{name}_sum": float(values.sum()), f"{name}_squared_sum": float((values ** 2).sum()),
+                                 f"{name}_min": float(values.min()), f"{name}_max": float(values.max())})
+            computed = independent_diagnostics([computed])
+        else:
+            computed = independent_diagnostics([])
+        check_diagnostics(row["diagnostics"], computed)
+        total_queries += len(edges)
+    assert probes["probes"] == result["run"]["probe_evaluations"] == len(expected) == protocol["probes"]["expected"]
+    assert probes["state_presentations"] == result["run"]["probe_state_presentations"] == len(expected) * 64
+    assert probes["query_count"] == result["run"]["probe_nonterminal_queries"] == total_queries
+    assert result["provenance"]["probe_integrity"] == {"expected": len(expected), "actual": len(expected), "complete": True, "unchanged": True}
+    return len(expected), total_queries
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--study", type=Path, default=Path("experiments/constrained_bootstrap/pilot_v1"))
+    parser.add_argument("--allow-smoke", action="store_true")
+    parser.add_argument("--skip-forward-inference", action="store_true")
+    archive_names = ("supervised", "fixed_targets", "coverage", "equal_support", "panel_evaluation", "bank_replication", "map_replay", "within_map", "recorded_actions")
+    for name in archive_names:
+        parser.add_argument("--" + name.replace("_", "-") + "-study", type=Path)
+    args = parser.parse_args()
+    if not __debug__:
+        parser.error("Assertions must be enabled; do not use python -O.")
+    root = Path(__file__).resolve().parents[1]
+    resolve = lambda p: p.resolve() if p.is_absolute() else (root / p).resolve()
+    study = resolve(args.study)
+    archives = {name: resolve(getattr(args, name + "_study") or Path(f"experiments/{name}/pilot_v1")) for name in archive_names}
+    sys.path.insert(0, str(study / "source"))
+    from q6.world import CollectionWorld, WorldConfig
+    torch.set_num_threads(1)
+    started = time.monotonic()
+    result, protocol = read_json(study / "results.json"), read_json(study / "protocol.json")
+    smoke = bool(protocol["smoke"] or protocol["deviations"])
+    assert not smoke or args.allow_smoke, "Smoke/deviating artifacts require explicit --allow-smoke."
+    assert protocol["id"] == "constrained-bootstrap-v1" and result["run"]["status"] == "complete"
+    assert result["artifacts"]["report"] == "docs/experiments/constrained_bootstrap_results_v1.md"
+    assert protocol["bank_ids"] == [1, 2, 3]
+    assert [r["id"] for r in protocol["conditions"]] == list(CONDITIONS)
+    assert protocol["primary_comparison"] == "constrained_minus_recorded"
+    final = max(protocol["checkpoints"])
+    assert protocol["evaluation_checkpoints"] == {"recorded_actions": 30000, "constrained_bootstrap": final}
+    if not smoke:
+        assert protocol["seeds"] == [0, 1, 2] and protocol["git"]["dirty"] is False
+        assert protocol["runtime"]["python"].startswith("3.12.")
+        assert protocol["runtime"]["torch"].split("+")[0] == "2.8.0" and protocol["runtime"]["numpy"] == "2.0.2"
+        assert protocol["panel_selection"] == {"count": 8, "maps_per_panel": 64, "start": 1100000, "stride": 1000}
+        assert protocol["checkpoints"] == [0, 1000, 3000, 10000, 30000]
+    assert protocol["control_archive"] == "recorded_actions/pilot_v1"
+    assert protocol["optimizer"]["implementation"] == "constrained_bootstrap.constrained_update"
+    assert protocol["bootstrap_diagnostics"]["sign_tolerance"] == 1e-12
+    assert protocol["bootstrap_diagnostics"]["historical_control_diagnostics"] is False
+    assert protocol["probes"]["no_optimizer_or_policy_evaluation"] and protocol["probes"]["full_online_target_vectors"]
+    config = WorldConfig(**{**protocol["world"], "action_mapping": tuple(protocol["world"]["action_mapping"])})
+    assert asdict(config) == asdict(WorldConfig()) and protocol["rule_visibility"] == "observed"
+    assert all(protocol["collection"][k] == 0 for k in ("new_steps", "new_episodes"))
+    assert protocol["evaluation"]["final_only"] and protocol["evaluation"]["after_all_treatment_fits"]
+    assert protocol["evaluation"]["greedy_repetitions"] == 1 and protocol["evaluation"]["epsilon_0_1_repetitions"] == 2
+    assert protocol["evaluation"]["optimal_q_atol"] == 1e-6 and protocol["evaluation"]["optimal_q_rtol"] == 0
+    assert protocol["sampling"]["rng"] == "SeedSequence([seed,66301])"
+    assert protocol["sampling"]["implementation"] == "unchanged coverage.SupportSampler"
+    assert protocol["sampling"]["paired_local_global_map_schedule_within_bank"]
+    assert protocol["optimizer"]["observed_only"]
+    assert protocol["recorded_actions"]["equal_action_target_budget"] is True
+    assert protocol["recorded_actions"]["all_tables_frozen_before_training"]
+    assert protocol["collection"]["new_support_draws"] == 0
+    for key, value in {"learning_rate": .001, "gradient_norm_cap": 5., "gamma": .97, "target_tau": .01, "batch_size": 64}.items():
+        close(protocol["optimizer"][key], value)
+    assert protocol["dataset"]["fresh_state_enumeration"] is False
+    report = {"study": str(args.study), "smoke_validation_only": smoke,
+              "manifest_files": common.audit_manifest(study, protocol, result)}
+    data, arrays, metadata, transitions, supports = validate_inputs(study, archives, protocol)
+    transition_data = dict(arrays)
+    for key, value in data.items():
+        transition_data["heldout_" + key] = np.empty((0,) + value.shape[1:], dtype=value.dtype)
+    transition_report = common.audit_transitions(transition_data, {**metadata, "heldout": []}, transitions, config, CollectionWorld)
+    tables, collector_reports = validate_recorded_tables(study, archives, result, data, metadata, transitions, supports)
+    selection, task_hashes, planner = reconstruct_panels(study, archives, protocol, result, metadata, CollectionWorld, config)
+    states, agents, initial, snapshots = validate_models(study, archives["recorded_actions"], result)
+    counts = validate_sampling(study, archives["recorded_actions"], result, data, supports)
+    exposure_maps, exposure_clocks = validate_exposure(study, result, data, transitions, supports, counts, tables)
+    action_totals = validate_action_exposure(study, result, data, transitions, supports, counts, tables)
+    control_inputs = validate_control_identity(study, archives["recorded_actions"], result, tables, supports, counts)
+    diagnostic_windows, diagnostic_queries = validate_bootstrap_windows(study, result, supports, tables)
+    probe_count, probe_queries = validate_bootstrap_probes(study, result, data, tables, supports,
+                                                         skip_forward=args.skip_forward_inference)
+    if not smoke:
+        assert action_totals == {"action_target_presentations": 24273701, "terminal_action_targets": 1062190,
+                                "nonterminal_action_targets": 23211511, "nonterminal_target_queries": 23211511,
+                                "outside_support_target_queries": 0}
+        assert diagnostic_windows == 2700 and probe_count == 45
+    loss_rows = validate_losses(study, result)
+    rows, refs, paired = shared.validate_episode_tables(study, result, states, task_hashes, planner)
+    shared.validate_thresholds(result, eligible=not smoke)
+    source_inputs = validate_provenance(study, archives, result, data, transitions, supports, initial, snapshots, counts, rows, refs)
+    replay_count, replay_steps = shared.validate_replays(study, result, rows, refs, agents, CollectionWorld, config,
+                                                skip_forward=args.skip_forward_inference)
+    run, budget = result["run"], protocol["budget"]
+    fits = {(b, s) for b in protocol["bank_ids"] for s in protocol["seeds"]}
+    assert run["fits"] == run["frozen_baselines"] == len(fits) and len(states) == 2 * len(fits)
+    assert run["banks"] == len(protocol["bank_ids"]) and run["model_parameter_count"] == 20420
+    assert run["train_updates"] == len(fits) * final == budget["maximum_updates"] and budget["updates_per_fit"] == final
+    assert run["training_examples"] == run["train_updates"] * 64 and run["historical_baseline_updates"] == len(fits) * 30000
+    assert all(run[k] == 0 for k in ("baseline_new_updates", "collection_episodes", "collection_steps"))
+    assert run["support_draws"] == 0
+    assert run["baseline_reconstructed_updates"] == len(fits) * 30000
+    assert all(budget[k] == 0 for k in ("new_baseline_updates", "maximum_collection_steps", "maximum_collection_episodes"))
+    assert run["learner_episodes"] == len(rows) and run["reference_episodes"] == run["unique_reference_episodes"] == len(refs)
+    assert run["panels"] == len(selection["panels"])
+    assert 0 < run["wall_seconds"] <= budget["admission_seconds"] <= 1200
+    assert 0 < run["peak_rss_bytes"] <= budget["peak_process_rss_bytes"] == 4 * 1024 ** 3
+    assert run["resource_checks"] > run["train_updates"] + run["baseline_reconstructed_updates"] + len(rows) + len(refs)
+    assert run["resource_limits"] == {"seconds": budget["admission_seconds"], "peak_process_rss_bytes": budget["peak_process_rss_bytes"], "torch_threads": 1}
+    assert protocol["runtime"]["torch_threads"] == 1 and budget["all_phases_included"]
+    assert run["interpretation"] == ("smoke_or_deviation_descriptive_only" if smoke else "constrained_bootstrap_descriptive_only") and run["stop_reason"] is None
+    completed = [r for r in run["progress"] if r.get("training_complete")]
+    assert {(r["bank_id"], r["seed"]) for r in completed} == fits and len(completed) == len(fits)
+    assert all(r["updates"] == final for r in completed)
+    progress = [r for r in run["progress"] if r.get("snapshot_saved")]
+    assert {(r["bank_id"], r["seed"], r["checkpoint"]) for r in progress} == {(b, s, cp) for b, s in fits for cp in protocol["checkpoints"]}
+    assert len(progress) == len(fits) * len(protocol["checkpoints"]) and all(r["condition"] == "constrained_bootstrap" for r in progress)
+    evaluated = [r for r in run["progress"] if r.get("evaluation_complete")]
+    expected_evaluated = {(b, c, s, p["id"]) for b, s in fits for c in CONDITIONS for p in result["panels"]}
+    assert {(r["bank_id"], r["condition"], r["seed"], r["panel"]) for r in evaluated} == expected_evaluated
+    assert len(evaluated) == len(expected_evaluated)
+    assert len(run["progress"]) == len(progress) + len(completed) + len(evaluated)
+    report.update(training_states=len(data["observations"]), reused_support_sizes={str(b): len(supports[b, CONDITIONS[0]]) for b in protocol["bank_ids"]}, recorded_bank_tables_checked=len(tables),
+        selected_layouts=len(task_hashes), rejected_candidates=len(selection["collision_skips"]), transition_validation=transition_report,
+        archive_input_hashes_checked=source_inputs, inherited_counts_and_controls_identical=True,
+        treatment_sampling_streams_checked=3 * len(fits), paired_local_and_map_streams_checked=len(fits), historical_sampler_updates_reconstructed=len(fits) * 30000,
+        bootstrap_diagnostic_windows_checked=diagnostic_windows, optimizer_nonterminal_queries_checked=diagnostic_queries,
+        fixed_diagnostic_probes_checked=probe_count, separate_probe_queries_checked=probe_queries,
+        probe_forward_inference_checked=not args.skip_forward_inference,
+        optimizer_diagnostic_values_reproduced_by_retraining=False,
+        optimizer_diagnostic_checks="raw window arithmetic, sign partitions, bounds, independent query counts; fixed probes regenerated separately",
+        control_recorded_input_copies_checked=control_inputs,
+        recorded_action_exposure=action_totals, historical_collector_logs_checked=collector_reports,
+        model_snapshots_checked=len(snapshots), frozen_controls_checked=len(fits), final_models_checked=len(states),
+        initial_models_match_archive=True, frozen_evaluation_identity_unchanged=True,
+        exposure_map_rows_checked=exposure_maps, exposure_clock_rows_checked=exposure_clocks,
+        loss_rows_checked=loss_rows, learner_episode_rows=len(rows), reference_episode_rows=len(refs),
+        paired_layout_rows=len(paired["per_layout"]), paired_seed_rows=len(paired["per_seed"]), paired_aggregate_rows=len(paired["aggregate"]),
+        recorded_replays_checked=replay_count, recorded_steps_checked=replay_steps,
+        replay_forward_inference_checked=not args.skip_forward_inference, forward_inference_checked=not args.skip_forward_inference,
+        full_policy_evaluation_repeated=False, new_training_updates=0, new_collection_steps=0,
+        bank_effects=result["robustness"]["bank_effects"], audit_seconds=time.monotonic() - started)
+    print(json.dumps(report, separators=(",", ":")))
+
+
+if __name__ == "__main__":
+    main()

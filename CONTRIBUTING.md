@@ -83,6 +83,7 @@ python scripts/audit_bank_replication.py
 python scripts/audit_map_replay.py
 python scripts/audit_within_map.py
 python scripts/audit_recorded_actions.py
+python scripts/audit_constrained_bootstrap.py
 ```
 
 These separately check exact targets, reconstruct minibatch sampling schedules, reproduce saved predictions from weights, and reconcile raw metrics and gates. They perform forward inference and isolated environment transitions, with no training or full policy reevaluation. Bit-exact predictions require the recorded environment and are excluded from broader dependency-range CI. The supervised audit accepts complete, undeviating v1 studies; its smoke and incomplete artifacts can use the general verifier's `verify_supervised` function.
@@ -119,6 +120,13 @@ The within-map audit reconstructs quota-preserving support draws and the
 original archived control stream. It verifies exact local and ordered-map
 sampling matches, using the control prefix for smoke while retaining its
 full historical training counts. No baseline is retrained by the audit.
+
+The constrained-bootstrap audit verifies reuse of recorded-action controls,
+equal logged-action target/query counts and exact state replay. It regenerates
+fixed checkpoint probes from snapshots in the pinned runtime; portable mode
+checks their formulas from saved online/target values. Training-window
+diagnostics are checked for accounting and arithmetic, without retraining.
+Probe inference is separate from optimizer queries and final-policy episodes.
 
 ## Build a package
 

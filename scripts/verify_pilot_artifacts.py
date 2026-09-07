@@ -376,6 +376,10 @@ def main():
         verify_manifest(manifest.parent)
         subprocess.run([sys.executable, str(ROOT / "scripts/audit_recorded_actions.py"),
                         "--study", str(manifest.parent), "--skip-forward-inference"], check=True)
+    for manifest in sorted((ROOT / "experiments/constrained_bootstrap").glob("*/manifest.json")):
+        verify_manifest(manifest.parent)
+        subprocess.run([sys.executable, str(ROOT / "scripts/audit_constrained_bootstrap.py"),
+                        "--study", str(manifest.parent), "--skip-forward-inference"], check=True)
 
 
 if __name__ == "__main__":

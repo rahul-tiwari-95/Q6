@@ -67,7 +67,7 @@ class MapSampler:
         return rows
 
 
-def exposure_metrics(data, transitions, supports, counts, sampling):
+def exposure_metrics(data, transitions, supports, counts, sampling, *, control_condition="collected_unique"):
     """Archived membership and actual presentation frequency are separate facts."""
     result = {"classification": "descriptive actual training exposure; baseline counts are historical", "per_map": [], "per_clock": [], "summaries": []}
     # Enumeration clocks are innermost; a position is goal-near iff winnable at clock2.
@@ -83,7 +83,7 @@ def exposure_metrics(data, transitions, supports, counts, sampling):
         mask[support] = True
         sample = sampling[str(bank)][condition][str(seed)]
         total = int(count.sum())
-        base = {"bank_id": bank, "condition": condition, "seed": seed, "source": "archived_baseline" if condition == "collected_unique" else "new_treatment", "updates": sample["updates"]}
+        base = {"bank_id": bank, "condition": condition, "seed": seed, "source": "archived_baseline" if condition == control_condition else "new_treatment", "updates": sample["updates"]}
         def entry(selected):
             presentations = int(count[selected].sum())
             return {"supported_states": int((mask & selected).sum()), "presentations": presentations,
@@ -114,7 +114,8 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
               max_seconds=1200, max_rss_bytes=4 * 1024**3, dashboard=None, archives=None, smoke=False, checkpoints=None, _comparison=None):
     conditions = _comparison.conditions if _comparison else CONDITIONS
     comparisons = _comparison.comparisons if _comparison else COMPARISONS
-    treatment = conditions[1]
+    control, treatment = conditions
+    control_archive = getattr(_comparison, "control_archive", "bank_replication")
     module = _comparison.module if _comparison else "q6.map_replay"
     started = time.monotonic()
     output, protocol_file = Path(output), Path(protocol_file)
@@ -141,8 +142,8 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
             deviations.append({"field": "archive_" + name, "actual": artifact_path(path), "declared": f"experiments/{name}/pilot_v1"})
     source_files = sorted(Path(__file__).parent.glob("*.py"))
     protocol = {"id": "map-replay-v1", "question": "Does equal-map replay improve efficiency using unchanged collected experience?",
-        "conditions": [{"id": "collected_unique", "label": "Collected unique (frozen control)"}, {"id": treatment, "label": "Map-balanced replay"}],
-        "bank_ids": bank_ids, "seeds": seeds, "checkpoints": schedule, "evaluation_checkpoints": {"collected_unique": 30000, treatment: updates},
+        "conditions": [{"id": control, "label": "Collected unique (frozen control)"}, {"id": treatment, "label": "Map-balanced replay"}],
+        "bank_ids": bank_ids, "seeds": seeds, "checkpoints": schedule, "evaluation_checkpoints": {control: 30000, treatment: updates},
         "panels": [], "world": asdict(WorldConfig()), "rule_visibility": "observed", "runtime": runtime, "git": git_info(), "smoke": bool(smoke), "deviations": deviations,
         "source_sha256": {p.relative_to(ROOT).as_posix(): sha(p) for p in source_files}, "protocol_sha256": sha(protocol_file), "created_at": datetime.now(timezone.utc).isoformat(),
         "collection": {"new_steps": 0, "new_episodes": 0, "new_support_draws": 0, "source": "bank_replication/pilot_v1 collected banks1,2,3"},
@@ -202,7 +203,7 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
                         raise ConsistencyError("input archive is not complete")
                     archives_meta[name] = {"directory": artifact_path(directory), "files": {"manifest.json": sha(directory / "manifest.json")}}
                     shutil.copy2(directory / "manifest.json", output / f"{name}_manifest.json")
-                    filename = "panels.json" if name in ("panel_evaluation", "bank_replication", "map_replay", "within_map") else "dataset_metadata.json"
+                    filename = "panels.json" if name in ("panel_evaluation", "bank_replication", "map_replay", "within_map", "recorded_actions") else "dataset_metadata.json"
                     checked_input(directory, manifest, filename, archives_meta[name]["files"])
                     saved = json.loads((directory / filename).read_text())
                     shutil.copy2(directory / filename, output / f"{name}_{filename}")
@@ -248,8 +249,11 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
                 write_json(output / "panels.json", selection)
                 write_json(output / "protocol.json", protocol)
                 old_banks = json.loads((directory / "banks.json").read_text())
-                old_sampling = json.loads((directory / "sampling.json").read_text())
-                with np.load(directory / "supports.npz") as arrays, np.load(directory / "sample_counts.npz") as global_archive, np.load(directory / "local_sample_counts.npz") as local_archive:
+                control_directory, control_manifest = directories[control_archive], manifests[control_archive]
+                for filename in ("sampling.json", "sample_counts.npz", "local_sample_counts.npz"):
+                    checked_input(control_directory, control_manifest, filename, archives_meta[control_archive]["files"])
+                old_sampling = json.loads((control_directory / "sampling.json").read_text())
+                with np.load(directory / "supports.npz") as arrays, np.load(control_directory / "sample_counts.npz") as global_archive, np.load(control_directory / "local_sample_counts.npz") as local_archive:
                     for bank in bank_ids:
                         support = arrays[f"collected_unique_bank{bank}"]
                         (_comparison.make_sampler(support, data["map_seeds"], 0) if _comparison else MapSampler(support, data["map_seeds"], 0))  # Validate sampler availability before any optimizer.
@@ -267,28 +271,28 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
                             np.savez_compressed(output / "supports.npz", **{f"{c}_bank{b}": a for b, pair in supports.items() for c, a in pair.items()})
                             write_json(output / "banks.json", banks)
                         for seed in seeds:
-                            key, name = (bank, "collected_unique", seed), f"bank{bank}_collected_unique_seed{seed}"
+                            key, name = (bank, control, seed), f"bank{bank}_{control}_seed{seed}"
                             counts[key], local_counts[key] = global_archive[name], local_archive[name]
                             map_counts[key] = np.asarray([counts[key][data["map_seeds"] == m].sum() for m in np.unique(data["map_seeds"])], np.uint32)
-                            samples.setdefault(str(bank), {}).setdefault("collected_unique", {})[str(seed)] = {**old_sampling[str(bank)]["collected_unique"][str(seed)], "historical": True, "new_updates": 0}
+                            samples.setdefault(str(bank), {}).setdefault(control, {})[str(seed)] = {**old_sampling[str(bank)][control][str(seed)], "historical": True, "new_updates": 0}
                             if _comparison:
-                                _comparison.record_baseline(bank, seed, support, data, counts[key], local_counts[key], samples[str(bank)]["collected_unique"][str(seed)], enforce, updates)
+                                _comparison.record_baseline(bank, seed, support, data, counts[key], local_counts[key], samples[str(bank)][control][str(seed)], enforce, updates)
                             initial_name = f"models/{name}_update0.pt"
-                            checked_input(directory, manifest, initial_name, archives_meta["bank_replication"]["files"])
-                            initial = torch.load(directory / initial_name, map_location="cpu", weights_only=True)
-                            prior_initial[f"{bank}:{seed}"] = {"online_hash": initial["parameter_hash"], "target_hash": initial["target_parameter_hash"], "source": artifact_path(directory / initial_name), "sha256": sha(directory / initial_name)}
+                            checked_input(control_directory, control_manifest, initial_name, archives_meta[control_archive]["files"])
+                            initial = torch.load(control_directory / initial_name, map_location="cpu", weights_only=True)
+                            prior_initial[f"{bank}:{seed}"] = {"online_hash": initial["parameter_hash"], "target_hash": initial["target_parameter_hash"], "source": artifact_path(control_directory / initial_name), "sha256": sha(control_directory / initial_name)}
                             final_name = f"models/{name}_update30000.pt"
-                            checked_input(directory, manifest, final_name, archives_meta["bank_replication"]["files"])
-                            shutil.copy2(directory / final_name, output / final_name)
+                            checked_input(control_directory, control_manifest, final_name, archives_meta[control_archive]["files"])
+                            shutil.copy2(control_directory / final_name, output / final_name)
                             final = torch.load(output / final_name, map_location="cpu", weights_only=True)
                             policy = FrozenPolicy(final)
-                            model_records.append({"bank_id": bank, "condition": "collected_unique", "seed": seed, "checkpoint": 30000,
+                            model_records.append({"bank_id": bank, "condition": control, "seed": seed, "checkpoint": 30000,
                                 "initial_online_hash": initial["parameter_hash"], "initial_target_hash": initial["target_parameter_hash"],
-                                "saved": final_name, "source": artifact_path(directory / final_name), "source_before": sha(directory / final_name),
+                                "saved": final_name, "source": artifact_path(control_directory / final_name), "source_before": sha(control_directory / final_name),
                                 "file_before": sha(output / final_name), "online_before": policy.parameter_hash(), "target_before": module_hash(policy.target), "panel_checks": []})
-                            snapshot_records.append({"bank_id": bank, "condition": "collected_unique", "seed": seed, "checkpoint": 30000,
+                            snapshot_records.append({"bank_id": bank, "condition": control, "seed": seed, "checkpoint": 30000,
                                 "saved": final_name, "sha256": sha(output / final_name), "online_hash": policy.parameter_hash(), "target_hash": module_hash(policy.target), "historical": True})
-                            if final["optimizer_updates"] != 30000 or sha(output / final_name) != sha(directory / final_name):
+                            if final["optimizer_updates"] != 30000 or sha(output / final_name) != sha(control_directory / final_name):
                                 raise ConsistencyError("frozen baseline checkpoint/copy differs")
                 np.savez_compressed(output / "supports.npz", **{f"{c}_bank{b}": a for b, pair in supports.items() for c, a in pair.items()})
                 write_json(output / "banks.json", banks)
@@ -333,6 +337,8 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
                                 "parameter_hash": agent.parameter_hash(), "target_parameter_hash": module_hash(agent.target), "optimizer_updates": checkpoint, "purpose": "inference_only_not_resumable"}, path)
                             snapshot_records.append({"bank_id": bank, "condition": treatment, "seed": seed, "checkpoint": checkpoint,
                                 "saved": path.relative_to(output).as_posix(), "sha256": sha(path), "online_hash": agent.parameter_hash(), "target_hash": module_hash(agent.target), "historical": False})
+                            if _comparison and hasattr(_comparison, "checkpoint_probe"):
+                                _comparison.checkpoint_probe(agent, train_obs, bank, seed, checkpoint, path)
                             progress.append({"bank_id": bank, "condition": treatment, "seed": seed, "checkpoint": checkpoint, "snapshot_saved": True})
                             print(f"bank{bank} {treatment} seed={seed}: saved update {checkpoint}", flush=True)
                         model_records.append({"bank_id": bank, "condition": treatment, "seed": seed, "checkpoint": updates,
@@ -429,7 +435,7 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
                 "outside_support_direct_samples": int(sampler.counts.sum() - sampler.counts[sampler.support].sum())}
     for filename, arrays in (("sample_counts", counts), ("local_sample_counts", local_counts), ("map_counts", map_counts)):
         np.savez_compressed(output / f"{filename}.npz", **{f"bank{b}_{c}_seed{s}": a for (b, c, s), a in arrays.items()})
-    exposure = exposure_metrics(data, transitions, supports, counts, samples) if counts else {"per_map": [], "per_clock": [], "summaries": []}
+    exposure = exposure_metrics(data, transitions, supports, counts, samples, control_condition=control) if counts else {"per_map": [], "per_clock": [], "summaries": []}
     extra_integrity = (_comparison.finalize_exposure(data, transitions, supports, counts, samples, exposure, output)
         if _comparison and hasattr(_comparison, "finalize_exposure") else {"complete": True})
     for row in exposure["summaries"]:
@@ -463,7 +469,7 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
         record["unchanged_during_evaluation"] = all(record[k + "_before"] == record[k + "_after"] for k in ("online", "target", "file", "source")) and all(r.get("unchanged", False) for r in record["panel_checks"])
     cell_checks = [{"bank_id": bank, **verify_expected_cells([r for r in rows if r["bank_id"] == bank], refs, selection["panels"], seeds, conditions=conditions)} for bank in bank_ids]
     expected_snapshots = {f"models/bank{bank}_{treatment}_seed{seed}_update{cp}.pt" for bank in bank_ids for seed in seeds for cp in schedule}
-    expected_snapshots.update(f"models/bank{bank}_collected_unique_seed{seed}_update30000.pt" for bank in bank_ids for seed in seeds)
+    expected_snapshots.update(f"models/bank{bank}_{control}_seed{seed}_update30000.pt" for bank in bank_ids for seed in seeds)
     snapshot_integrity = {"expected": len(expected_snapshots), "actual": len(snapshot_records), "complete": {r["saved"] for r in snapshot_records} == expected_snapshots and len(snapshot_records) == len(expected_snapshots),
         "unchanged": all(sha(output / r["saved"]) == r["sha256"] for r in snapshot_records)}
     source_integrity = [{"archive": name, "file": filename, "before": digest, "after": sha(directories[name] / filename),
@@ -527,7 +533,7 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
         "all_supports_frozen_before_training": len(supports) == len(bank_ids), "all_treatment_fits_finished_before_evaluation": len([r for r in model_records if r["condition"] == treatment]) == len(bank_ids) * len(seeds),
         "models": model_records, "prior_initial_models": prior_initial, "initialization_consistency": initialization_consistency,
         "snapshot_integrity": snapshot_integrity, "loss_integrity": loss_integrity, "support_integrity": support_integrity, "source_integrity": source_integrity, "count_integrity": count_integrity,
-        "baseline_counts_source": "manifest-verified bank_replication/pilot_v1 sample_counts.npz and local_sample_counts.npz; no new baseline updates"}
+        "baseline_counts_source": f"manifest-verified {control_archive}/pilot_v1 sample_counts.npz and local_sample_counts.npz; no new baseline updates"}
     if _comparison:
         provenance.update(_comparison.provenance())
     artifacts = {key: artifact_path(output / filename) for key, filename in {"protocol": "protocol.json", "banks": "banks.json", "panels": "panels.json", "dataset": "dataset.npz",
@@ -538,9 +544,9 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
     result = {"schema_version": 1, "protocol": protocol, "run": {"id": output.name, "status": status, "stop_reason": reason,
         "interpretation": "smoke_or_deviation_descriptive_only" if smoke or deviations else "map_replay_descriptive_only" if status == "complete" else "incomplete_not_evidence",
         "train_updates": total_updates, "training_examples": sum(int(s.counts.sum()) for s in samplers.values()), "baseline_new_updates": 0, "collection_episodes": 0, "collection_steps": 0, "support_draws": 0,
-        "historical_baseline_updates": sum(s["updates"] for b in samples.values() for s in b.get("collected_unique", {}).values()),
+        "historical_baseline_updates": sum(s["updates"] for b in samples.values() for s in b.get(control, {}).values()),
         "learner_episodes": len(rows), "reference_episodes": len(refs), "unique_reference_episodes": len({r["reference_sample_id"] for r in refs}),
-        "banks": len(banks), "fits": len([r for r in model_records if r["condition"] == treatment]), "frozen_baselines": len([r for r in model_records if r["condition"] == "collected_unique"]),
+        "banks": len(banks), "fits": len([r for r in model_records if r["condition"] == treatment]), "frozen_baselines": len([r for r in model_records if r["condition"] == control]),
         "model_parameter_count": 20420, "panels": len(selection["panels"]), "wall_seconds": time.monotonic() - started, **{k + "_wall_seconds": v for k, v in timings.items()},
         "aggregation_wall_seconds": time.monotonic() - aggregation_start, "fit_wall_seconds": fit_timings, "peak_rss_bytes": peak_rss_bytes(), "resource_checks": checks,
         "resource_limits": {"seconds": max_seconds, "peak_process_rss_bytes": max_rss_bytes, "torch_threads": 1}, "progress": progress,
