@@ -81,6 +81,7 @@ python scripts/audit_equal_support_study.py
 python scripts/audit_panel_evaluation.py
 python scripts/audit_bank_replication.py
 python scripts/audit_map_replay.py
+python scripts/audit_within_map.py
 ```
 
 These separately check exact targets, reconstruct minibatch sampling schedules, reproduce final dense predictions from saved weights, and reconcile raw metrics and gates. They perform forward inference and isolated environment transitions, with no training or policy rollouts. Bit-exact predictions require the recorded environment and are excluded from broader dependency-range CI. The supervised audit accepts complete, undeviating v1 studies; its smoke and incomplete artifacts can use the general verifier's `verify_supervised` function.
@@ -110,6 +111,11 @@ baseline policies, reconstructs independent map/within-map sampling streams,
 and verifies exposure summaries and final paired behavior. It distinguishes
 new treatment updates from historical baseline training and performs no new
 collection, retraining or complete policy evaluation.
+
+The within-map audit reconstructs quota-preserving support draws and the
+original archived control stream. It verifies exact local and ordered-map
+sampling matches, using the control prefix for smoke while retaining its
+full historical training counts. No baseline is retrained by the audit.
 
 ## Build a package
 

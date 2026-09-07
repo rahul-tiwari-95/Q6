@@ -11,3 +11,4 @@ dashboard/data/equal_support.json linguist-generated=true
 dashboard/data/panel_evaluation.json linguist-generated=true
 dashboard/data/bank_replication.json linguist-generated=true
 dashboard/data/map_replay.json linguist-generated=true
+dashboard/data/within_map.json linguist-generated=true

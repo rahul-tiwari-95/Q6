@@ -4,6 +4,7 @@ The [root README](../README.md) is the entry point for installing and running Q6
 
 ## Current experiments
 
+- [Within-map composition protocol](experiments/within_map_protocol_v1.md): replace states within each map while preserving its exact collected quota and original replay schedule, comparing against archived controls on prospective panels.
 - [Equal-map replay protocol](experiments/map_replay_protocol_v1.md), [result](experiments/map_replay_results_v1.md) and [validation](validation/map-replay-v1.md): balancing map exposure works, but efficiency effects are mixed (−3.91/+7.16/+4.56 points); next is within-map support replacement with exact map quotas and original replay schedules.
 - [Independent bank-replication protocol](experiments/bank_replication_protocol_v1.md), [result](experiments/bank_replication_results_v1.md) and [validation](validation/bank-replication-v1.md): three new matched-size pairs replicate the uniform efficiency advantage (+17.12/+27.67/+23.31 points); the subsequent replay study tests equal map exposure on the same collected supports.
 - [Frozen-policy panel protocol](experiments/panel_evaluation_protocol_v1.md), [result](experiments/panel_evaluation_results_v1.md) and [validation](validation/panel-evaluation-v1.md): uniform support improves efficient success on all eight prospective panel means (+15.30 points pooled), while success reverses on one. No training or collection; the subsequent bank study tests independent support draws.
