@@ -87,16 +87,20 @@ position, reward and terminal flags. Distinguish:
 Use the prior archived full-support predictions, without new inference, to
 report restricted ranking separately for states with one versus multiple
 logged actions, successful-path reachability and remaining-time groups
-1–8 / 9–16 / 17–24 / 25–32. Preserve state-balanced signed value bias as
+1–8 / 9–16 / 17–24 / 25–32, plus the original-start clock-32 slice.
+Preserve state-balanced signed value bias as
 well as absolute/squared error. On multiple-action states, also center each
 state's observed-action prediction errors by their within-state mean and
 report centered MAE/MSE, separating a shared value offset from relative
 recorded-action errors. Report target best-versus-second-best logged-action
 gaps and predicted unrestricted-versus-best-logged value gaps without
 assigning targets to missing actions. These are predeclared explanatory
-slices, not fitted interventions or new performance gates. One-action
-states have automatic restricted agreement. Lower numerical error alone
-cannot establish better behavior. Summarize paired start outcomes and any divergence
+slices, not fitted interventions or new performance gates. They analyze
+already available prior predictions; the original-start slice is an exploratory
+prior-data finding documented before the new familiar rollout outcomes, not
+a confirmatory result on unseen data. One-action states have automatic
+restricted agreement. Lower numerical error alone cannot establish better
+behavior. Summarize paired start outcomes and any divergence
 in the predetermined replays without selecting maps by results.
 
 A larger masking rescue for the exact model would support an action-selection
