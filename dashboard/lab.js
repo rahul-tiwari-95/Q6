@@ -33,7 +33,7 @@ const fixedMode=()=>$('fixed-epsilon').value;
 const latestFixedUpdate=()=>Math.max(0,...(fixed?.aggregate || []).map(r=>r.checkpoint).filter(Number.isFinite));
 let coverage=null, coverageTrajectory=null, coverageFrame=0, coverageTimer=null;
 let coverageConditions=['collected_unique','uniform_subset'];
-const coverageStudies={coverage:null,equal_support:null,panel_evaluation:null,bank_replication:null,map_replay:null,within_map:null,recorded_actions:null,constrained_bootstrap:null,logged_graph:null};
+const coverageStudies={coverage:null,equal_support:null,panel_evaluation:null,bank_replication:null,map_replay:null,within_map:null,recorded_actions:null,constrained_bootstrap:null,logged_graph:null,familiar_starts:null};
 const coverageIsEqual=()=>$('coverage-study').value==='equal_support';
 const coverageDirection=()=>coverageIsEqual()?'uniform subset minus collected unique states':'collected unique states minus exhaustive states';
 const coverageColors={exhaustive:'#a6e5c1',collected_unique:'#98b8d1',uniform_subset:'#e7b985',map_balanced:'#a6e5c1',within_map_uniform:'#c4aadf',recorded_actions:'#d6ba83',constrained_bootstrap:'#9bd1c9',logged_graph:'#aeb6f4'};
@@ -53,7 +53,7 @@ function robustnessPanels(){
   return Array.isArray(declared)?declared.map(p=>typeof p==='string'?p:p.id || p.panel).filter(Boolean):[...new Set((study?.aggregate || []).map(r=>r.panel).filter(p=>p!=='all'))].sort((a,b)=>Number(a.split('_').at(-1))-Number(b.split('_').at(-1)));
 }
 function renderRobustness(){
-  stopRobustnessPlayback();stopBanksPlayback();
+  stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();
   const study=robustnessData(),ready=Boolean(study?.aggregate?.length),run=study?.run || {};
   $('robustness-empty').hidden=ready;$('robustness-content').hidden=!ready;
   if(!ready){
@@ -71,18 +71,18 @@ function renderRobustness(){
   $('robustness-evidence-links').innerHTML='<a href="data/panel_evaluation.json" download>Download displayed data ↓</a>'+[['protocol_document','Study design'],['protocol','Saved protocol'],['report','Measured findings'],['evaluations','Raw episodes'],['paired_differences','Paired differences'],['provenance','Frozen-weight provenance'],['manifest','Artifact checksums']].flatMap(([key,label])=>{const path=study.artifacts?.[key];return typeof path==='string' && /^(docs|experiments)\/[a-zA-Z0-9_./-]+$/.test(path) && !path.split('/').includes('..')?[`<a href="../${escape(path)}">${label} ↗</a>`]:[];}).join('');
   renderRobustnessComparison();
 }
-function renderPanelChart(id,series,panels,{title,rates=false,reference=null,difference=false}={}){
+function renderPanelChart(id,series,panels,{title,rates=false,reference=null,difference=false,axisLabel="Fixed evaluation panels · no training axis",groupLabel="evaluation panels",pointLabel=robustnessPanelLabel}={}){
   const width=500,height=265,p={l:48,r:18,t:24,b:43},values=series.flatMap(s=>s.rows.map(r=>r.value)).filter(Number.isFinite);
   const top=difference?Math.max(.01,...values.map(Math.abs))*1.12:rates?1:Math.max(1,...values)*1.1,bottom=difference?-top:0;
   const x=panel=>p.l+(panels.indexOf(panel)+.5)/Math.max(1,panels.length)*(width-p.l-p.r),y=value=>p.t+(top-value)/(top-bottom)*(height-p.t-p.b),fmt=difference?value=>signed(value,100,' pp'):rates?percent:value=>value.toFixed(1);
-  let svg=`<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"><title>${escape(title)} across evaluation panels</title>`;
+  let svg=`<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"><title>${escape(title)} across ${escape(groupLabel)}</title>`;
   for(let i=0;i<=4;i++){const value=bottom+i*(top-bottom)/4;svg+=`<line x1="${p.l}" y1="${y(value)}" x2="${width-p.r}" y2="${y(value)}" stroke="#26302a"/><text x="${p.l-7}" y="${y(value)+4}" text-anchor="end" fill="#8a978f" font-size="9">${fmt(value)}</text>`;}
   if(Number.isFinite(reference)){svg+=`<line x1="${p.l}" y1="${y(reference)}" x2="${width-p.r}" y2="${y(reference)}" stroke="#8a978f" stroke-dasharray="4 4"/><text x="${width-p.r}" y="${y(reference)-5}" text-anchor="end" fill="#a4afa8" font-size="9">${percent(reference)} historical reference</text>`;}
-  panels.forEach(panel=>{svg+=`<text x="${x(panel)}" y="${height-24}" text-anchor="middle" fill="#8a978f" font-size="10">${escape(robustnessPanelLabel(panel).replace('Panel ','P'))}</text>`;});
-  svg+=`<text x="${width/2}" y="${height-7}" text-anchor="middle" fill="#8a978f" font-size="10">Fixed evaluation panels · no training axis</text>`;
+  panels.forEach(panel=>{svg+=`<text x="${x(panel)}" y="${height-24}" text-anchor="middle" fill="#8a978f" font-size="10">${escape(pointLabel(panel).replace('Panel ','P'))}</text>`;});
+  svg+=`<text x="${width/2}" y="${height-7}" text-anchor="middle" fill="#8a978f" font-size="10">${escape(axisLabel)}</text>`;
   for(const s of series){let segment=[];const segments=[];for(const panel of panels){const row=s.rows.find(r=>r.panel===panel);if(Number.isFinite(row?.value))segment.push(row);else if(segment.length){segments.push(segment);segment=[];}}if(segment.length)segments.push(segment);
     for(const points of segments){if(!difference)svg+=`<path d="${points.map((r,i)=>`${i?'L':'M'}${x(r.panel)},${y(r.value)}`).join(' ')}" stroke="${s.color}" stroke-width="2" fill="none"/>`;
-      for(const r of points){const tooltip=`${s.label}, ${robustnessPanelLabel(r.panel)}: ${fmt(r.value)}`;
+      for(const r of points){const tooltip=`${s.label}, ${pointLabel(r.panel)}: ${fmt(r.value)}`;
         if(difference){const barWidth=Math.min(30,(width-p.l-p.r)/Math.max(1,panels.length)*.6);svg+=`<rect x="${x(r.panel)-barWidth/2}" y="${Math.min(y(0),y(r.value))}" width="${barWidth}" height="${Math.max(1,Math.abs(y(r.value)-y(0)))}" fill="${r.value>=0?'#a6e5c1':'#e7b985'}"><title>${escape(tooltip)}</title></rect>`;}
         else svg+=`<circle cx="${x(r.panel)}" cy="${y(r.value)}" r="3.5" fill="${s.color}"><title>${escape(tooltip)}</title></circle>`;
       }
@@ -116,7 +116,7 @@ function renderRobustnessComparison(){
 }
 function stopRobustnessPlayback(){if(robustnessTimer)clearInterval(robustnessTimer);robustnessTimer=null;$('robustness-replay-play').textContent='▶ Play';$('robustness-replay-play').setAttribute('aria-label','Play frozen-policy recording');}
 function selectRobustnessTrajectory(){
-  stopRobustnessPlayback();stopBanksPlayback();const study=robustnessData(),rows=(study?.trajectories || []).filter(r=>r.policy!=='learner' || r.mode===robustnessMode());
+  stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();const study=robustnessData(),rows=(study?.trajectories || []).filter(r=>r.policy!=='learner' || r.mode===robustnessMode());
   selectOptions('robustness-replay-panel',robustnessPanels().filter(p=>rows.some(r=>r.panel===p)).map(p=>[p,robustnessPanelLabel(p)]),robustnessPanels()[0]);
   const atPanel=rows.filter(r=>r.panel===$('robustness-replay-panel').value),controller=r=>r.policy==='learner'?r.condition:r.policy;
   selectOptions('robustness-replay-controller',[...new Set(atPanel.map(controller))].map(c=>[c,robustnessConditions.includes(c)?coverageLabel(c):policyLabel(c)]),'collected_unique');
@@ -137,9 +137,9 @@ function renderRobustnessReferences(){
 }
 $('robustness-epsilon').addEventListener('change',renderRobustnessComparison);
 for(const id of ['robustness-replay-panel','robustness-replay-controller','robustness-replay-seed'])$(id).addEventListener('change',selectRobustnessTrajectory);
-$('robustness-replay-play').addEventListener('click',()=>{if(robustnessTimer){stopRobustnessPlayback();stopBanksPlayback();return;}if(!robustnessTrajectory)return;if(robustnessFrame>=robustnessTrajectory.steps.length)robustnessFrame=0;$('robustness-replay-play').textContent='Ⅱ Pause';$('robustness-replay-play').setAttribute('aria-label','Pause frozen-policy recording');robustnessTimer=setInterval(()=>{robustnessFrame=Math.min(robustnessFrame+1,robustnessTrajectory.steps.length);$('robustness-replay-scrub').value=String(robustnessFrame);drawRobustnessWorld();if(robustnessFrame>=robustnessTrajectory.steps.length)stopRobustnessPlayback();stopBanksPlayback();},160);});
-$('robustness-replay-reset').addEventListener('click',()=>{stopRobustnessPlayback();stopBanksPlayback();robustnessFrame=0;$('robustness-replay-scrub').value='0';drawRobustnessWorld();});
-$('robustness-replay-scrub').addEventListener('input',event=>{stopRobustnessPlayback();stopBanksPlayback();robustnessFrame=Number(event.target.value);drawRobustnessWorld();});
+$('robustness-replay-play').addEventListener('click',()=>{if(robustnessTimer){stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();return;}if(!robustnessTrajectory)return;if(robustnessFrame>=robustnessTrajectory.steps.length)robustnessFrame=0;$('robustness-replay-play').textContent='Ⅱ Pause';$('robustness-replay-play').setAttribute('aria-label','Pause frozen-policy recording');robustnessTimer=setInterval(()=>{robustnessFrame=Math.min(robustnessFrame+1,robustnessTrajectory.steps.length);$('robustness-replay-scrub').value=String(robustnessFrame);drawRobustnessWorld();if(robustnessFrame>=robustnessTrajectory.steps.length)stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();},160);});
+$('robustness-replay-reset').addEventListener('click',()=>{stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();robustnessFrame=0;$('robustness-replay-scrub').value='0';drawRobustnessWorld();});
+$('robustness-replay-scrub').addEventListener('input',event=>{stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();robustnessFrame=Number(event.target.value);drawRobustnessWorld();});
 
 const banksIsMapReplay=()=>$('coverage-study').value==='map_replay';
 const banksIsWithinMap=()=>$('coverage-study').value==='within_map';
@@ -256,7 +256,7 @@ function renderBanksGraph(){
 }
 
 function renderBanks(){
-  stopBanksPlayback();const study=banksData(),run=study?.run || {},ready=Boolean(study?.aggregate?.length),mapReplay=banksHasArchivedControl(),within=banksIsWithinMap(),recorded=banksHasRecordedSupervision(),constrained=banksIsConstrained(),graph=banksIsGraph();
+  stopBanksPlayback();stopFamiliarPlayback();const study=banksData(),run=study?.run || {},ready=Boolean(study?.aggregate?.length),mapReplay=banksHasArchivedControl(),within=banksIsWithinMap(),recorded=banksHasRecordedSupervision(),constrained=banksIsConstrained(),graph=banksIsGraph();
   renderBanksStudyCopy();
   $('banks-empty').hidden=ready;$('banks-content').hidden=!ready;
   if(!ready){$('banks-empty-title').textContent=run.status?.startsWith('inconsistent')?'Consistency check failed.':study?'No complete bank result available.':`No saved ${graph?'logged graph':constrained?'constrained bootstrap':recorded?'recorded actions':within?'within-map states':mapReplay?'map-balanced replay':'bank-replication'} result yet.`;$('banks-empty-message').textContent=study?`Status: ${(run.status || 'unavailable').replaceAll('_',' ')}. ${run.stop_reason || study.provenance?.stop_reason || 'No completed result is substituted.'}`:'Earlier studies remain available through the study selector.';for(const id of ['banks-effects','banks-success-chart','banks-efficient-chart','banks-steps-chart','banks-difference-chart'])$(id).innerHTML='';return;}
@@ -314,7 +314,7 @@ function renderBanksComposition(){
 }
 function stopBanksPlayback(){if(banksTimer)clearInterval(banksTimer);banksTimer=null;$('banks-replay-play').textContent='▶ Play';$('banks-replay-play').setAttribute('aria-label','Play bank-replication recording');}
 function selectBanksTrajectory(){
-  stopBanksPlayback();const study=banksData(),bank=Number($('banks-selected-bank').value),rows=(study?.trajectories || []).filter(r=>r.policy==='learner'?r.bank_id===bank && r.mode===banksMode():true);
+  stopBanksPlayback();stopFamiliarPlayback();const study=banksData(),bank=Number($('banks-selected-bank').value),rows=(study?.trajectories || []).filter(r=>r.policy==='learner'?r.bank_id===bank && r.mode===banksMode():true);
   selectOptions('banks-replay-panel',banksPanels().filter(p=>rows.some(r=>r.panel===p)).map(p=>[p,robustnessPanelLabel(p)]),banksPanels()[0]);const atPanel=rows.filter(r=>r.panel===$('banks-replay-panel').value),controller=r=>r.policy==='learner'?r.condition:r.policy;
   selectOptions('banks-replay-controller',[...new Set(atPanel.map(controller))].map(c=>[c,banksConditions().includes(c)?banksLabel(c):policyLabel(c)]),banksConditions()[0]);const available=atPanel.filter(r=>controller(r)===$('banks-replay-controller').value);
   selectOptions('banks-replay-seed',[...new Set(available.map(r=>r.seed))].sort((a,b)=>a-b).map(s=>[String(s),String(s)]),'0');banksTrajectory=available.find(r=>r.seed===Number($('banks-replay-seed').value)) || null;banksFrame=0;$('banks-replay-scrub').value='0';$('banks-replay-scrub').max=banksTrajectory?.steps.length || 0;for(const id of ['banks-replay-play','banks-replay-reset','banks-replay-scrub'])$(id).disabled=!banksTrajectory;drawBanksWorld();renderBanksReferences();
@@ -322,9 +322,9 @@ function selectBanksTrajectory(){
 function drawBanksWorld(){const t=banksTrajectory;drawRecordedWorld('banks',t,banksFrame,t?`${t.policy==='learner'?`Bank ${t.bank_id} · ${banksLabel(t.condition)} · final policy`:'Shared '+policyLabel(t.policy)} · ${robustnessPanelLabel(t.panel)} · seed ${t.seed} · map ${t.map_seed}. ${t.policy==='learner'?(t.mode==='greedy'?'Greedy actions.':'ε = 0.1 exploration.'):''} The first map of each panel was selected before outcomes; no learning occurs during replay.`:'',t?`${robustnessPanelLabel(t.panel)}, ${t.policy==='learner'?banksLabel(t.condition):policyLabel(t.policy)}`:'');}
 function renderBanksReferences(){const study=banksData();if(!study)return;const bank=Number($('banks-selected-bank').value),panel=$('banks-replay-panel').value,rows=banksConditions().map(c=>[study.aggregate.find(r=>r.bank_id===bank && r.condition===c && r.panel===panel && r.mode===banksMode()),banksLabel(c),coverageColors[c]]);for(const [policy,color] of [['random_actions','#b5a7d2'],['shortest_path','#ddd5b0']])rows.push([study.references?.find(r=>r.policy===policy && r.panel===panel),policyLabel(policy),color]);$('banks-reference-title').textContent=`Bank ${bank} · ${robustnessPanelLabel(panel)}`;$('banks-reference-bars').innerHTML=rows.filter(([r])=>r).map(([r,label,color])=>`<div class="diagnostic-row"><span>${label}</span><div class="diagnostic-track"><div class="diagnostic-fill" style="width:${100*r.success_rate}%;background:${color}"></div></div><strong>${percent(r.success_rate)}</strong></div>`).join('');$('banks-reference-caption').textContent=`Selected bank and panel; networks use ${banksMode()==='greedy'?'greedy actions':'ε = 0.1'}. Random and planner references are shared across bank pairs and retain their own policies.`;}
 $('banks-selected-bank').addEventListener('change',renderBanksComparison);$('banks-epsilon').addEventListener('change',renderBanksComparison);
-for(const id of ['banks-replay-panel','banks-replay-controller','banks-replay-seed'])$(id).addEventListener('change',selectBanksTrajectory);
-$('banks-replay-play').addEventListener('click',()=>{if(banksTimer){stopBanksPlayback();return;}if(!banksTrajectory)return;if(banksFrame>=banksTrajectory.steps.length)banksFrame=0;$('banks-replay-play').textContent='Ⅱ Pause';$('banks-replay-play').setAttribute('aria-label','Pause bank-replication recording');banksTimer=setInterval(()=>{banksFrame=Math.min(banksFrame+1,banksTrajectory.steps.length);$('banks-replay-scrub').value=String(banksFrame);drawBanksWorld();if(banksFrame>=banksTrajectory.steps.length)stopBanksPlayback();},160);});
-$('banks-replay-reset').addEventListener('click',()=>{stopBanksPlayback();banksFrame=0;$('banks-replay-scrub').value='0';drawBanksWorld();});$('banks-replay-scrub').addEventListener('input',event=>{stopBanksPlayback();banksFrame=Number(event.target.value);drawBanksWorld();});
+for(const id of ['banks-replay-panel','banks-replay-controller','banks-replay-seed','familiar-bank','familiar-replay-map','familiar-replay-controller','familiar-replay-action-set','familiar-replay-seed'])$(id).addEventListener('change',selectBanksTrajectory);
+$('banks-replay-play').addEventListener('click',()=>{if(banksTimer){stopBanksPlayback();stopFamiliarPlayback();return;}if(!banksTrajectory)return;if(banksFrame>=banksTrajectory.steps.length)banksFrame=0;$('banks-replay-play').textContent='Ⅱ Pause';$('banks-replay-play').setAttribute('aria-label','Pause bank-replication recording');banksTimer=setInterval(()=>{banksFrame=Math.min(banksFrame+1,banksTrajectory.steps.length);$('banks-replay-scrub').value=String(banksFrame);drawBanksWorld();if(banksFrame>=banksTrajectory.steps.length)stopBanksPlayback();stopFamiliarPlayback();},160);});
+$('banks-replay-reset').addEventListener('click',()=>{stopBanksPlayback();stopFamiliarPlayback();banksFrame=0;$('banks-replay-scrub').value='0';drawBanksWorld();});$('banks-replay-scrub').addEventListener('input',event=>{stopBanksPlayback();stopFamiliarPlayback();banksFrame=Number(event.target.value);drawBanksWorld();});
 
 let loadInProgress = false;
 const replayRows = () => [...(adaptation?.trajectories || []),...(diagnostics?.trajectories || [])];
@@ -339,6 +339,85 @@ function selectOptions(id, options, preferred) {
 }
 function listItems(id, values) { $(id).innerHTML = (values || []).map(v => `<li>${escape(v)}</li>`).join(''); }
 const tracks = ['coverage','fixed','supervised','competence','adaptation','provenance'];
+const familiarData=()=>coverageStudies.familiar_starts;
+const familiarConditions=['constrained_bootstrap','logged_graph'],familiarActionSets=['unrestricted','logged'];
+const familiarActionLabel=value=>value==='logged'?'Recorded-action mask':value==='unrestricted'?'All four actions':value || 'Reference policy';
+const familiarLabel=value=>value==='logged_q'?'Exact logged-Q policy':value==='shortest_path'?'Full-world shortest path':coverageLabel(value);
+const familiarBanks=()=>[...new Set((familiarData()?.aggregate || []).map(r=>r.bank_id).filter(Number.isFinite))].sort((a,b)=>a-b);
+const familiarEligible=()=>familiarData()?.robustness?.eligible===true && familiarData()?.run?.status==='complete' && familiarData()?.protocol?.smoke!==true && !(familiarData()?.protocol?.deviations?.length);
+const familiarAll=row=>!row.block || row.block==='all';
+const familiarSummary=(bank,condition,actionSet)=>(familiarData()?.aggregate || []).find(r=>r.bank_id===bank && r.condition===condition && r.action_set===actionSet && familiarAll(r));
+const familiarTable=(id,rows,columns)=>{$(id).innerHTML='<thead><tr>'+columns.map(([,label])=>`<th>${label}</th>`).join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+columns.map(([key,,format=number])=>`<td>${escape(format(row[key]))}</td>`).join('')+'</tr>').join('')+'</tbody>';};
+let familiarTrajectory=null,familiarFrame=0,familiarTimer=null;
+function stopFamiliarPlayback(){if(familiarTimer)clearInterval(familiarTimer);familiarTimer=null;$('familiar-replay-play').textContent='▶ Play';$('familiar-replay-play').setAttribute('aria-label','Play familiar-start recording');}
+function renderFamiliar(){
+  stopFamiliarPlayback();const study=familiarData(),run=study?.run || {},ready=Boolean(study?.aggregate?.length);
+  $('familiar-empty').hidden=ready;$('familiar-content').hidden=!ready;
+  if(!ready){$('familiar-empty-title').textContent=run.status?.startsWith('inconsistent')?'Consistency check failed.':study?'No complete familiar-start result available.':'No saved familiar-start diagnostic yet.';$('familiar-empty-message').textContent=study?`Status: ${(run.status || 'unavailable').replaceAll('_',' ')}. ${run.stop_reason || study.provenance?.stop_reason || 'No other study is substituted.'}`:'Earlier measured studies remain available through the selector.';return;}
+  $('familiar-note').textContent=run.status?.startsWith('inconsistent')?`Consistency check failed. ${run.stop_reason || study.provenance?.stop_reason || ''}`:run.status!=='complete'?'Incomplete familiar-start diagnostic. Missing cells do not establish a masking interaction.':!familiarEligible()?'Smoke or protocol-deviation diagnostic. These measurements verify execution; they do not establish a masking rescue.':'Privileged familiar-start diagnostic: frozen weights, original training starts, no new learning or fresh maps. The recorded-action mask is historical information supplied at evaluation. These results do not establish fresh-map generalization, significance, or a new competence gate.';
+  const banks=familiarBanks();selectOptions('familiar-bank',banks.map(b=>[String(b),`Bank ${b}`]),String(banks[0]));
+  const interactions=banks.map(bank=>(study.paired_differences?.aggregate || []).find(r=>r.bank_id===bank && r.block==='all' && r.comparison==='interaction')?.efficient_success_delta);
+  const pooled=study.pooled?.paired?.find(r=>r.block==='all' && r.comparison==='interaction')?.efficient_success_delta;
+  $('familiar-effects').innerHTML=[...banks.map((bank,i)=>[String(bank),interactions[i]]),['Equal-bank mean',pooled]].map(([bank,value])=>`<div class="stat-card"><span>${bank==='Equal-bank mean'?bank:`Bank ${bank}`}</span><strong>${signed(value,100,' pp')}</strong><small>${bank==='Equal-bank mean'?'Each bank has the same weight; not independent learner replications':'Exact masking effect minus constrained masking effect'}</small></div>`).join('');
+  const variation=study.robustness || {};$('familiar-effects-caption').textContent=familiarEligible()?`Interaction range ${signed(variation.minimum,100,' pp')} to ${signed(variation.maximum,100,' pp')}; ${number(variation.positive_banks)} positive banks, ${number(variation.negative_banks)} negative, ${number(variation.zero_banks)} tied (1e-12 tolerance). Descriptive only: banks share training maps and learner initializations.`:'Bank sign counts are not evidence for this ineligible diagnostic.';
+  renderFamiliarComparison();
+  $('familiar-method').textContent=`${number(run.wall_seconds)} seconds elapsed. Final networks remain frozen. Masks and graph references use each bank’s archived recorded information; world planning is a separate reference. All comparisons use the same original starts. Replays were chosen before outcomes. No previous fresh-map scores are mixed into this diagnostic.`;
+  $('familiar-evidence-links').innerHTML='<a href="data/familiar_starts.json" download>Download displayed data ↓</a><a href="../docs/experiments/familiar_starts_protocol_v1.md">Study design ↗</a>'+[['protocol_document','Study design'],['protocol','Saved protocol'],['report','Measured findings'],['episodes','Raw familiar episodes'],['steps','All recorded decision steps'],['paired_differences','Same-start paired differences'],['reachability','Logged reachability'],['prediction_slices','Archived fit slices'],['manifest','Artifact checksums']].flatMap(([key,label])=>{const p=study.artifacts?.[key];return typeof p==='string'&&/^(docs|experiments)\/[a-zA-Z0-9_./-]+$/.test(p)&&!p.split('/').includes('..')?[`<a href="../${escape(p)}">${label} ↗</a>`]:[];}).join('');
+}
+function selectFamiliarTrajectory(){
+  stopFamiliarPlayback();const bank=Number($('familiar-bank').value),rows=(familiarData()?.trajectories || []).filter(r=>r.bank_id===bank || r.bank_id==='shared'),controller=r=>r.policy==='learner'?r.condition:r.policy;
+  selectOptions('familiar-replay-map',[...new Set(rows.map(r=>r.map_seed))].sort((a,b)=>a-b).map(m=>[String(m),`Map ${number(m)}`]),String(Math.min(...rows.map(r=>r.map_seed))));const atMap=rows.filter(r=>r.map_seed===Number($('familiar-replay-map').value));
+  selectOptions('familiar-replay-controller',[...new Set(atMap.map(controller))].map(c=>[c,familiarLabel(c)]),familiarConditions[0]);const byController=atMap.filter(r=>controller(r)===$('familiar-replay-controller').value);
+  selectOptions('familiar-replay-action-set',[...new Set(byController.map(r=>r.action_set || 'reference'))].map(a=>[a,familiarActionLabel(a)]),'unrestricted');const available=byController.filter(r=>(r.action_set || 'reference')===$('familiar-replay-action-set').value);
+  selectOptions('familiar-replay-seed',[...new Set(available.map(r=>r.seed))].sort((a,b)=>a-b).map(seed=>[String(seed),String(seed)]),'0');familiarTrajectory=available.find(r=>String(r.seed)===$('familiar-replay-seed').value) || null;familiarFrame=0;$('familiar-replay-scrub').value='0';$('familiar-replay-scrub').max=familiarTrajectory?.steps.length || 0;for(const id of ['familiar-replay-play','familiar-replay-reset','familiar-replay-scrub'])$(id).disabled=!familiarTrajectory;drawFamiliarWorld();
+}
+function drawFamiliarWorld(){
+  const t=familiarTrajectory;drawRecordedWorld('familiar',t,familiarFrame,t?`Original training map ${number(t.map_seed)} · bank ${t.bank_id} · ${familiarLabel(t.policy==='learner'?t.condition:t.policy)} · ${familiarActionLabel(t.action_set)}. Greedy frozen-policy diagnostic; this is not a fresh-map result.`:'','Familiar-start recording');
+  $('familiar-step-diagnostics').innerHTML=$('familiar-step-diagnostics').innerHTML.replace('Regret compares the chosen action with the optimal choice for that state.','No full-world optimal-action values are supplied in this diagnostic.');
+  const decision=t && (familiarFrame?t.steps[familiarFrame-1]:t.steps[0]);$('familiar-mask-diagnostics').innerHTML='';if(!decision)return;
+  const mask=decision.recorded_mask,arrows=['↑','↓','←','→'];
+  $('familiar-mask-diagnostics').innerHTML=`<p><strong>Pre-action recorded support:</strong> ${decision.current_supported===true?'Supported':decision.current_supported===false?'Outside support':'Unavailable'} · remaining time ${number(decision.remaining_before)}. ${decision.current_supported===false?'No recorded mask or graph values are assigned outside support.':''}</p>`;
+  if(Array.isArray(mask) && decision.current_supported===true)$('familiar-mask-diagnostics').innerHTML+='<div class="table-scroll"><table class="evidence-table"><thead><tr><th>Recorded information before action</th>'+arrows.map(a=>`<th>${a}</th>`).join('')+'</tr></thead><tbody><tr><td>Action recorded</td>'+mask.map(v=>`<td>${v?'Yes':'No'}</td>`).join('')+'</tr><tr><td>Exact logged-graph Q</td>'+arrows.map((_,i)=>`<td>${decimal(decision.logged_q_values?.[i])}</td>`).join('')+'</tr></tbody></table></div>';
+  $('familiar-mask-diagnostics').innerHTML+=`<p>Off-mask choice at a supported state: ${decision.off_mask_action===true?'Yes':decision.off_mask_action===false?'No':'—'}. Nonterminal support exit: ${decision.support_exit===true?'Yes':decision.support_exit===false?'No':'—'}. Logged success reachable before action: ${decision.logged_success_reachable===true?'Yes':decision.logged_success_reachable===false?'No':'—'}. Logged success reachability lost: ${decision.logged_reachability_lost===true?'Yes':decision.logged_reachability_lost===false?'No':'—'}. Recorded-action regret: ${decimal(decision.logged_value_regret)}. Logged values describe recorded actions only; they are not full-world Q*.</p>`;
+}
+$('familiar-bank').addEventListener('change',renderFamiliarComparison);
+for(const id of ['familiar-replay-map','familiar-replay-controller','familiar-replay-action-set','familiar-replay-seed'])$(id).addEventListener('change',selectFamiliarTrajectory);
+$('familiar-replay-play').addEventListener('click',()=>{if(familiarTimer){stopFamiliarPlayback();return;}if(!familiarTrajectory)return;if(familiarFrame>=familiarTrajectory.steps.length)familiarFrame=0;$('familiar-replay-play').textContent='Ⅱ Pause';$('familiar-replay-play').setAttribute('aria-label','Pause familiar-start recording');familiarTimer=setInterval(()=>{familiarFrame=Math.min(familiarFrame+1,familiarTrajectory.steps.length);$('familiar-replay-scrub').value=String(familiarFrame);drawFamiliarWorld();if(familiarFrame>=familiarTrajectory.steps.length)stopFamiliarPlayback();},160);});
+$('familiar-replay-reset').addEventListener('click',()=>{stopFamiliarPlayback();familiarFrame=0;$('familiar-replay-scrub').value='0';drawFamiliarWorld();});$('familiar-replay-scrub').addEventListener('input',event=>{stopFamiliarPlayback();familiarFrame=Number(event.target.value);drawFamiliarWorld();});
+
+function renderFamiliarComparison(){
+  const study=familiarData();if(!study?.aggregate?.length)return;const bank=Number($('familiar-bank').value),rows=study.aggregate.filter(r=>r.bank_id===bank && familiarAll(r)),blocks=[...new Set(study.aggregate.map(r=>r.block).filter(b=>b && b!=='all'))].sort(),pairLabel=id=>study.paired_differences?.comparisons?.find(c=>c.id===id)?.label || id;
+  const colors=['#98b8d1','#a6e5c1','#c4aadf','#e7b985'];
+  $('familiar-stats').innerHTML=[[number(familiarBanks().length),'Archived banks'],[number(study.aggregate.filter(familiarAll).reduce((sum,r)=>sum+r.episodes,0)),'Learner episodes'],[number((study.references || []).filter(familiarAll).reduce((sum,r)=>sum+r.episodes,0)),'Reference episodes'],['Frozen','Weights · no new learning']].map(([value,label])=>`<div class="stat-card"><span>${label}</span><strong>${value}</strong></div>`).join('');
+  $('familiar-matrix').innerHTML=familiarConditions.flatMap((condition,c)=>familiarActionSets.map((actionSet,a)=>{const r=familiarSummary(bank,condition,actionSet),color=colors[2*c+a];return `<div class="stat-card"><span>${familiarLabel(condition)}</span><h3>${familiarActionLabel(actionSet)}</h3><strong style="color:${color}">${percent(r?.success_rate)}</strong><small>Task success · ${number(r?.episodes)} familiar-start episodes</small><div class="diagnostic-row"><span>Efficient success</span><div class="diagnostic-track"><div class="diagnostic-fill" style="width:${Number.isFinite(r?.efficient_success_rate)?100*r.efficient_success_rate:0}%;background:${color}"></div></div><strong>${percent(r?.efficient_success_rate)}</strong></div><p class="help-text">Mean steps ${decimal(r?.mean_steps)} · blocked-step rate ${percent(r?.noop_rate)}</p></div>`;})).join('');
+  $('familiar-matrix-note').textContent=`Bank ${number(bank)} · greedy final policies · all original starts in this diagnostic. Efficient success counts success within twice the full-world planner’s path length; failed episodes remain in its denominator and in mean steps. Masked behavior uses privileged recorded information. Successful-only route means are not substituted.`;
+  const series=metric=>familiarConditions.flatMap((condition,c)=>familiarActionSets.map((actionSet,a)=>({label:`${familiarLabel(condition)} · ${familiarActionLabel(actionSet)}`,color:colors[2*c+a],rows:study.aggregate.filter(r=>r.bank_id===bank&&r.condition===condition&&r.action_set===actionSet&&r.block!=='all').map(r=>({panel:r.block,value:r[metric]}))})));
+  const chartOptions={rates:true,axisLabel:'Original training-map blocks · no new learning',groupLabel:'familiar map blocks',pointLabel:b=>`Block ${Number(b.replace('block_',''))+1}`};
+  renderPanelChart('familiar-success-chart',series('success_rate'),blocks,{...chartOptions,title:`Bank ${bank} familiar success`});renderPanelChart('familiar-efficient-chart',series('efficient_success_rate'),blocks,{...chartOptions,title:`Bank ${bank} familiar efficient success`});
+  $('familiar-legend').innerHTML=series('success_rate').map(s=>`<span><i style="background:${s.color}"></i>${escape(s.label)}</span>`).join('');
+  const pairColumns=[['bank_id','Bank'],['comparison','Same-start contrast',pairLabel],['starts','Paired starts'],['success_delta','Success Δ',v=>signed(v,100,' pp')],['efficient_success_delta','Efficient Δ',v=>signed(v,100,' pp')],['steps_delta','Mean steps Δ',signed],['noop_steps_delta','Mean blocked steps Δ',signed],['base_return_delta','Base return Δ',signedDecimal],['shaped_return_delta','Shaped return Δ',signedDecimal]];
+  familiarTable('familiar-paired-table',(study.paired_differences?.aggregate || []).filter(familiarAll),pairColumns);
+  familiarTable('familiar-layout-table',(study.paired_differences?.per_start || []).filter(r=>r.bank_id===bank),[...pairColumns.slice(0,1),['seed','Seed'],['map_seed','Original map'],...pairColumns.slice(1).filter(([key])=>key!=='starts')]);
+  familiarTable('familiar-learner-table',(study.seed_results || []).filter(r=>r.bank_id===bank&&familiarAll(r)),[['condition','Frozen network',familiarLabel],['action_set','Action set',familiarActionLabel],['seed','Seed'],['episodes','Episodes'],['success_rate','Success',percent],['efficient_success_rate','Efficient success',percent],['mean_steps','Mean steps incl. failures',decimal],['noop_rate','Pooled blocked-step rate',percent],['base_return','Mean base return',decimal],['shaped_return','Mean shaped return',decimal]]);
+  $('familiar-support-note').textContent='Off-mask actions count only decisions made while the current state belongs to the recorded support. A nonterminal successor outside support is a support exit; choosing an unrecorded action need not cause an exit, and terminal completion is never an exit. Off-support occupancy uses all episode decisions as denominator. All counts below are observed rollout decisions, not training queries. The unrestricted-argmax diagnostic uses each policy’s actual visited states; a mask also changes the route and therefore that state distribution.';
+  familiarTable('familiar-support-table',rows,[['condition','Frozen network',familiarLabel],['action_set','Action set',familiarActionLabel],['off_mask_actions','Off-mask actions'],['supported_steps','Supported decisions'],['off_mask_rate','Off-mask / supported',percent],['unrestricted_argmax_outside_steps','Unrestricted argmax outside mask'],['unrestricted_argmax_outside_rate','Outside argmax / supported',percent],['off_mask_episodes','Episodes with off-mask choice'],['off_mask_episode_rate','Off-mask episode rate',percent],['support_exit_episodes','Episodes with support exit'],['episodes','All episodes'],['support_exits','Support exits'],['support_reentries','Reentries'],['unsupported_steps','Off-support decisions'],['evaluation_steps','All decisions'],['unsupported_step_fraction','Off-support / all decisions',percent],['logged_reachability_losses','Logged reachability losses'],['logged_reachable_steps','Reachable supported decisions'],['mean_logged_regret','Mean defined logged regret',decimal],['logged_regret_steps','Defined-regret decisions'],['restricted_action_agreement','Restricted action agreement',percent],['restricted_agreement_steps','Agreement decisions']]);
+  renderFamiliarReferences();renderFamiliarSlices();selectFamiliarTrajectory();
+}
+
+function renderFamiliarReferences(){
+  const study=familiarData(),bank=Number($('familiar-bank').value),refs=(study?.references || []).filter(r=>familiarAll(r)&&(r.bank_id===bank || r.bank_id==='shared')),reach=study?.reachability?.per_bank?.find(r=>r.bank_id===bank);
+  const rows=refs.flatMap(r=>[[`${familiarLabel(r.policy)} · success`,r.success_rate],[`${familiarLabel(r.policy)} · efficient success`,r.efficient_success_rate]]);
+  rows.push(['Recorded-graph success ceiling',reach?.success_ceiling],['Recorded-graph efficiency ceiling',reach?.efficient_success_ceiling]);
+  $('familiar-reference-bars').innerHTML=rows.map(([label,value])=>`<div class="diagnostic-row"><span>${escape(label)}</span><div class="diagnostic-track">${Number.isFinite(value)?`<div class="diagnostic-fill" style="width:${100*value}%;background:#a6e5c1"></div>`:''}</div><strong>${percent(value)}</strong></div>`).join('');
+  $('familiar-reference-note').textContent=`Bank ${number(bank)}: recorded success is reachable from ${number(reach?.success_reachable_starts)} / ${number(reach?.starts)} starts; success within twice the physical planner length is reachable from ${number(reach?.efficient_success_reachable_starts)} / ${number(reach?.starts)}. These ceilings come from successful-path reachability, not the exact logged-Q policy’s realized score. The logged-Q policy maximizes discounted return within recorded actions. Full-world shortest paths are shared references, not learner action advice.`;
+}
+function renderFamiliarSlices(){
+  const study=familiarData(),bank=Number($('familiar-bank').value),axis=$('familiar-slice-axis').value,rows=(study?.prediction_slices?.per_slice || []).filter(r=>r.bank_id===bank&&r.axis===axis),fmt=v=>Number.isFinite(v)?v.toPrecision(4):'—';
+  familiarTable('familiar-slices-table',rows,[['condition','Frozen network',familiarLabel],['seed','Seed'],['group','Slice',v=>String(v).replaceAll('_','–')],['states','Support states'],['observed_edges','Recorded edges'],['restricted_action_agreement','Recorded-action agreement',percent],['state_mean_signed_error','State signed bias',fmt],['state_mean_abs_error','State MAE',fmt],['state_mean_squared_error','State MSE',fmt],['state_mean_squared_offset','Mean squared state offset',fmt],['multiple_action_states','Multiple-action states'],['centered_state_mean_abs_error','Centered state MAE · multiple only',fmt],['centered_state_mean_squared_error','Centered state MSE · multiple only',fmt],['mean_target_top_two_gap','Logged target top-two gap · multiple only',fmt],['mean_unrestricted_prediction_gap','Unrestricted minus best-logged prediction',fmt],['mean_graph_regret','Mean recorded-graph regret',fmt]]);
+  $('familiar-slices-note').textContent=`${axis==='original_start'?'These exploratory original-start slices, added after inspecting prior archived data,':'These predeclared descriptive slices'} reuse archived final predictions: ${number(study?.prediction_slices?.new_inference_rows)} new inference rows and no fitting. One-action states have automatic restricted agreement. Signed bias averages predicted minus logged-graph values within each state. Centered errors remove each state’s mean observed-action error and then average only multiple-action states. The top-two target gap also uses multiple-action states; ties remain included. Agreement allows 1e-6 absolute graph-value tolerance. Missing action targets remain undefined.`;
+}
+$('familiar-slice-axis').addEventListener('change',renderFamiliarSlices);
+
 function activateTab(name) {
   for (const track of tracks) {
     const active = track === name;
@@ -350,7 +429,7 @@ function activateTab(name) {
   stopCompetencePlayback();
   stopSupervisedPlayback();
   stopFixedPlayback();
-  stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();
+  stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();
   history.replaceState(null,'',`#${name}`);
 }
 for (const [index,name] of tracks.entries()) {
@@ -366,16 +445,17 @@ for (const [index,name] of tracks.entries()) {
 if (tracks.includes(location.hash.slice(1))) activateTab(location.hash.slice(1));
 
 function selectCoverageStudy(){
-  stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();coverage=coverageStudies[$('coverage-study').value] || null;
+  stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();coverage=coverageStudies[$('coverage-study').value] || null;
   coverageConditions=coverageIsEqual()?['collected_unique','uniform_subset']:['exhaustive','collected_unique'];
-  for(const id of ['coverage-replay-condition','coverage-replay-controller','coverage-replay-checkpoint','coverage-replay-panel','coverage-replay-seed','coverage-support-condition','robustness-replay-panel','robustness-replay-controller','robustness-replay-seed','banks-selected-bank','banks-exposure-seed','banks-exposure-map','banks-replay-panel','banks-replay-controller','banks-replay-seed'])$(id).value='';
+  for(const id of ['coverage-replay-condition','coverage-replay-controller','coverage-replay-checkpoint','coverage-replay-panel','coverage-replay-seed','coverage-support-condition','robustness-replay-panel','robustness-replay-controller','robustness-replay-seed','banks-selected-bank','banks-exposure-seed','banks-exposure-map','banks-replay-panel','banks-replay-controller','banks-replay-seed','familiar-bank','familiar-replay-map','familiar-replay-controller','familiar-replay-action-set','familiar-replay-seed'])$(id).value='';
   renderCoverage();
 }
 $('coverage-study').addEventListener('change',selectCoverageStudy);
 function renderCoverage(){
-  stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();
-  const frozen=$('coverage-study').value==='panel_evaluation',replicated=['bank_replication','map_replay','within_map','recorded_actions','constrained_bootstrap','logged_graph'].includes($('coverage-study').value);
-  $('banks-view').hidden=!replicated;$('robustness-view').hidden=!frozen;$('coverage-learning-intro').hidden=frozen || replicated;
+  stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();
+  const familiar=$('coverage-study').value==='familiar_starts',frozen=$('coverage-study').value==='panel_evaluation',replicated=['bank_replication','map_replay','within_map','recorded_actions','constrained_bootstrap','logged_graph'].includes($('coverage-study').value);
+  $('banks-view').hidden=!replicated;$('robustness-view').hidden=!frozen;$('coverage-learning-intro').hidden=frozen || replicated || familiar;$('familiar-view').hidden=!familiar;
+  if(familiar){$('coverage-study-context').textContent='Privileged familiar-start diagnostic · frozen networks · no new learning or fresh maps.';$('coverage-empty').hidden=true;$('coverage-content').hidden=true;renderFamiliar();return;}
   if(replicated){$('coverage-study-context').textContent=banksIsGraph()?'Exact recorded-graph labels versus archived constrained bootstrap; no full-world Q* training or new collection.':banksIsConstrained()?'Same recorded supervision and replay; constrain training targets only. All four actions remain available at evaluation.':banksIsRecorded()?'Same collected states and replay; treatment loss uses recorded actions only. Fewer action targets, no new collection.':banksIsWithinMap()?'Same per-map state counts and replay exposure; selected states change. New fits versus archived controls.':banksIsMapReplay()?'Same collected supports; new balanced replay fits versus archived baseline. No new collection.':'New bank pairs and final-policy evaluation; inspect each bank before the equal-bank mean.';$('coverage-empty').hidden=true;$('coverage-content').hidden=true;renderBanks();return;}
   if(frozen){$('coverage-study-context').textContent='Frozen policies on several new panels; no training or new competence gate.';$('coverage-empty').hidden=true;$('coverage-content').hidden=true;renderRobustness();return;}
   renderCoveragePanelSensitivity();
@@ -527,7 +607,7 @@ function renderCoverageComparison(){
 }
 function stopCoveragePlayback(){if(coverageTimer)clearInterval(coverageTimer);coverageTimer=null;$('coverage-replay-play').textContent='▶ Play';$('coverage-replay-play').setAttribute('aria-label','Play saved experience-coverage trajectory');}
 function selectCoverageTrajectory(){
-  stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();
+  stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();
   const rows=(coverage?.trajectories || []).filter(r=>r.policy!=='learner' || r.mode===coverageMode());
   selectOptions('coverage-replay-condition',[...new Set(rows.map(r=>r.condition))].map(c=>[c,coverageLabel(c)]),coverageConditions[0]);
   const atCondition=rows.filter(r=>r.condition===$('coverage-replay-condition').value);
@@ -558,9 +638,9 @@ function renderCoverageReferences(){
 }
 $('coverage-epsilon').addEventListener('change',renderCoverageComparison);
 for(const id of ['coverage-replay-condition','coverage-replay-controller','coverage-replay-checkpoint','coverage-replay-panel','coverage-replay-seed'])$(id).addEventListener('change',selectCoverageTrajectory);
-$('coverage-replay-play').addEventListener('click',()=>{if(coverageTimer){stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();return;}if(!coverageTrajectory)return;if(coverageFrame>=coverageTrajectory.steps.length)coverageFrame=0;$('coverage-replay-play').textContent='Ⅱ Pause';$('coverage-replay-play').setAttribute('aria-label','Pause saved experience-coverage trajectory');coverageTimer=setInterval(()=>{coverageFrame=Math.min(coverageFrame+1,coverageTrajectory.steps.length);$('coverage-replay-scrub').value=String(coverageFrame);drawCoverageWorld();if(coverageFrame>=coverageTrajectory.steps.length)stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();},160);});
-$('coverage-replay-reset').addEventListener('click',()=>{stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();coverageFrame=0;$('coverage-replay-scrub').value='0';drawCoverageWorld();});
-$('coverage-replay-scrub').addEventListener('input',event=>{stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();coverageFrame=Number(event.target.value);drawCoverageWorld();});
+$('coverage-replay-play').addEventListener('click',()=>{if(coverageTimer){stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();return;}if(!coverageTrajectory)return;if(coverageFrame>=coverageTrajectory.steps.length)coverageFrame=0;$('coverage-replay-play').textContent='Ⅱ Pause';$('coverage-replay-play').setAttribute('aria-label','Pause saved experience-coverage trajectory');coverageTimer=setInterval(()=>{coverageFrame=Math.min(coverageFrame+1,coverageTrajectory.steps.length);$('coverage-replay-scrub').value=String(coverageFrame);drawCoverageWorld();if(coverageFrame>=coverageTrajectory.steps.length)stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();},160);});
+$('coverage-replay-reset').addEventListener('click',()=>{stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();coverageFrame=0;$('coverage-replay-scrub').value='0';drawCoverageWorld();});
+$('coverage-replay-scrub').addEventListener('input',event=>{stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();coverageFrame=Number(event.target.value);drawCoverageWorld();});
 
 function renderFixed(){
   stopFixedPlayback();
@@ -1194,9 +1274,9 @@ async function getData(path) {
 }
 async function loadData() {
   if(loadInProgress)return;loadInProgress=true;$('refresh').disabled=true;$('study-run').disabled=true;
-  stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();
+  stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();
   const adaptationPath=$('study-run').value==='pilot_v1'?'../experiments/adaptation/pilot_v1/results.json':'data/adaptation.json';
-  const results=await Promise.allSettled([getData(adaptationPath),getData('data/provenance.json'),getData('data/competence.json'),getData('data/supervised.json'),getData('data/fixed_targets.json'),getData('data/coverage.json'),getData('data/equal_support.json'),getData('data/panel_evaluation.json'),getData('data/bank_replication.json'),getData('data/map_replay.json'),getData('data/within_map.json'),getData('data/recorded_actions.json'),getData('data/constrained_bootstrap.json'),getData('data/logged_graph.json')]);
+  const results=await Promise.allSettled([getData(adaptationPath),getData('data/provenance.json'),getData('data/competence.json'),getData('data/supervised.json'),getData('data/fixed_targets.json'),getData('data/coverage.json'),getData('data/equal_support.json'),getData('data/panel_evaluation.json'),getData('data/bank_replication.json'),getData('data/map_replay.json'),getData('data/within_map.json'),getData('data/recorded_actions.json'),getData('data/constrained_bootstrap.json'),getData('data/logged_graph.json'),getData('data/familiar_starts.json')]);
   const errors=[];
   diagnostics=null;
   if(results[0].status==='fulfilled') {
@@ -1225,16 +1305,17 @@ async function loadData() {
   if(results[11].status==='fulfilled')coverageStudies.recorded_actions=results[11].value;else {coverageStudies.recorded_actions=null;errors.push(results[11].reason.message);}
   if(results[12].status==='fulfilled')coverageStudies.constrained_bootstrap=results[12].value;else {coverageStudies.constrained_bootstrap=null;errors.push(results[12].reason.message);}
   if(results[13].status==='fulfilled')coverageStudies.logged_graph=results[13].value;else {coverageStudies.logged_graph=null;errors.push(results[13].reason.message);}
+  if(results[14].status==='fulfilled')coverageStudies.familiar_starts=results[14].value;else {coverageStudies.familiar_starts=null;errors.push(results[14].reason.message);}
   coverage=coverageStudies[$('coverage-study').value] || null;coverageConditions=coverageIsEqual()?['collected_unique','uniform_subset']:['exhaustive','collected_unique'];
   renderCoverage();
   if(errors.length) $('load-status').textContent=errors.join(' · ');
   else {
-    const loaded=[coverageStudies.logged_graph&&'Logged graph',coverageStudies.constrained_bootstrap&&'Constrained bootstrap',coverageStudies.recorded_actions&&'Recorded actions',coverageStudies.within_map&&'Within-map states',coverageStudies.map_replay&&'Map-balanced replay',coverageStudies.bank_replication&&'Bank replications',coverageStudies.panel_evaluation&&'Panel robustness',coverageStudies.equal_support&&'Equal-size banks',coverageStudies.coverage&&'Experience coverage',fixed&&'Fixed-data targets',supervised&&'Exact targets',competence&&'Competence',adaptation&&'Adaptation',provenance&&'Provenance'].filter(Boolean);
+    const loaded=[coverageStudies.familiar_starts&&'Familiar starts',coverageStudies.logged_graph&&'Logged graph',coverageStudies.constrained_bootstrap&&'Constrained bootstrap',coverageStudies.recorded_actions&&'Recorded actions',coverageStudies.within_map&&'Within-map states',coverageStudies.map_replay&&'Map-balanced replay',coverageStudies.bank_replication&&'Bank replications',coverageStudies.panel_evaluation&&'Panel robustness',coverageStudies.equal_support&&'Equal-size banks',coverageStudies.coverage&&'Experience coverage',fixed&&'Fixed-data targets',supervised&&'Exact targets',competence&&'Competence',adaptation&&'Adaptation',provenance&&'Provenance'].filter(Boolean);
     $('load-status').textContent=`${loaded.join(' + ') || 'No'} saved ${loaded.length===1?'study':'studies'} loaded · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
   }
   $('refresh').disabled=false;$('study-run').disabled=false;loadInProgress=false;
 }
 $('refresh').addEventListener('click',loadData);
 $('study-run').addEventListener('change',loadData);
-document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlayback();stopCompetencePlayback();stopSupervisedPlayback();stopFixedPlayback();stopCoveragePlayback();stopRobustnessPlayback();stopBanksPlayback();stopFamiliarPlayback();}});
 await loadData();

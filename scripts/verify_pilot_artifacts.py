@@ -384,6 +384,10 @@ def main():
         verify_manifest(manifest.parent)
         subprocess.run([sys.executable, str(ROOT / "scripts/audit_logged_graph.py"),
                         "--study", str(manifest.parent), "--skip-forward-inference"], check=True)
+    for manifest in sorted((ROOT / "experiments/familiar_starts").glob("*/manifest.json")):
+        verify_manifest(manifest.parent)
+        subprocess.run([sys.executable, str(ROOT / "scripts/audit_familiar_starts.py"),
+                        "--study", str(manifest.parent), "--skip-forward-inference"], check=True)
 
 
 if __name__ == "__main__":
