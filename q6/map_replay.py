@@ -203,7 +203,7 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
                         raise ConsistencyError("input archive is not complete")
                     archives_meta[name] = {"directory": artifact_path(directory), "files": {"manifest.json": sha(directory / "manifest.json")}}
                     shutil.copy2(directory / "manifest.json", output / f"{name}_manifest.json")
-                    filename = "panels.json" if name in ("panel_evaluation", "bank_replication", "map_replay", "within_map", "recorded_actions", "constrained_bootstrap") else "dataset_metadata.json"
+                    filename = "panels.json" if name in ("panel_evaluation", "bank_replication", "map_replay", "within_map", "recorded_actions", "constrained_bootstrap", "logged_graph") else "dataset_metadata.json"
                     checked_input(directory, manifest, filename, archives_meta[name]["files"])
                     saved = json.loads((directory / filename).read_text())
                     shutil.copy2(directory / filename, output / f"{name}_{filename}")
@@ -487,7 +487,7 @@ def run_study(output, protocol_file, *, bank_ids=(1, 2, 3), seeds=(0, 1, 2), upd
         "finite": all(np.isfinite(r["mean_loss"]) and np.isfinite(r["last_loss"]) for r in losses)}
     complete = (extra_integrity["complete"] and loss_integrity["complete"] and loss_integrity["finite"] and snapshot_integrity["complete"] and snapshot_integrity["unchanged"] and len(supports) == len(bank_ids)
         and all(r["unchanged"] and r["read_only"] for r in support_integrity)
-        and all(r["complete"] and r["map_digest_identical"] and r["map_counts_identical"] for r in consistency)
+        and all(r["complete"] and (not getattr(_comparison, "requires_paired_replay", True) or (r["map_digest_identical"] and r["map_counts_identical"])) for r in consistency)
         and all(r["online_identical"] and r["target_identical"] for r in initialization_consistency)
         and all(r["unchanged_during_evaluation"] and len(r["panel_checks"]) == panel_count for r in model_records)
         and all(r["unchanged"] for r in source_integrity) and all(all(r[k] for k in ("sum_matches", "local_matches", "map_sum_matches", "on_support")) for r in count_integrity)
