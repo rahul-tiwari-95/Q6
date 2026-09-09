@@ -28,7 +28,7 @@ python3 -m http.server 8080 --bind 127.0.0.1
 
 Open **[the lab](http://127.0.0.1:8080/dashboard/lab.html#coverage)**. No training is required to explore the shipped results.
 
-Start with **Experience coverage → Exact logged graph**. On the first preselected map, bank 1 / seed 0 changes from success in 12 steps to failure at 32. Switch to bank 2 / seed 0 and the result reverses: failure at 32 becomes success in 19. Then compare the graph-fit cards with all eight panels. There are **2,618 saved recordings** across the current studies, plus the earlier research dashboards.
+Start with **Experience coverage → Familiar starts**. On the first preselected map, bank 1 / seed 0, the goal is two moves away. Constrained DDQN takes two. The exact-label model takes ten—and restricting it to recorded actions makes that fifteen. Switch action sets, inspect its first decision, and watch a simple task become a detour. There are **2,938 saved recordings** across the current studies, plus the earlier research dashboards.
 
 ## A few things the worlds have taught us
 
@@ -38,20 +38,22 @@ Start with **Experience coverage → Exact logged graph**. On the first preselec
 - **What if the learner only gets recorded outcomes?** Keeping the original collected states and replay fixed, but removing outcomes for unrecorded actions, cut efficient success from **43.0% to 21.3%** on new common panels. The logs cover only about 35% of the four possible actions at each collected state, averaged across those states. This exposed how much the earlier procedure relied on broader supervision. [Inspect the recorded-outcome control →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/recorded_actions_results_v1.md)
 - **A smaller training-time choice can produce better routes.** Letting the bootstrap choose only actions logged at its successor raised efficient success from **22.7% to 49.5%**, with exactly the same data, replay and target count. Every bank-panel average improved in efficiency; overall success rose more modestly, **66.2% → 69.5%**. Fresh policies still choose among all four actions. [Inspect the bootstrap control →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/constrained_bootstrap_results_v1.md)
 
-- **Better answers to the training problem can produce worse decisions.** Solving the logged transition graph exactly cut value error by **54%**, yet fresh-map efficient success fell **48.7% → 18.6%**. Every bank-panel average declined. Fitting recorded values and choosing useful actions are different achievements—and Q6 keeps both in view. [Read the latest experiment →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/logged_graph_results_v1.md)
+- **Better answers to the training problem can produce worse decisions.** Solving the logged transition graph exactly cut value error by **54%**, yet fresh-map efficient success fell **48.7% → 18.6%**. Every bank-panel average declined. Fitting recorded values and choosing useful actions are different achievements—and Q6 keeps both in view. [Inspect the exact-label comparison →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/logged_graph_results_v1.md)
 
-“Efficient” means reaching the goal within twice the shortest-path length, with failures counted. These are bounded findings from a fully visible toy world and a **20,420-parameter feedforward network**. Earlier offline arms receive transitions for all four actions; both latest arms use logged outcomes only. The latest comparison uses exact values of the same recorded action graph as an alternative to bootstrapped labels. It still replays deduplicated states offline, and unobserved action predictions remain available during fresh-world evaluation. None of this establishes online-RL competence, general intelligence or a memory mechanism.
+- **The logs are a record, not the limit of a useful policy.** On identical familiar starts, restricting choices to logged actions cut DDQN efficiency **68.5% → 40.8%**. It did not restore exact-label efficiency either: **25.8% → 24.0%**. Even the best logged routes allow only **60.9%** efficient success; DDQN sometimes finds useful shortcuts beyond them. The regression also includes worse ranking among recorded actions, so blocking unrecorded choices cannot explain or fix it all. [Read the frozen-policy investigation →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/familiar_starts_results_v1.md)
+
+“Efficient” means reaching the goal within twice the shortest-path length, with failures counted. These are bounded findings from a fully visible toy world and a **20,420-parameter feedforward network**. Earlier offline arms receive transitions for all four actions; both latest arms use logged outcomes only. The latest diagnostic freezes those learners and varies action choice on familiar states, with no training. Its logged masks are diagnostic information, not an assumed feature available on fresh worlds. The learners were trained through offline deduplicated state replay. None of this establishes online-RL competence, general intelligence or a memory mechanism.
 
 ## Where Q6 is headed
 
 | Step | The question | What would count as progress? |
 | --- | --- | --- |
 | **Established control: experience composition** | Which states help an agent learn across maps? | Within-map replacements improve efficiency across three banks with map exposure and batch diversity fixed. |
-| **Now: learn from actual experience** | Can useful behavior survive when training uses only recorded actions and transitions? | Constrained bootstrapping remains the stronger behavioral baseline; exact logged values improve numerical fit but harm fresh behavior. |
+| **Now: learn from actual experience** | Can useful behavior survive when training uses only recorded actions and transitions? | Constrained DDQN remains the baseline; familiar-start controls expose both imperfect action ranking and missing efficient routes in the logs. |
 | **Then: adaptation and retention** | What remains when A changes to B and A returns? | Competent starting policies, then fair retained/reset/replay and memory comparisons. |
 | **Make more worlds affordable** | How much simulation and learning can we do with a stated compute budget? | Measured throughput, memory and behavior under sequential and batched execution. |
 
-**Next: freeze the learners and inspect where their decisions go wrong.** Start both existing models from the same familiar training maps, comparing unrestricted action choice with choices limited to logged actions. Include an exact recorded-graph policy reference. This can test whether the behavior gap already appears on familiar experience, and how it changes when selection stays within supervised actions—without another training run. Logged masks are available for this familiar-state diagnostic, not as an assumed fresh-world deployment feature. This next diagnostic has not run.
+**Next: give the learner better journeys to learn from.** Keep constrained DDQN and compare random collection with one fixed mix of random and frozen-DDQN-guided complete episodes. Match episode allocations per map, report actual interaction counts and the collector’s prior training cost, and keep the learner’s network and update budget fixed. Measure whether the logs contain shorter successful routes—and whether new policies benefit on common fresh maps. This tests a collection-policy change, not route length alone. The next experiment has not run; continuous online feedback remains deferred.
 
 Recurrent memory and nested learning remain future experiments. They earn a place when a repeatable limitation gives us a concrete reason to add them. The [roadmap](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/roadmap.md) records those decisions.
 
@@ -65,14 +67,14 @@ source .venv/bin/activate
 python -m pip install -e '.[dev]'
 
 # Small execution check. Choose a new output directory each time.
-python -m q6.logged_graph \
-  --output /tmp/q6-logged-graph-smoke \
-  --protocol-file docs/experiments/logged_graph_protocol_v1.md --smoke
+python -m q6.familiar_starts \
+  --output /tmp/q6-familiar-starts-smoke \
+  --protocol-file docs/experiments/familiar_starts_protocol_v1.md --smoke
 ```
 
-Smoke reconstructs three recorded-action graphs from shipped logs, computes fixed targets, reuses archived controls, trains three treatments for 24 updates each, measures their graph fit, and evaluates four alternate maps. Its unequal treatment/control budgets check execution only; smoke is ineligible research evidence.
+Smoke reconstructs the recorded graphs, checks which routes they permit, and evaluates six frozen policies on two original starts with both action sets: 32 episodes including references. It performs no training. Smoke checks execution only and is ineligible research evidence.
 
-The latest main comparison took **3.07 minutes on one CPU thread**, peaking at **0.57 GiB process memory** on the reference Mac. This is one observed run, not a cross-machine benchmark. Full reproduction commands, pinned versions, fixed budgets and audit instructions are in the [experiment report](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/logged_graph_results_v1.md) and [validation record](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/validation/logged-graph-v1.md).
+The latest frozen comparison took **12.5 seconds on one CPU thread**, peaking at **0.42 GiB process memory** on the reference Mac. This is one observed run, not a cross-machine benchmark. Full reproduction commands, pinned versions, fixed budgets and audit instructions are in the [experiment report](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/familiar_starts_results_v1.md) and [validation record](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/validation/familiar-starts-v1.md).
 
 ## Bring a good question
 
