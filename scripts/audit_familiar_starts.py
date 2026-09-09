@@ -10,6 +10,7 @@ import csv
 import gzip
 import hashlib
 import json
+import math
 import sys
 import time
 from collections import defaultdict
@@ -30,6 +31,38 @@ from audit_fixed_targets_study import close, read_json, csv_rows
 
 CONDITIONS = ("constrained_bootstrap", "logged_graph")
 ACTION_SETS = ("unrestricted", "logged")
+FLOAT32_MEAN_ULPS = 2
+
+
+def assert_float32_mean(actual, values, label=""):
+    """Check the archived prediction-gap mean against a float64 reference.
+
+    The archived runner reduced nonnegative float32 per-state gaps in float32.
+    SIMD reduction order differs across platforms. Use fsum for the reference
+    and allow two float32 rounding units at its magnitude, only for this mean.
+    This archival tolerance covers all 180 saved slices (maximum 1.518 ULP);
+    it is not a universal error bound for arbitrary float32 summations.
+    Exact zero stays exact, and other audit metrics retain their own checks.
+    """
+    values = np.asarray(values)
+    assert values.dtype == np.float32 and values.ndim == 1 and values.size > 0, (label, "nonempty float32 gap vector required")
+    assert np.isfinite(values).all() and (values >= 0).all(), (label, "finite nonnegative gaps required")
+    actual = float(actual)
+    assert math.isfinite(actual) and actual >= 0, (label, "invalid saved mean", actual)
+    canonical = math.fsum(map(float, values)) / values.size
+    if canonical == 0:
+        ulp = 0.0
+    else:
+        # The smallest float32 spacing is 2**-149. frexp avoids overflow in
+        # np.spacing at the maximum finite float32 value.
+        rounded = float(np.float32(canonical))
+        exponent = math.frexp(rounded)[1]
+        ulp = math.ldexp(1.0, -149 if rounded == 0 else max(-149, exponent - 24))
+    tolerance = FLOAT32_MEAN_ULPS * ulp
+    error = abs(actual - canonical)
+    assert error <= tolerance, (label, actual, canonical, "float32 ULP tolerance", tolerance)
+    return {"canonical_mean": canonical, "absolute_tolerance": tolerance,
+            "absolute_error": error, "error_float32_ulps": error / ulp if ulp else 0.0}
 
 
 def independent_reachability(table, remaining, support):
@@ -283,10 +316,11 @@ def audit_slices(study, result, data, supports, tables, targets, shortest):
                             "multiple_action_states": int(multiple.sum()),
                             "centered_state_mean_abs_error": float(arrays["state_centered_abs_error"][multiple].mean()) if multiple.any() else None,
                             "centered_state_mean_squared_error": float(arrays["state_centered_squared_error"][multiple].mean()) if multiple.any() else None,
-                            "mean_target_top_two_gap": float(arrays["target_action_gap"][multiple].mean()) if multiple.any() else None,
-                            "mean_unrestricted_prediction_gap": float((pred[selected].max(1) - np.where(mask[selected], pred[selected], -np.inf).max(1)).mean())}
+                            "mean_target_top_two_gap": float(arrays["target_action_gap"][multiple].mean()) if multiple.any() else None}
                         for name, value in expected_metrics.items():
                             compare(item[name], value, f"prior slice {key} {name}")
+                        gaps = pred[selected].max(1) - np.where(mask[selected], pred[selected], -np.inf).max(1)
+                        assert_float32_mean(item["mean_unrestricted_prediction_gap"], gaps, f"prior slice {key} mean_unrestricted_prediction_gap")
                         if axis == "original_start":
                             assert item["classification"].startswith("exploratory")
     assert set(rows) == expected_keys
@@ -636,6 +670,7 @@ def audit(study, allow_smoke=False, skip_forward=False):
         "independent_transition_entries": len(data["observations"]) * 4, "kernel_clone_checks": clone_checks,
         "recorded_edges": sum(int(t["observed"].sum()) for t in tables.values()), "graph_reachability_states": sum(len(s) for s in supports.values()),
         "prior_prediction_slices": slices, "learner_episodes": len(rows), "reference_episodes": len(references), **step_summary, **summary,
+        "prediction_gap_mean_float32_ulp_tolerance": FLOAT32_MEAN_ULPS,
         "eligible_descriptive_study": eligible, "wall_seconds": time.monotonic() - started}
 
 

@@ -28,7 +28,8 @@ not hard OS or total-machine limits.
 
 ## Software and smoke checks
 
-The seeded fast lane passed **415 tests, three deselected, in 105.62 seconds**.
+Before main execution, the seeded fast lane passed **415 tests, three
+deselected, in 105.62 seconds**.
 Final focused verification passed **20 tests in 1.77 seconds**, after adding
 the explicit identity check between all 256 supported clock-32 rows and
 original starts. The unchanged long training checks remain in the scheduled
@@ -88,6 +89,32 @@ The integrated portable verifier passes across every shipped study, including
 this archive. No prior research artifact or dashboard data file was changed.
 Portable verification skips selected forward regeneration while retaining
 hashes, recorded-graph reconstruction and raw-evidence arithmetic.
+
+### Linux audit portability correction
+
+The first publication CI run exposed a float32 reduction-order difference
+in the auxiliary `mean_unrestricted_prediction_gap` scalar. The saved Mac
+mean was `0.0917019471526146`; Linux recomputed `0.09170196205377579`, a
+1.49e-8 difference just beyond the generic 1e-8 absolute check. All tests
+and the preceding archived studies passed; this was an auditor portability
+failure, not a changed policy outcome.
+
+For this scalar only, the auditor now computes a canonical reference with
+`math.fsum` over the saved float32 per-state gaps and permits **two float32
+rounding units at the reference magnitude**. Every one of the 180 saved slices
+was checked; the largest discrepancy is 1.518 units. Exact zero remains
+exact, invalid inputs fail, and larger discrepancies are rejected. This is
+an explicit archival tolerance, not a universal error bound for arbitrary
+float32 summations. No common tolerance, runner, snapshot or artifact changes.
+
+The added 11 regression cases accept the actual Mac and Linux reductions of
+the same archived values, reject discrepancies outside the budget, and cover
+zero, nonfinite, negative, empty and wrong-precision inputs. Together with
+the evaluator tests, **31 focused tests pass in 1.77 seconds**. Actual Python
+3.10 compilation passes. The complete seeded suite then passes **426 tests,
+three deselected, in 92.05 seconds**. The corrected auditor passes full and portable main
+checks in **6.410 / 6.278 seconds**, preserving every prior evidence check.
+The main experiment was not rerun. Final publication CI is recorded on PR #1.
 
 ## Dashboard and interpretation checks
 
