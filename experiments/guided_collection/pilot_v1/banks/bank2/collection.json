@@ -1,0 +1,1343 @@
+{
+  "bank_id": 2,
+  "status": "complete",
+  "stop_reason": null,
+  "collection_episodes": 4096,
+  "complete_collection_episodes": 4096,
+  "collection_steps": 67763,
+  "collection_successes": 2639,
+  "collection_noop_steps": 26382,
+  "episodes_per_map": 16,
+  "random_episodes_per_map": 8,
+  "per_policy": [
+    {
+      "policy": "random",
+      "episodes": 2048,
+      "complete_episodes": 2048,
+      "steps": 50555,
+      "successes": 807,
+      "noop_steps": 16822,
+      "unique_trajectories": 1998,
+      "mean_steps": 24.68505859375
+    },
+    {
+      "policy": "guided",
+      "episodes": 2048,
+      "complete_episodes": 2048,
+      "steps": 17208,
+      "successes": 1832,
+      "noop_steps": 9560,
+      "unique_trajectories": 256,
+      "mean_steps": 8.40234375
+    }
+  ],
+  "guided_duplicate_checks": [
+    {
+      "map_seed": 300000,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300001,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300002,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300003,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300004,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300005,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300006,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300007,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300008,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300009,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300010,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300011,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300012,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300013,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300014,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300015,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300016,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300017,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300018,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300019,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300020,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300021,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300022,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300023,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300024,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300025,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300026,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300027,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300028,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300029,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300030,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300031,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300032,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300033,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300034,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300035,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300036,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300037,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300038,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300039,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300040,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300041,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300042,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300043,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300044,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300045,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300046,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300047,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300048,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300049,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300050,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300051,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300052,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300053,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300054,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300055,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300056,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300057,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300058,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300059,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300060,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300061,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300062,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300063,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300064,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300065,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300066,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300067,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300068,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300069,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300070,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300071,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300072,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300073,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300074,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300075,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300076,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300077,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300078,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300079,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300080,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300081,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300082,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300083,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300084,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300085,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300086,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300087,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300088,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300089,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300090,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300091,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300092,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300093,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300094,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300095,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300096,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300097,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300098,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300099,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300100,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300101,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300102,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300103,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300104,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300105,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300106,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300107,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300108,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300109,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300110,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300111,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300112,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300113,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300114,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300115,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300116,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300117,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300118,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300119,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300120,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300121,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300122,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300123,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300124,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300125,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300126,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300127,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300128,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300129,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300130,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300131,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300132,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300133,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300134,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300135,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300136,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300137,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300138,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300139,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300140,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300141,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300142,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300143,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300144,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300145,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300146,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300147,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300148,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300149,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300150,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300151,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300152,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300153,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300154,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300155,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300156,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300157,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300158,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300159,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300160,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300161,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300162,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300163,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300164,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300165,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300166,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300167,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300168,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300169,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300170,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300171,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300172,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300173,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300174,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300175,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300176,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300177,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300178,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300179,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300180,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300181,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300182,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300183,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300184,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300185,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300186,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300187,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300188,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300189,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300190,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300191,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300192,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300193,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300194,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300195,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300196,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300197,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300198,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300199,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300200,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300201,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300202,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300203,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300204,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300205,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300206,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300207,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300208,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300209,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300210,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300211,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300212,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300213,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300214,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300215,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300216,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300217,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300218,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300219,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300220,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300221,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300222,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300223,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300224,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300225,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300226,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300227,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300228,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300229,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300230,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300231,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300232,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300233,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300234,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300235,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300236,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300237,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300238,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300239,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300240,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300241,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300242,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300243,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300244,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300245,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300246,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300247,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300248,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300249,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300250,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300251,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300252,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300253,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300254,
+      "episodes": 8,
+      "unique_trajectories": 1
+    },
+    {
+      "map_seed": 300255,
+      "episodes": 8,
+      "unique_trajectories": 1
+    }
+  ],
+  "collector_before": {
+    "online": "095c9e80b325d52617908b9aee92488d02fc510f3287c09941cd908338f0e1be",
+    "target": "55e46fc083101e53a910cbc822bfeab4c286216a68b423ca7add31846d5e3238"
+  },
+  "collector_after": {
+    "online": "095c9e80b325d52617908b9aee92488d02fc510f3287c09941cd908338f0e1be",
+    "target": "55e46fc083101e53a910cbc822bfeab4c286216a68b423ca7add31846d5e3238"
+  },
+  "collector_parameters_rng_unchanged": true,
+  "arrays": {
+    "visited_counts": {
+      "shape": [
+        163840
+      ],
+      "dtype": "uint32",
+      "sha256": "5c533e7aa173340a10caba29563e9280a19479ca03492a79774bfe440369d15e"
+    },
+    "support_indices": {
+      "shape": [
+        38646
+      ],
+      "dtype": "int32",
+      "sha256": "7ca576445fe58f94ed8243ff9abaaa83a09ef981f86430d750ee3fb1b7975f65"
+    }
+  },
+  "wall_seconds": 2.2642417500028387,
+  "resource_checks": 71859
+}

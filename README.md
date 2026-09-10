@@ -28,7 +28,7 @@ python3 -m http.server 8080 --bind 127.0.0.1
 
 Open **[the lab](http://127.0.0.1:8080/dashboard/lab.html#coverage)**. No training is required to explore the shipped results.
 
-Start with **Experience coverage → Familiar starts**. On the first preselected map, bank 1 / seed 0, the goal is two moves away. Constrained DDQN takes two. The exact-label model takes ten—and restricting it to recorded actions makes that fifteen. Switch action sets, inspect its first decision, and watch a simple task become a detour. There are **2,938 saved recordings** across the current studies, plus the earlier research dashboards.
+Start with **Experience coverage → Guided collection**. On the first preset collection map, bank 1 / episode slot 8, random wandering takes 26 moves; a frozen DDQN takes two. The journeys improve, the experience bank shrinks, and fresh-map efficiency falls **49.1% → 43.3%**. Watch the routes, inspect the experience bank, and follow the mismatch. There are **3,338 saved recordings** across the current studies, plus the earlier research dashboards.
 
 ## A few things the worlds have taught us
 
@@ -42,18 +42,20 @@ Start with **Experience coverage → Familiar starts**. On the first preselected
 
 - **The logs are a record, not the limit of a useful policy.** On identical familiar starts, restricting choices to logged actions cut DDQN efficiency **68.5% → 40.8%**. It did not restore exact-label efficiency either: **25.8% → 24.0%**. Even the best logged routes allow only **60.9%** efficient success; DDQN sometimes finds useful shortcuts beyond them. The regression also includes worse ranking among recorded actions, so blocking unrecorded choices cannot explain or fix it all. [Read the frozen-policy investigation →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/familiar_starts_results_v1.md)
 
-“Efficient” means reaching the goal within twice the shortest-path length, with failures counted. These are bounded findings from a fully visible toy world and a **20,420-parameter feedforward network**. Earlier offline arms receive transitions for all four actions; both latest arms use logged outcomes only. The latest diagnostic freezes those learners and varies action choice on familiar states, with no training. Its logged masks are diagnostic information, not an assumed feature available on fresh worlds. The learners were trained through offline deduplicated state replay. None of this establishes online-RL competence, general intelligence or a memory mechanism.
+- **Better journeys can leave a weaker student.** Replacing eight of sixteen random episodes per map with frozen-policy-guided episodes raised the logs’ efficient-route ceiling **60.9% → 82.3%**, but fresh efficient success fell **49.1% → 43.3%** across all three bank averages. The mixture collected fewer unique states and actions. A good demonstration and a useful learning bank are different things. [Inspect the collection experiment →](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/guided_collection_results_v1.md)
+
+“Efficient” means reaching the goal within twice the shortest-path length, with failures counted. These are bounded findings from a fully visible toy world and a **20,420-parameter feedforward network**. Earlier offline arms receive outcomes for all four actions; the current DDQN comparisons learn from logged outcomes only, with training-time successor choices restricted to logged actions. Fresh policies choose among all four actions. The latest collection experiment uses one previously trained, frozen collector, then trains new students through offline deduplicated state replay. Its route ceilings describe familiar recorded graphs, not fresh-policy limits. None of this establishes online-RL competence, general intelligence or a memory mechanism.
 
 ## Where Q6 is headed
 
 | Step | The question | What would count as progress? |
 | --- | --- | --- |
 | **Established control: experience composition** | Which states help an agent learn across maps? | Within-map replacements improve efficiency across three banks with map exposure and batch diversity fixed. |
-| **Now: learn from actual experience** | Can useful behavior survive when training uses only recorded actions and transitions? | Constrained DDQN remains the baseline; familiar-start controls expose both imperfect action ranking and missing efficient routes in the logs. |
+| **Now: learn from actual experience** | Can useful behavior survive when training uses only recorded actions and transitions? | Retain constrained DDQN with random collection; test which experience improves fresh behavior when efficient demonstrations alone are insufficient. |
 | **Then: adaptation and retention** | What remains when A changes to B and A returns? | Competent starting policies, then fair retained/reset/replay and memory comparisons. |
 | **Make more worlds affordable** | How much simulation and learning can we do with a stated compute budget? | Measured throughput, memory and behavior under sequential and batched execution. |
 
-**Next: give the learner better journeys to learn from.** Keep constrained DDQN and compare random collection with one fixed mix of random and frozen-DDQN-guided complete episodes. Match episode allocations per map, report actual interaction counts and the collector’s prior training cost, and keep the learner’s network and update budget fixed. Measure whether the logs contain shorter successful routes—and whether new policies benefit on common fresh maps. This tests a collection-policy change, not route length alone. The next experiment has not run; continuous online feedback remains deferred.
+**Next: separate the value of guidance from the exploration it replaced.** Keep the original random-collection DDQN baseline. Using the existing logs, train on just the same eight retained random episodes per map, then compare with both frozen endpoints on common new panels. This will show whether guidance helps, hurts, or fails to compensate for dropping the other eight random episodes. Keep the network and training budget fixed; no new collection is needed. The next comparison has not run, and continuous online feedback remains deferred.
 
 Recurrent memory and nested learning remain future experiments. They earn a place when a repeatable limitation gives us a concrete reason to add them. The [roadmap](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/roadmap.md) records those decisions.
 
@@ -67,14 +69,14 @@ source .venv/bin/activate
 python -m pip install -e '.[dev]'
 
 # Small execution check. Choose a new output directory each time.
-python -m q6.familiar_starts \
-  --output /tmp/q6-familiar-starts-smoke \
-  --protocol-file docs/experiments/familiar_starts_protocol_v1.md --smoke
+python -m q6.guided_collection \
+  --output /tmp/q6-guided-collection-smoke \
+  --protocol-file docs/experiments/guided_collection_protocol_v1.md --smoke
 ```
 
-Smoke reconstructs the recorded graphs, checks which routes they permit, and evaluates six frozen policies on two original starts with both action sets: 32 episodes including references. It performs no training. Smoke checks execution only and is ineligible research evidence.
+Smoke collects one complete bank of 4,096 episodes, performs 24 learner updates and checks a small fresh evaluation with 44 recorded journeys. The archived control has a much larger training budget, so smoke checks execution only and is ineligible research evidence.
 
-The latest frozen comparison took **12.5 seconds on one CPU thread**, peaking at **0.42 GiB process memory** on the reference Mac. This is one observed run, not a cross-machine benchmark. Full reproduction commands, pinned versions, fixed budgets and audit instructions are in the [experiment report](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/familiar_starts_results_v1.md) and [validation record](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/validation/familiar-starts-v1.md).
+The latest main comparison took **3 minutes 6 seconds on one CPU thread**, peaking at **0.56 GiB process memory** on the reference Mac. It used **203,113 collection interactions**, versus the controls’ 301,585, under equal episode allocation. The collector also brings **100,878 prior interactions and 30,000 training updates**; this is not an equal-total-history comparison. Full commands, pinned versions, fixed budgets and audits are in the [experiment report](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/experiments/guided_collection_results_v1.md) and [validation record](https://github.com/rahul-tiwari-95/Q6/blob/q6-adaptation-lab/docs/validation/guided-collection-v1.md).
 
 ## Bring a good question
 
