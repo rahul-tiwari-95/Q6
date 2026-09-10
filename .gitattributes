@@ -1,0 +1,17 @@
+# Preserve captured artifact bytes, including standard CSV CRLF, for hash checks.
+experiments/** -text linguist-generated=true
+experiments/**/*.csv whitespace=cr-at-eol
+dashboard/data/adaptation.json linguist-generated=true
+dashboard/data/provenance.json linguist-generated=true
+dashboard/data/competence.json linguist-generated=true
+dashboard/data/supervised.json linguist-generated=true
+dashboard/data/fixed_targets.json linguist-generated=true
+dashboard/data/coverage.json linguist-generated=true
+dashboard/data/equal_support.json linguist-generated=true
+dashboard/data/panel_evaluation.json linguist-generated=true
+dashboard/data/bank_replication.json linguist-generated=true
+dashboard/data/map_replay.json linguist-generated=true
+dashboard/data/within_map.json linguist-generated=true
+dashboard/data/recorded_actions.json linguist-generated=true
+dashboard/data/constrained_bootstrap.json linguist-generated=true
+dashboard/data/logged_graph.json linguist-generated=true

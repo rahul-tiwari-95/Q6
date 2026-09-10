@@ -1,0 +1,134 @@
+[
+  {
+    "left_bank": 1,
+    "right_bank": 2,
+    "left_condition": "collected_unique",
+    "right_condition": "collected_unique",
+    "states": 33805,
+    "union_states": 86018,
+    "jaccard": 0.3929991397149434,
+    "fraction_of_left": 0.5649325690603119,
+    "fraction_of_right": 0.5635669511869832
+  },
+  {
+    "left_bank": 1,
+    "right_bank": 2,
+    "left_condition": "collected_unique",
+    "right_condition": "uniform_subset",
+    "states": 21928,
+    "union_states": 97895,
+    "jaccard": 0.22399509678737423,
+    "fraction_of_left": 0.36644997409716074,
+    "fraction_of_right": 0.36556415044011736
+  },
+  {
+    "left_bank": 1,
+    "right_bank": 2,
+    "left_condition": "uniform_subset",
+    "right_condition": "collected_unique",
+    "states": 21775,
+    "union_states": 98048,
+    "jaccard": 0.2220851011749347,
+    "fraction_of_left": 0.3638931131870519,
+    "fraction_of_right": 0.36301347025873565
+  },
+  {
+    "left_bank": 1,
+    "right_bank": 2,
+    "left_condition": "uniform_subset",
+    "right_condition": "uniform_subset",
+    "states": 21930,
+    "union_states": 97893,
+    "jaccard": 0.22402010358248292,
+    "fraction_of_left": 0.3664833971155935,
+    "fraction_of_right": 0.3655974926647106
+  },
+  {
+    "left_bank": 1,
+    "right_bank": 3,
+    "left_condition": "collected_unique",
+    "right_condition": "collected_unique",
+    "states": 33603,
+    "union_states": 86074,
+    "jaccard": 0.3903966354532147,
+    "fraction_of_left": 0.5615568441985995,
+    "fraction_of_right": 0.561566228817808
+  },
+  {
+    "left_bank": 1,
+    "right_bank": 3,
+    "left_condition": "collected_unique",
+    "right_condition": "uniform_subset",
+    "states": 21826,
+    "union_states": 97851,
+    "jaccard": 0.22305341795178382,
+    "fraction_of_left": 0.3647454001570882,
+    "fraction_of_right": 0.36475149570507037
+  },
+  {
+    "left_bank": 1,
+    "right_bank": 3,
+    "left_condition": "uniform_subset",
+    "right_condition": "collected_unique",
+    "states": 21867,
+    "union_states": 97810,
+    "jaccard": 0.22356609753603926,
+    "fraction_of_left": 0.3654305720349605,
+    "fraction_of_right": 0.36543667903339017
+  },
+  {
+    "left_bank": 1,
+    "right_bank": 3,
+    "left_condition": "uniform_subset",
+    "right_condition": "uniform_subset",
+    "states": 21987,
+    "union_states": 97690,
+    "jaccard": 0.22506909612038078,
+    "fraction_of_left": 0.36743595314092814,
+    "fraction_of_right": 0.36744209365286273
+  },
+  {
+    "left_bank": 2,
+    "right_bank": 3,
+    "left_condition": "collected_unique",
+    "right_condition": "collected_unique",
+    "states": 33821,
+    "union_states": 86001,
+    "jaccard": 0.39326286903640656,
+    "fraction_of_left": 0.563833688983729,
+    "fraction_of_right": 0.5652093987098499
+  },
+  {
+    "left_bank": 2,
+    "right_bank": 3,
+    "left_condition": "collected_unique",
+    "right_condition": "uniform_subset",
+    "states": 21947,
+    "union_states": 97875,
+    "jaccard": 0.22423499361430396,
+    "fraction_of_left": 0.365880901573753,
+    "fraction_of_right": 0.36677362211303854
+  },
+  {
+    "left_bank": 2,
+    "right_bank": 3,
+    "left_condition": "uniform_subset",
+    "right_condition": "collected_unique",
+    "states": 21870,
+    "union_states": 97952,
+    "jaccard": 0.22327262332571055,
+    "fraction_of_left": 0.36459722592691385,
+    "fraction_of_right": 0.365486814398877
+  },
+  {
+    "left_bank": 2,
+    "right_bank": 3,
+    "left_condition": "uniform_subset",
+    "right_condition": "uniform_subset",
+    "states": 21740,
+    "union_states": 98082,
+    "jaccard": 0.22165127138516752,
+    "fraction_of_left": 0.36242998132835424,
+    "fraction_of_right": 0.36331428189444837
+  }
+]

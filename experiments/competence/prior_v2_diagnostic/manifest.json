@@ -1,0 +1,14 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "RESULTS.md": "2760a2f15fd6b54e5199f5fea6312433646d38f9b19051847285595a90ae6ae3",
+    "episodes.csv": "5e2b1cb21b347fc2dec20c001635ba6a38b2d9baf06306eb54878fd506c4eff8",
+    "results.json": "faa6b4be525fae78ea33bdcd1eb09b06b89c67b0dfe64101dcb8a6f1d7a4ce8c",
+    "run.py": "94f7b23ad55a4da93d2b010158792589db63f7c1c4fc7eef7fca22a3d269a575",
+    "source/experiments/competence/prior_v2_diagnostic/run.py": "94f7b23ad55a4da93d2b010158792589db63f7c1c4fc7eef7fca22a3d269a575",
+    "source/q6/learning.py": "ef1272d170b4eaa6b2efa731f851e58bf39bdd19af8e4d16dbe575cae1991a9c",
+    "source/q6/optimal.py": "01e9fb1909953f872aa32beff9aa2f88c5cba1a188d34e84be1901d7f9ce60a7",
+    "source/q6/world.py": "478cf48343af888ddd6087ea7bc1ac6f311abb10327ac11937b799b685f8156f",
+    "steps.csv": "494a815698b792a5bdaa55a7b6fb9a82ad926003d2391cb8c4c18d56ef88187c"
+  }
+}

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Q6 Lab — Experiment Registry</title>
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -9,13 +10,16 @@
 <nav class="topbar">
   <div class="brand">Q6 / Lab</div>
   <div class="spacer"></div>
+  <a href="lab.html" style="font-size:12px;">Changing worlds lab ↗</a>
   <a href="versions.html" style="color:var(--muted);font-size:12px;text-decoration:none;margin-right:16px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">Versions</a>
   <a href="replay.html" style="color:var(--muted);font-size:12px;text-decoration:none;margin-right:16px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">Replay</a>
   <a href="architecture.html" style="color:var(--muted);font-size:12px;text-decoration:none;margin-right:16px;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">Architecture</a>
   <button id="mode-toggle" class="mode-toggle">lab mode</button>
 </nav>
 <main>
-  <h1>Experiments</h1>
+  <h1>Historical run archive</h1>
+  <p><a href="lab.html">Explore the current adaptation and provenance pilots →</a></p>
+  <p style="color:var(--muted)">These summaries preserve earlier experiments. Raw historical replays and checkpoints are not bundled in this checkout; see the <a href="../research_review/2026-09-05/README.md">research audit</a> for interpretation and provenance limits.</p>
   <p style="color:var(--muted)">All training runs in <code>training_runs/</code>. Regenerate this index with <code>python dashboard/scan.py</code>.</p>
   <div id="runs"></div>
 </main>

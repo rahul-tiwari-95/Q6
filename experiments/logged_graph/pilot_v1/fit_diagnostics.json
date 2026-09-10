@@ -1,0 +1,859 @@
+{
+  "classification": "final supported-state fit against exact logged graph; descriptive, not a gate or full-world fit",
+  "per_seed": [
+    {
+      "bank_id": 1,
+      "condition": "constrained_bootstrap",
+      "seed": 0,
+      "checkpoint": 30000,
+      "prediction_key": "bank1_constrained_bootstrap_seed0",
+      "snapshot": "models/bank1_constrained_bootstrap_seed0_update30000.pt",
+      "snapshot_sha256": "505652b6e6a5310c50a6caadbc54f68cbe43d4b1e423337c0ad13d5f0dcc7a2b",
+      "predictions": {
+        "shape": [
+          59839,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "b198f70703aace28524f0dfd48f058c897c73ac1c3005732831e972df7cfc07b"
+      },
+      "states": 59839,
+      "observed_edges": 84305,
+      "state_mean_abs_error": 0.2523376333678666,
+      "state_mean_squared_error": 0.10670161535824703,
+      "edge_mean_abs_error": 0.25579303958593813,
+      "edge_max_abs_error": 1.095727590440063,
+      "restricted_action_agreement": 0.975016293721486,
+      "mean_graph_regret": 0.009691994326255053,
+      "max_graph_regret": 1.103059264943792,
+      "unrestricted_argmax_outside_logged_fraction": 0.6485068266515149,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59839,
+      "online_output_values": 239356,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "095c9e80b325d52617908b9aee92488d02fc510f3287c09941cd908338f0e1be",
+        "target_before": "55e46fc083101e53a910cbc822bfeab4c286216a68b423ca7add31846d5e3238",
+        "file_before": "505652b6e6a5310c50a6caadbc54f68cbe43d4b1e423337c0ad13d5f0dcc7a2b",
+        "source_before": "505652b6e6a5310c50a6caadbc54f68cbe43d4b1e423337c0ad13d5f0dcc7a2b"
+      },
+      "after": {
+        "online_after": "095c9e80b325d52617908b9aee92488d02fc510f3287c09941cd908338f0e1be",
+        "target_after": "55e46fc083101e53a910cbc822bfeab4c286216a68b423ca7add31846d5e3238",
+        "file_after": "505652b6e6a5310c50a6caadbc54f68cbe43d4b1e423337c0ad13d5f0dcc7a2b",
+        "source_after": "505652b6e6a5310c50a6caadbc54f68cbe43d4b1e423337c0ad13d5f0dcc7a2b"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 1,
+      "condition": "constrained_bootstrap",
+      "seed": 1,
+      "checkpoint": 30000,
+      "prediction_key": "bank1_constrained_bootstrap_seed1",
+      "snapshot": "models/bank1_constrained_bootstrap_seed1_update30000.pt",
+      "snapshot_sha256": "60b9e2e232c37b2493a38013d86272d3b4153fdaebb1b1a512991630e8aef1bd",
+      "predictions": {
+        "shape": [
+          59839,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "8c2bdedd8356e73c02b9aa6f463e79068fdcd28b6e0a9de8f935cc72ba4c9dbb"
+      },
+      "states": 59839,
+      "observed_edges": 84305,
+      "state_mean_abs_error": 0.24769585259943416,
+      "state_mean_squared_error": 0.102761570539188,
+      "edge_mean_abs_error": 0.2503367785273239,
+      "edge_max_abs_error": 1.055784480910845,
+      "restricted_action_agreement": 0.9757516001270075,
+      "mean_graph_regret": 0.00918416553532378,
+      "max_graph_regret": 1.0941358453010863,
+      "unrestricted_argmax_outside_logged_fraction": 0.6498437473888267,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59839,
+      "online_output_values": 239356,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "b0220bd190dab5c4d1c6e7aa53ff0e8b8bf1d6b918708efb0887ed44ba155cf3",
+        "target_before": "b4122b124919a50c23d7d353741800d8289e259a33aedb6f07d64213a96de0db",
+        "file_before": "60b9e2e232c37b2493a38013d86272d3b4153fdaebb1b1a512991630e8aef1bd",
+        "source_before": "60b9e2e232c37b2493a38013d86272d3b4153fdaebb1b1a512991630e8aef1bd"
+      },
+      "after": {
+        "online_after": "b0220bd190dab5c4d1c6e7aa53ff0e8b8bf1d6b918708efb0887ed44ba155cf3",
+        "target_after": "b4122b124919a50c23d7d353741800d8289e259a33aedb6f07d64213a96de0db",
+        "file_after": "60b9e2e232c37b2493a38013d86272d3b4153fdaebb1b1a512991630e8aef1bd",
+        "source_after": "60b9e2e232c37b2493a38013d86272d3b4153fdaebb1b1a512991630e8aef1bd"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 1,
+      "condition": "constrained_bootstrap",
+      "seed": 2,
+      "checkpoint": 30000,
+      "prediction_key": "bank1_constrained_bootstrap_seed2",
+      "snapshot": "models/bank1_constrained_bootstrap_seed2_update30000.pt",
+      "snapshot_sha256": "02ceb8fd5b832717b743bfb774c7b30aa8274789d28311dbe2b303366e47a6e6",
+      "predictions": {
+        "shape": [
+          59839,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "1b22f4f8e5d2a908b8778d82f28d526a6134d3a4edb944126964ba2007ba5cdd"
+      },
+      "states": 59839,
+      "observed_edges": 84305,
+      "state_mean_abs_error": 0.2465472511917948,
+      "state_mean_squared_error": 0.10247205530712437,
+      "edge_mean_abs_error": 0.24948904615275538,
+      "edge_max_abs_error": 1.1258957133354492,
+      "restricted_action_agreement": 0.9742141412790989,
+      "mean_graph_regret": 0.009830142317607485,
+      "max_graph_regret": 1.1078064957870184,
+      "unrestricted_argmax_outside_logged_fraction": 0.6477046742091278,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59839,
+      "online_output_values": 239356,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "477b5c553f1996d9ac8492cff2d810163469836495996f06be7bb27059dd19f4",
+        "target_before": "eeb865da18c7aeeddb66560e1364879666dad2539714ee3eaea403352a62318c",
+        "file_before": "02ceb8fd5b832717b743bfb774c7b30aa8274789d28311dbe2b303366e47a6e6",
+        "source_before": "02ceb8fd5b832717b743bfb774c7b30aa8274789d28311dbe2b303366e47a6e6"
+      },
+      "after": {
+        "online_after": "477b5c553f1996d9ac8492cff2d810163469836495996f06be7bb27059dd19f4",
+        "target_after": "eeb865da18c7aeeddb66560e1364879666dad2539714ee3eaea403352a62318c",
+        "file_after": "02ceb8fd5b832717b743bfb774c7b30aa8274789d28311dbe2b303366e47a6e6",
+        "source_after": "02ceb8fd5b832717b743bfb774c7b30aa8274789d28311dbe2b303366e47a6e6"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 2,
+      "condition": "constrained_bootstrap",
+      "seed": 0,
+      "checkpoint": 30000,
+      "prediction_key": "bank2_constrained_bootstrap_seed0",
+      "snapshot": "models/bank2_constrained_bootstrap_seed0_update30000.pt",
+      "snapshot_sha256": "d5b8edff3a5d0777d788d0cdf927dd24d570c96e87c8633ae6e1f522fc9c85e9",
+      "predictions": {
+        "shape": [
+          59984,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "bc66f221a8466a90d52a9c7e69d514a6fd8556648dc19ef3fca6cfa931439ef1"
+      },
+      "states": 59984,
+      "observed_edges": 84091,
+      "state_mean_abs_error": 0.24729786777248078,
+      "state_mean_squared_error": 0.10415501523150313,
+      "edge_mean_abs_error": 0.2525088830900755,
+      "edge_max_abs_error": 1.082534252673877,
+      "restricted_action_agreement": 0.9750600160042678,
+      "mean_graph_regret": 0.009649331991900028,
+      "max_graph_regret": 1.1114553104856137,
+      "unrestricted_argmax_outside_logged_fraction": 0.6529074419845292,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59984,
+      "online_output_values": 239936,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "f9932ce2845d5c9fa583694fc4f82527118633446697c02b37bb6c2cf477bce7",
+        "target_before": "9ff2f1cd3c75abc7ce49d8583d86a8d8b41cb0c539d47014dc3e3063eca44b0d",
+        "file_before": "d5b8edff3a5d0777d788d0cdf927dd24d570c96e87c8633ae6e1f522fc9c85e9",
+        "source_before": "d5b8edff3a5d0777d788d0cdf927dd24d570c96e87c8633ae6e1f522fc9c85e9"
+      },
+      "after": {
+        "online_after": "f9932ce2845d5c9fa583694fc4f82527118633446697c02b37bb6c2cf477bce7",
+        "target_after": "9ff2f1cd3c75abc7ce49d8583d86a8d8b41cb0c539d47014dc3e3063eca44b0d",
+        "file_after": "d5b8edff3a5d0777d788d0cdf927dd24d570c96e87c8633ae6e1f522fc9c85e9",
+        "source_after": "d5b8edff3a5d0777d788d0cdf927dd24d570c96e87c8633ae6e1f522fc9c85e9"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 2,
+      "condition": "constrained_bootstrap",
+      "seed": 1,
+      "checkpoint": 30000,
+      "prediction_key": "bank2_constrained_bootstrap_seed1",
+      "snapshot": "models/bank2_constrained_bootstrap_seed1_update30000.pt",
+      "snapshot_sha256": "3cfded4af2adf78d7fb0d92f860d375c8a8c4b58147f085786d7022f6fa25667",
+      "predictions": {
+        "shape": [
+          59984,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "a45c557664ec567b0692875a18fd53a41589ab50bfea4fdecaa2584e872bf7cf"
+      },
+      "states": 59984,
+      "observed_edges": 84091,
+      "state_mean_abs_error": 0.24644701164199107,
+      "state_mean_squared_error": 0.1033597951595526,
+      "edge_mean_abs_error": 0.2509186547829247,
+      "edge_max_abs_error": 1.3140928638653564,
+      "restricted_action_agreement": 0.9757602027207255,
+      "mean_graph_regret": 0.009469034101811357,
+      "max_graph_regret": 1.1114553104856137,
+      "unrestricted_argmax_outside_logged_fraction": 0.6547746065617498,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59984,
+      "online_output_values": 239936,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "d2f30c27dc51c5bd390445e5b078b57cda4bd108dc5a0b9b0644560609ac0ba7",
+        "target_before": "63c01c100db25e1ce8620220f4b36fc4d5db6701c5cd291e168d431f2042293d",
+        "file_before": "3cfded4af2adf78d7fb0d92f860d375c8a8c4b58147f085786d7022f6fa25667",
+        "source_before": "3cfded4af2adf78d7fb0d92f860d375c8a8c4b58147f085786d7022f6fa25667"
+      },
+      "after": {
+        "online_after": "d2f30c27dc51c5bd390445e5b078b57cda4bd108dc5a0b9b0644560609ac0ba7",
+        "target_after": "63c01c100db25e1ce8620220f4b36fc4d5db6701c5cd291e168d431f2042293d",
+        "file_after": "3cfded4af2adf78d7fb0d92f860d375c8a8c4b58147f085786d7022f6fa25667",
+        "source_after": "3cfded4af2adf78d7fb0d92f860d375c8a8c4b58147f085786d7022f6fa25667"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 2,
+      "condition": "constrained_bootstrap",
+      "seed": 2,
+      "checkpoint": 30000,
+      "prediction_key": "bank2_constrained_bootstrap_seed2",
+      "snapshot": "models/bank2_constrained_bootstrap_seed2_update30000.pt",
+      "snapshot_sha256": "bbd4f1a872ee3d7b2fd4d03da1a57396d1c8187b74e34d4fe79d2af7c8905e00",
+      "predictions": {
+        "shape": [
+          59984,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "7898ad82fe13b590b448d1f6f11ca6de52b906377f082574b48922f98fd15cb4"
+      },
+      "states": 59984,
+      "observed_edges": 84091,
+      "state_mean_abs_error": 0.2471422491142307,
+      "state_mean_squared_error": 0.10239530771070643,
+      "edge_mean_abs_error": 0.25164574130421224,
+      "edge_max_abs_error": 1.1322787651300241,
+      "restricted_action_agreement": 0.974709922646039,
+      "mean_graph_regret": 0.009754493610526254,
+      "max_graph_regret": 1.1415682649437922,
+      "unrestricted_argmax_outside_logged_fraction": 0.6547912776740464,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59984,
+      "online_output_values": 239936,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "f3cdd935abe4aec8be31c9b29e021a97feb231a31f6ffd1149301e50e6c7a2e5",
+        "target_before": "bcca3a68cc6f4ac1af3c5a2514b8a8f45d9aa6bc12897cc60c9b9d5309a87b53",
+        "file_before": "bbd4f1a872ee3d7b2fd4d03da1a57396d1c8187b74e34d4fe79d2af7c8905e00",
+        "source_before": "bbd4f1a872ee3d7b2fd4d03da1a57396d1c8187b74e34d4fe79d2af7c8905e00"
+      },
+      "after": {
+        "online_after": "f3cdd935abe4aec8be31c9b29e021a97feb231a31f6ffd1149301e50e6c7a2e5",
+        "target_after": "bcca3a68cc6f4ac1af3c5a2514b8a8f45d9aa6bc12897cc60c9b9d5309a87b53",
+        "file_after": "bbd4f1a872ee3d7b2fd4d03da1a57396d1c8187b74e34d4fe79d2af7c8905e00",
+        "source_after": "bbd4f1a872ee3d7b2fd4d03da1a57396d1c8187b74e34d4fe79d2af7c8905e00"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 3,
+      "condition": "constrained_bootstrap",
+      "seed": 0,
+      "checkpoint": 30000,
+      "prediction_key": "bank3_constrained_bootstrap_seed0",
+      "snapshot": "models/bank3_constrained_bootstrap_seed0_update30000.pt",
+      "snapshot_sha256": "390281e74878bac71d4266eea27f5303369a143e6356ea569a683fc92e237169",
+      "predictions": {
+        "shape": [
+          59838,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "0bc3366a2a1dd09642ced25935c24d01cc6ac9e6a9fed5cbd350c370ece4c6c1"
+      },
+      "states": 59838,
+      "observed_edges": 83933,
+      "state_mean_abs_error": 0.24528054891828957,
+      "state_mean_squared_error": 0.100750588445671,
+      "edge_mean_abs_error": 0.24844536802504405,
+      "edge_max_abs_error": 1.1965964561951055,
+      "restricted_action_agreement": 0.9747317757946455,
+      "mean_graph_regret": 0.0101361617894848,
+      "max_graph_regret": 1.1181978618860056,
+      "unrestricted_argmax_outside_logged_fraction": 0.6514923627126575,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59838,
+      "online_output_values": 239352,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "aeda2247fbbf36e3e4be0018914a261face9cfbd4fc02b8e8605c7c3212af5ce",
+        "target_before": "fe9a4963153a01e1a8a607febfc971bedc8051f3ab356546d53025e99756297d",
+        "file_before": "390281e74878bac71d4266eea27f5303369a143e6356ea569a683fc92e237169",
+        "source_before": "390281e74878bac71d4266eea27f5303369a143e6356ea569a683fc92e237169"
+      },
+      "after": {
+        "online_after": "aeda2247fbbf36e3e4be0018914a261face9cfbd4fc02b8e8605c7c3212af5ce",
+        "target_after": "fe9a4963153a01e1a8a607febfc971bedc8051f3ab356546d53025e99756297d",
+        "file_after": "390281e74878bac71d4266eea27f5303369a143e6356ea569a683fc92e237169",
+        "source_after": "390281e74878bac71d4266eea27f5303369a143e6356ea569a683fc92e237169"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 3,
+      "condition": "constrained_bootstrap",
+      "seed": 1,
+      "checkpoint": 30000,
+      "prediction_key": "bank3_constrained_bootstrap_seed1",
+      "snapshot": "models/bank3_constrained_bootstrap_seed1_update30000.pt",
+      "snapshot_sha256": "5601700fb58e0fe90f5ef7912a54506a006175c9e3aeb74d6b86543f7f9e2149",
+      "predictions": {
+        "shape": [
+          59838,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "996a9757766f0b7f3bcdd9819a06540ffdfc10b38c9dd4b40125ca6d3e89a6bc"
+      },
+      "states": 59838,
+      "observed_edges": 83933,
+      "state_mean_abs_error": 0.24891458363689384,
+      "state_mean_squared_error": 0.10221837810263217,
+      "edge_mean_abs_error": 0.2526263269075059,
+      "edge_max_abs_error": 1.0694033897731303,
+      "restricted_action_agreement": 0.9754002473344697,
+      "mean_graph_regret": 0.009581484557554462,
+      "max_graph_regret": 1.1181978618860056,
+      "unrestricted_argmax_outside_logged_fraction": 0.6522109696179685,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59838,
+      "online_output_values": 239352,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "7be38556593c5df850500bed2130b234e0250d301a409f348a3d80c725666b2d",
+        "target_before": "ba871254ec93412d38e3b90fe601332faa47203cab4d2a71b6dd783a5b42f528",
+        "file_before": "5601700fb58e0fe90f5ef7912a54506a006175c9e3aeb74d6b86543f7f9e2149",
+        "source_before": "5601700fb58e0fe90f5ef7912a54506a006175c9e3aeb74d6b86543f7f9e2149"
+      },
+      "after": {
+        "online_after": "7be38556593c5df850500bed2130b234e0250d301a409f348a3d80c725666b2d",
+        "target_after": "ba871254ec93412d38e3b90fe601332faa47203cab4d2a71b6dd783a5b42f528",
+        "file_after": "5601700fb58e0fe90f5ef7912a54506a006175c9e3aeb74d6b86543f7f9e2149",
+        "source_after": "5601700fb58e0fe90f5ef7912a54506a006175c9e3aeb74d6b86543f7f9e2149"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 3,
+      "condition": "constrained_bootstrap",
+      "seed": 2,
+      "checkpoint": 30000,
+      "prediction_key": "bank3_constrained_bootstrap_seed2",
+      "snapshot": "models/bank3_constrained_bootstrap_seed2_update30000.pt",
+      "snapshot_sha256": "21267b1714a2127086e4242adf2ba95804e18f5e2cd379234afea9148eb7eb7b",
+      "predictions": {
+        "shape": [
+          59838,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "f4dba21238d9de59fc61d75f1dd308e1e439fba89638432fa4a8ae9a55b2ec2d"
+      },
+      "states": 59838,
+      "observed_edges": 83933,
+      "state_mean_abs_error": 0.24391242197947746,
+      "state_mean_squared_error": 0.10044849785979182,
+      "edge_mean_abs_error": 0.24731793632002363,
+      "edge_max_abs_error": 1.0344510210238111,
+      "restricted_action_agreement": 0.9753334001804873,
+      "mean_graph_regret": 0.009614708108477388,
+      "max_graph_regret": 1.1154653811710453,
+      "unrestricted_argmax_outside_logged_fraction": 0.6525786289648718,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59838,
+      "online_output_values": 239352,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "b11088e4c239cb6e8505c5664707a88667dd12acbb452797365066c633e30ba3",
+        "target_before": "9d085acc16d3ddb2520ddcc14a615d0028b2f89a12d21962c1a6212ca3753be0",
+        "file_before": "21267b1714a2127086e4242adf2ba95804e18f5e2cd379234afea9148eb7eb7b",
+        "source_before": "21267b1714a2127086e4242adf2ba95804e18f5e2cd379234afea9148eb7eb7b"
+      },
+      "after": {
+        "online_after": "b11088e4c239cb6e8505c5664707a88667dd12acbb452797365066c633e30ba3",
+        "target_after": "9d085acc16d3ddb2520ddcc14a615d0028b2f89a12d21962c1a6212ca3753be0",
+        "file_after": "21267b1714a2127086e4242adf2ba95804e18f5e2cd379234afea9148eb7eb7b",
+        "source_after": "21267b1714a2127086e4242adf2ba95804e18f5e2cd379234afea9148eb7eb7b"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 1,
+      "condition": "logged_graph",
+      "seed": 0,
+      "checkpoint": 30000,
+      "prediction_key": "bank1_logged_graph_seed0",
+      "snapshot": "models/bank1_logged_graph_seed0_update30000.pt",
+      "snapshot_sha256": "092f9c735a037fedacc82ff0b1246bc7d9efda8522c840e1ce92b66a444d3115",
+      "predictions": {
+        "shape": [
+          59839,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "57e89d17b4eabeae32e8f9911f2770f4a5181f05c8b7aef17727445174201e3b"
+      },
+      "states": 59839,
+      "observed_edges": 84305,
+      "state_mean_abs_error": 0.11551042346350289,
+      "state_mean_squared_error": 0.032256891819344186,
+      "edge_mean_abs_error": 0.11648358198076078,
+      "edge_max_abs_error": 1.2238418886010187,
+      "restricted_action_agreement": 0.9689333043667173,
+      "mean_graph_regret": 0.010142822214202906,
+      "max_graph_regret": 1.1279750982485426,
+      "unrestricted_argmax_outside_logged_fraction": 0.6495930747505807,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59839,
+      "online_output_values": 239356,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "90def6cd62a7046db39ac4228b752f1097237647ab093bbc74c9ffc53e55c9a2",
+        "target_before": "ba94af38266ca3edc1ff5bdaadb605c03e3c1f3b99d93a629af57950de058a7f",
+        "file_before": "092f9c735a037fedacc82ff0b1246bc7d9efda8522c840e1ce92b66a444d3115",
+        "source_before": "092f9c735a037fedacc82ff0b1246bc7d9efda8522c840e1ce92b66a444d3115"
+      },
+      "after": {
+        "online_after": "90def6cd62a7046db39ac4228b752f1097237647ab093bbc74c9ffc53e55c9a2",
+        "target_after": "ba94af38266ca3edc1ff5bdaadb605c03e3c1f3b99d93a629af57950de058a7f",
+        "file_after": "092f9c735a037fedacc82ff0b1246bc7d9efda8522c840e1ce92b66a444d3115",
+        "source_after": "092f9c735a037fedacc82ff0b1246bc7d9efda8522c840e1ce92b66a444d3115"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 1,
+      "condition": "logged_graph",
+      "seed": 1,
+      "checkpoint": 30000,
+      "prediction_key": "bank1_logged_graph_seed1",
+      "snapshot": "models/bank1_logged_graph_seed1_update30000.pt",
+      "snapshot_sha256": "38dc002b597dfa9fcfbf30e6d74d36b8540e7f8bef82cbbb27f95d87d23ec5bc",
+      "predictions": {
+        "shape": [
+          59839,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "cac91cf501c43ffd07a075e33881b158d1589c1746ac76adbeac0628ea59db3e"
+      },
+      "states": 59839,
+      "observed_edges": 84305,
+      "state_mean_abs_error": 0.11663047438898014,
+      "state_mean_squared_error": 0.03211024422834595,
+      "edge_mean_abs_error": 0.11702430261408404,
+      "edge_max_abs_error": 1.1758061166915894,
+      "restricted_action_agreement": 0.9690001504035829,
+      "mean_graph_regret": 0.009723565770414578,
+      "max_graph_regret": 1.1078064957870184,
+      "unrestricted_argmax_outside_logged_fraction": 0.649058306455656,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59839,
+      "online_output_values": 239356,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "00c1d4d6c0bd60326a339e7c5b5f941ff17fe8c8efe1f6ca9b2f9b63f263b6f8",
+        "target_before": "e1a67830275b3e970816f2e2a7aee95b200b96039ca471e19ddaaf5168c9665b",
+        "file_before": "38dc002b597dfa9fcfbf30e6d74d36b8540e7f8bef82cbbb27f95d87d23ec5bc",
+        "source_before": "38dc002b597dfa9fcfbf30e6d74d36b8540e7f8bef82cbbb27f95d87d23ec5bc"
+      },
+      "after": {
+        "online_after": "00c1d4d6c0bd60326a339e7c5b5f941ff17fe8c8efe1f6ca9b2f9b63f263b6f8",
+        "target_after": "e1a67830275b3e970816f2e2a7aee95b200b96039ca471e19ddaaf5168c9665b",
+        "file_after": "38dc002b597dfa9fcfbf30e6d74d36b8540e7f8bef82cbbb27f95d87d23ec5bc",
+        "source_after": "38dc002b597dfa9fcfbf30e6d74d36b8540e7f8bef82cbbb27f95d87d23ec5bc"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 1,
+      "condition": "logged_graph",
+      "seed": 2,
+      "checkpoint": 30000,
+      "prediction_key": "bank1_logged_graph_seed2",
+      "snapshot": "models/bank1_logged_graph_seed2_update30000.pt",
+      "snapshot_sha256": "bfea9b0e44654a8f18a30bfc8c9f6569501ad046c7ad79b1da1cb6ec3cd2a49c",
+      "predictions": {
+        "shape": [
+          59839,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "3c3777ec68ef95efd655f92feeee40edc02173184ff80b88ee593ac2fd340a93"
+      },
+      "states": 59839,
+      "observed_edges": 84305,
+      "state_mean_abs_error": 0.11136547961959682,
+      "state_mean_squared_error": 0.0305055793980364,
+      "edge_mean_abs_error": 0.1120610123551957,
+      "edge_max_abs_error": 1.1744832233110116,
+      "restricted_action_agreement": 0.9696853222814552,
+      "mean_graph_regret": 0.009629645491340313,
+      "max_graph_regret": 1.1231609260294253,
+      "unrestricted_argmax_outside_logged_fraction": 0.6509299954878925,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59839,
+      "online_output_values": 239356,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "6f7a7892ec0d45cfe9907b6a4db1cb4b872a737f763fe5f0a98cbd5efb960c71",
+        "target_before": "2d3e65b6157d0803609418fedd8c52fd72814f87e5eefee5a7558bd2835d6732",
+        "file_before": "bfea9b0e44654a8f18a30bfc8c9f6569501ad046c7ad79b1da1cb6ec3cd2a49c",
+        "source_before": "bfea9b0e44654a8f18a30bfc8c9f6569501ad046c7ad79b1da1cb6ec3cd2a49c"
+      },
+      "after": {
+        "online_after": "6f7a7892ec0d45cfe9907b6a4db1cb4b872a737f763fe5f0a98cbd5efb960c71",
+        "target_after": "2d3e65b6157d0803609418fedd8c52fd72814f87e5eefee5a7558bd2835d6732",
+        "file_after": "bfea9b0e44654a8f18a30bfc8c9f6569501ad046c7ad79b1da1cb6ec3cd2a49c",
+        "source_after": "bfea9b0e44654a8f18a30bfc8c9f6569501ad046c7ad79b1da1cb6ec3cd2a49c"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 2,
+      "condition": "logged_graph",
+      "seed": 0,
+      "checkpoint": 30000,
+      "prediction_key": "bank2_logged_graph_seed0",
+      "snapshot": "models/bank2_logged_graph_seed0_update30000.pt",
+      "snapshot_sha256": "ec5827beee01ea99aa325496c4d544c305e8183c180e0155c8ce0fff692ea265",
+      "predictions": {
+        "shape": [
+          59984,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "d79d19bc2c5621d725888a9751626c8a1cec6df6f2ae61be3c857aa77fd08eac"
+      },
+      "states": 59984,
+      "observed_edges": 84091,
+      "state_mean_abs_error": 0.117703716360098,
+      "state_mean_squared_error": 0.03218096025076577,
+      "edge_mean_abs_error": 0.11944326636268487,
+      "edge_max_abs_error": 1.228032627444811,
+      "restricted_action_agreement": 0.9712923446252334,
+      "mean_graph_regret": 0.009184632762274492,
+      "max_graph_regret": 1.1578978618860056,
+      "unrestricted_argmax_outside_logged_fraction": 0.6520072019205121,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59984,
+      "online_output_values": 239936,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "8ee7239dfba3016fff4c3195d0309a5f04857d477342ff82e1301c9a11831fcb",
+        "target_before": "a5b58e2f9cfb8d519fbc1166cdcc221042d3bd6dce60713898800d9ad252458f",
+        "file_before": "ec5827beee01ea99aa325496c4d544c305e8183c180e0155c8ce0fff692ea265",
+        "source_before": "ec5827beee01ea99aa325496c4d544c305e8183c180e0155c8ce0fff692ea265"
+      },
+      "after": {
+        "online_after": "8ee7239dfba3016fff4c3195d0309a5f04857d477342ff82e1301c9a11831fcb",
+        "target_after": "a5b58e2f9cfb8d519fbc1166cdcc221042d3bd6dce60713898800d9ad252458f",
+        "file_after": "ec5827beee01ea99aa325496c4d544c305e8183c180e0155c8ce0fff692ea265",
+        "source_after": "ec5827beee01ea99aa325496c4d544c305e8183c180e0155c8ce0fff692ea265"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 2,
+      "condition": "logged_graph",
+      "seed": 1,
+      "checkpoint": 30000,
+      "prediction_key": "bank2_logged_graph_seed1",
+      "snapshot": "models/bank2_logged_graph_seed1_update30000.pt",
+      "snapshot_sha256": "969ae94b96428503dd04e512a9042f20785edd16b8b21d18a6675dab4572a0c3",
+      "predictions": {
+        "shape": [
+          59984,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "ad30c1c7f3af2ae93daffdb7b8a9e0f93c3d94b0a717e674877e4c0f2d58d718"
+      },
+      "states": 59984,
+      "observed_edges": 84091,
+      "state_mean_abs_error": 0.11361984013636882,
+      "state_mean_squared_error": 0.030398935304632387,
+      "edge_mean_abs_error": 0.11535331233269885,
+      "edge_max_abs_error": 1.2010170023753113,
+      "restricted_action_agreement": 0.9718091491064283,
+      "mean_graph_regret": 0.00909813108825789,
+      "max_graph_regret": 1.1539743811710454,
+      "unrestricted_argmax_outside_logged_fraction": 0.6499566551080288,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59984,
+      "online_output_values": 239936,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "3c001d1d360c53574600d2440205699cbfa9ca9bb4797a58180561d30d27c290",
+        "target_before": "ac777c7aae679e8c0d622b1db0b3502214e7006e983dd7f21c2e296187f3015f",
+        "file_before": "969ae94b96428503dd04e512a9042f20785edd16b8b21d18a6675dab4572a0c3",
+        "source_before": "969ae94b96428503dd04e512a9042f20785edd16b8b21d18a6675dab4572a0c3"
+      },
+      "after": {
+        "online_after": "3c001d1d360c53574600d2440205699cbfa9ca9bb4797a58180561d30d27c290",
+        "target_after": "ac777c7aae679e8c0d622b1db0b3502214e7006e983dd7f21c2e296187f3015f",
+        "file_after": "969ae94b96428503dd04e512a9042f20785edd16b8b21d18a6675dab4572a0c3",
+        "source_after": "969ae94b96428503dd04e512a9042f20785edd16b8b21d18a6675dab4572a0c3"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 2,
+      "condition": "logged_graph",
+      "seed": 2,
+      "checkpoint": 30000,
+      "prediction_key": "bank2_logged_graph_seed2",
+      "snapshot": "models/bank2_logged_graph_seed2_update30000.pt",
+      "snapshot_sha256": "d06aa05393cb26e1c004df31059d240e4a4358ba880283b095de9139b4cdb53e",
+      "predictions": {
+        "shape": [
+          59984,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "6cbf67334f0371f82ae05263b416d286a9c1f7daa0e0dba4c22f4b837616ff21"
+      },
+      "states": 59984,
+      "observed_edges": 84091,
+      "state_mean_abs_error": 0.11202995681331589,
+      "state_mean_squared_error": 0.030735536893947084,
+      "edge_mean_abs_error": 0.11350861094683454,
+      "edge_max_abs_error": 1.250496654685587,
+      "restricted_action_agreement": 0.9710256068284876,
+      "mean_graph_regret": 0.009583647702915709,
+      "max_graph_regret": 1.1527813009134078,
+      "unrestricted_argmax_outside_logged_fraction": 0.650506801813817,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59984,
+      "online_output_values": 239936,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "96c52570bbe4e2fb4fc8cbdf1b428a1c72b5825b30ea4b1e89f79b74c75fc288",
+        "target_before": "91051519ea43cbfc0d6f877ac3762d73d63eb9ad75c822822659622a69bd9950",
+        "file_before": "d06aa05393cb26e1c004df31059d240e4a4358ba880283b095de9139b4cdb53e",
+        "source_before": "d06aa05393cb26e1c004df31059d240e4a4358ba880283b095de9139b4cdb53e"
+      },
+      "after": {
+        "online_after": "96c52570bbe4e2fb4fc8cbdf1b428a1c72b5825b30ea4b1e89f79b74c75fc288",
+        "target_after": "91051519ea43cbfc0d6f877ac3762d73d63eb9ad75c822822659622a69bd9950",
+        "file_after": "d06aa05393cb26e1c004df31059d240e4a4358ba880283b095de9139b4cdb53e",
+        "source_after": "d06aa05393cb26e1c004df31059d240e4a4358ba880283b095de9139b4cdb53e"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 3,
+      "condition": "logged_graph",
+      "seed": 0,
+      "checkpoint": 30000,
+      "prediction_key": "bank3_logged_graph_seed0",
+      "snapshot": "models/bank3_logged_graph_seed0_update30000.pt",
+      "snapshot_sha256": "6a75e87a9bf9953824e14f7455b72383ccccab55edcd4834b36e89082c81932f",
+      "predictions": {
+        "shape": [
+          59838,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "9122a2496c0e67accfd07326906529ea5f4b590f4195c96eceb758f27faa83f2"
+      },
+      "states": 59838,
+      "observed_edges": 83933,
+      "state_mean_abs_error": 0.11249636632033667,
+      "state_mean_squared_error": 0.030619748770942184,
+      "edge_mean_abs_error": 0.11429929217085874,
+      "edge_max_abs_error": 1.1658106693506052,
+      "restricted_action_agreement": 0.9705538286707444,
+      "mean_graph_regret": 0.009628013798834097,
+      "max_graph_regret": 1.1628609260294254,
+      "unrestricted_argmax_outside_logged_fraction": 0.6517764631170828,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59838,
+      "online_output_values": 239352,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "36f74da0fbd27a17ba1b9393b31d10fa47958010f80f4899c1579235a3f096d9",
+        "target_before": "89ab97c91bd01d9d9ec57d22139037eaa735de078960e0cc2807e26ceb62085a",
+        "file_before": "6a75e87a9bf9953824e14f7455b72383ccccab55edcd4834b36e89082c81932f",
+        "source_before": "6a75e87a9bf9953824e14f7455b72383ccccab55edcd4834b36e89082c81932f"
+      },
+      "after": {
+        "online_after": "36f74da0fbd27a17ba1b9393b31d10fa47958010f80f4899c1579235a3f096d9",
+        "target_after": "89ab97c91bd01d9d9ec57d22139037eaa735de078960e0cc2807e26ceb62085a",
+        "file_after": "6a75e87a9bf9953824e14f7455b72383ccccab55edcd4834b36e89082c81932f",
+        "source_after": "6a75e87a9bf9953824e14f7455b72383ccccab55edcd4834b36e89082c81932f"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 3,
+      "condition": "logged_graph",
+      "seed": 1,
+      "checkpoint": 30000,
+      "prediction_key": "bank3_logged_graph_seed1",
+      "snapshot": "models/bank3_logged_graph_seed1_update30000.pt",
+      "snapshot_sha256": "7bd5f76ad586015e4e62f23f45386fc4180913c2bd1fe899494b15019d12a068",
+      "predictions": {
+        "shape": [
+          59838,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "dbf8b9e43d20e56e5ed3b7c4c0b123678c0c95ab86d3621a94fab51fd0602a54"
+      },
+      "states": 59838,
+      "observed_edges": 83933,
+      "state_mean_abs_error": 0.11075523780853028,
+      "state_mean_squared_error": 0.02929322075909245,
+      "edge_mean_abs_error": 0.11270024847862779,
+      "edge_max_abs_error": 1.0788661529384556,
+      "restricted_action_agreement": 0.9716568067114543,
+      "mean_graph_regret": 0.009205836887453087,
+      "max_graph_regret": 1.1279750982485426,
+      "unrestricted_argmax_outside_logged_fraction": 0.649654065978141,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59838,
+      "online_output_values": 239352,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "39e40ac109e61a4b26acbe97c5a803d8e34a440ccd0b280f10db31a4572e7c48",
+        "target_before": "9a12a047271dd2df2fc125e4f23548837661390490c4bd1e97fec72c742c2915",
+        "file_before": "7bd5f76ad586015e4e62f23f45386fc4180913c2bd1fe899494b15019d12a068",
+        "source_before": "7bd5f76ad586015e4e62f23f45386fc4180913c2bd1fe899494b15019d12a068"
+      },
+      "after": {
+        "online_after": "39e40ac109e61a4b26acbe97c5a803d8e34a440ccd0b280f10db31a4572e7c48",
+        "target_after": "9a12a047271dd2df2fc125e4f23548837661390490c4bd1e97fec72c742c2915",
+        "file_after": "7bd5f76ad586015e4e62f23f45386fc4180913c2bd1fe899494b15019d12a068",
+        "source_after": "7bd5f76ad586015e4e62f23f45386fc4180913c2bd1fe899494b15019d12a068"
+      },
+      "parameters_sources_rng_unchanged": true
+    },
+    {
+      "bank_id": 3,
+      "condition": "logged_graph",
+      "seed": 2,
+      "checkpoint": 30000,
+      "prediction_key": "bank3_logged_graph_seed2",
+      "snapshot": "models/bank3_logged_graph_seed2_update30000.pt",
+      "snapshot_sha256": "10ca7239217e2d28444ad22ca1e412df7340bcba3485f8c468f6b67fc6e55d74",
+      "predictions": {
+        "shape": [
+          59838,
+          4
+        ],
+        "dtype": "float32",
+        "sha256": "b5dda20653e1498e9a28feaea50e0425b2279ec3e5671bef104a4141a145072b"
+      },
+      "states": 59838,
+      "observed_edges": 83933,
+      "state_mean_abs_error": 0.11080826865014258,
+      "state_mean_squared_error": 0.029975615632347186,
+      "edge_mean_abs_error": 0.1126635543094187,
+      "edge_max_abs_error": 1.205945586033882,
+      "restricted_action_agreement": 0.9704535579397707,
+      "mean_graph_regret": 0.009709789815730048,
+      "max_graph_regret": 1.1279750982485426,
+      "unrestricted_argmax_outside_logged_fraction": 0.6503392493064608,
+      "restricted_ranking_atol": 1e-06,
+      "restricted_ranking_rtol": 0,
+      "inference_state_rows": 59838,
+      "online_output_values": 239352,
+      "target_network_queries": 0,
+      "before": {
+        "online_before": "98eff1debd32cc151f713bd8f337dbc5ef1629a28699ec15d8e3ecb0604fd75d",
+        "target_before": "1b2642c175c9117a8f63e533d3bac7a388affb5691df1bd0cde90ff916ba3aa6",
+        "file_before": "10ca7239217e2d28444ad22ca1e412df7340bcba3485f8c468f6b67fc6e55d74",
+        "source_before": "10ca7239217e2d28444ad22ca1e412df7340bcba3485f8c468f6b67fc6e55d74"
+      },
+      "after": {
+        "online_after": "98eff1debd32cc151f713bd8f337dbc5ef1629a28699ec15d8e3ecb0604fd75d",
+        "target_after": "1b2642c175c9117a8f63e533d3bac7a388affb5691df1bd0cde90ff916ba3aa6",
+        "file_after": "10ca7239217e2d28444ad22ca1e412df7340bcba3485f8c468f6b67fc6e55d74",
+        "source_after": "10ca7239217e2d28444ad22ca1e412df7340bcba3485f8c468f6b67fc6e55d74"
+      },
+      "parameters_sources_rng_unchanged": true
+    }
+  ],
+  "pooled": [
+    {
+      "condition": "constrained_bootstrap",
+      "models": 9,
+      "states": 538983,
+      "observed_edges": 756987,
+      "state_mean_abs_error": 0.2472859034455147,
+      "state_mean_squared_error": 0.1028073903219718,
+      "restricted_action_agreement": 0.975108676897045,
+      "mean_graph_regret": 0.009656808208252442,
+      "unrestricted_argmax_outside_logged_fraction": 0.6516476400925446,
+      "edge_mean_abs_error": 0.2510107866993222,
+      "edge_max_abs_error": 1.3140928638653564,
+      "max_graph_regret": 1.1415682649437922
+    },
+    {
+      "condition": "logged_graph",
+      "models": 9,
+      "states": 538983,
+      "observed_edges": 756987,
+      "state_mean_abs_error": 0.11343636057403697,
+      "state_mean_squared_error": 0.030897587639211178,
+      "restricted_action_agreement": 0.9704907204865459,
+      "mean_graph_regret": 0.009544913917785117,
+      "unrestricted_argmax_outside_logged_fraction": 0.6504249670212233,
+      "edge_mean_abs_error": 0.11483877544629266,
+      "edge_max_abs_error": 1.250496654685587,
+      "max_graph_regret": 1.1628609260294254
+    }
+  ],
+  "pooling": "state-presentation weighted state metrics; edge-presentation weighted edge MAE; maxima across models",
+  "inference_state_rows": 1077966,
+  "online_forward_batches": 1062,
+  "completed_prediction_state_rows": 1077966,
+  "observed_edge_comparisons": 1513974,
+  "online_output_values": 4311864,
+  "neural_successor_queries": 0,
+  "wall_seconds": 4.338810000102967,
+  "sampled_process_peak_rss_bytes": 583172096,
+  "integrity": {
+    "expected_models": 18,
+    "actual_models": 18,
+    "complete": true
+  }
+}

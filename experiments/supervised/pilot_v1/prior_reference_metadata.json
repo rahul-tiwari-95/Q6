@@ -1,0 +1,74 @@
+{
+  "input": "experiments/competence/pilot_v1/task_exposure.json",
+  "input_sha256": "318689dd4c031d63eabeada6daa7232381ee4000d2852e2c7137f179dc2ab1d8",
+  "source_protocol": "experiments/competence/pilot_v1/protocol.json",
+  "source_protocol_sha256": "78d6e4d7c4c4e3c55d3ebbba5be42945e8b94e6af46bb86d77a046f19cd62f6f",
+  "historical_source_sha256": {
+    "q6/__init__.py": "54f1cd94584f782985a0a69c7e12717905008a959b1604b49874894003b8737f",
+    "q6/adaptation.py": "a2a9e4b189b72872ff0e4c8f522fb829f721ef369088fd4469d9236ec2194916",
+    "q6/competence.py": "c7453f66f8f92027e4c0285af1329397e63239a8dfa5ad07a598e067674766fd",
+    "q6/diagnostics.py": "229f604a62c1f899fc7e07740430c6fcd1dbd5bfddac93b76faa6b4f62214e79",
+    "q6/learning.py": "ef1272d170b4eaa6b2efa731f851e58bf39bdd19af8e4d16dbe575cae1991a9c",
+    "q6/optimal.py": "01e9fb1909953f872aa32beff9aa2f88c5cba1a188d34e84be1901d7f9ce60a7",
+    "q6/world.py": "478cf48343af888ddd6087ea7bc1ac6f311abb10327ac11937b799b685f8156f"
+  },
+  "historical_source_directory": "experiments/competence/pilot_v1/source",
+  "panel_unchanged_by_overlap": true,
+  "unique_task_ids_regenerated": 17222,
+  "seeds": [
+    {
+      "seed": 0,
+      "training_task_ids": 5904,
+      "unique_training_layouts": 5832,
+      "fresh_layout_overlap": [
+        "30d7a8fe6a17fb21aa9cb56c9d2fffe4fa4848a3b81546dfbe8a66301c4a9656",
+        "df3a15e95f7a614e59f27620fca7c9deedc881842124f3c8f4aaefc5fa9a3fbf",
+        "fbd562d48cc03cb54da8e63aa1e5d54e221b5a87fd4c3398cfa286c06fd6b5fb"
+      ],
+      "fresh_layout_overlap_count": 3
+    },
+    {
+      "seed": 1,
+      "training_task_ids": 5870,
+      "unique_training_layouts": 5785,
+      "fresh_layout_overlap": [
+        "6ca26b634a5a7e857e33511adf2fa72e9fdda98000bf430866913a2b4e346490",
+        "c3b0c287a7355c1dbda73e6c9334c96e4017c2468271f0555a34091ec31a8ad3",
+        "cfc719db01b85187baefcfc91c63ef2855168a3a00553af172e2497cf80a1ee0"
+      ],
+      "fresh_layout_overlap_count": 3
+    },
+    {
+      "seed": 2,
+      "training_task_ids": 5599,
+      "unique_training_layouts": 5535,
+      "fresh_layout_overlap": [
+        "02319bc6324707628ec1662c95d5cc3294b01e697abe9a16a28432d5c18ef928",
+        "239afb2ac576d9dcff75e1ffeca9bab963e1aaf9c153856e9560787a225e8fa3",
+        "7eeb72ea0a4e491d8dd367ff604da0853b33ef65b0d186b70059617c797922f7",
+        "f4f66d8b899a0e7c8439843a179bf9eab284e45f12e0eea1949eff6a739f670c"
+      ],
+      "fresh_layout_overlap_count": 4
+    }
+  ],
+  "models": {
+    "0": {
+      "source": "experiments/competence/pilot_v1/models/stream_seed0_step120000.pt",
+      "source_training_steps": 120000,
+      "sha256": "d08138af9f0fa00dad553ec8544e514d30ff5da63ae659ef19dc7d4a033fccab",
+      "saved": "models/prior_stream_seed0.pt"
+    },
+    "1": {
+      "source": "experiments/competence/pilot_v1/models/stream_seed1_step120000.pt",
+      "source_training_steps": 120000,
+      "sha256": "515e203a1fa01583f21d05550901067e36c163077c5484bc816f8d4a5fd63463",
+      "saved": "models/prior_stream_seed1.pt"
+    },
+    "2": {
+      "source": "experiments/competence/pilot_v1/models/stream_seed2_step120000.pt",
+      "source_training_steps": 120000,
+      "sha256": "df59a2c13b4fbc83cfcdc2a52cb71927617c316845f3aa8c1739479a02319ac3",
+      "saved": "models/prior_stream_seed2.pt"
+    }
+  }
+}

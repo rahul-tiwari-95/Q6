@@ -1,5 +1,2 @@
-torch>=2.0
-numpy>=1.24
-gymnasium>=0.29
-matplotlib>=3.7
-pytest>=7.0
+# Compatibility installer; runtime dependency bounds live in pyproject.toml.
+.

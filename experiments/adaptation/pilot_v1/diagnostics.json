@@ -1,0 +1,2951 @@
+{
+  "schema_version": 1,
+  "status": "posthoc_diagnostic_not_predeclared_outcome",
+  "study_id": "pilot_v1",
+  "protocol_id": "adaptation-v1",
+  "notes": [
+    "No training or model changes were performed.",
+    "Shortest path uses only visible walls, pellets, agent position and action mapping.",
+    "The planner still acts one step at a time under the same horizon and collision rules.",
+    "Random actions use independent per-map RNG and three seeds by default.",
+    "Training-tail and held-out success differ in both map samples and exploration; they do not isolate generalization."
+  ],
+  "aggregate": [
+    {
+      "condition": "shortest_path",
+      "world": "A",
+      "episodes": 16,
+      "success_rate": 1.0,
+      "mean_return": 0.965625,
+      "mean_shaped_return": 1.109575,
+      "mean_steps": 3.4375
+    },
+    {
+      "condition": "shortest_path",
+      "world": "B",
+      "episodes": 16,
+      "success_rate": 1.0,
+      "mean_return": 0.965625,
+      "mean_shaped_return": 1.109575,
+      "mean_steps": 3.4375
+    },
+    {
+      "condition": "random_actions",
+      "world": "A",
+      "episodes": 48,
+      "success_rate": 0.4791666666666667,
+      "mean_return": 0.24562499999999995,
+      "mean_shaped_return": 0.4925000000000001,
+      "mean_steps": 23.354166666666668
+    },
+    {
+      "condition": "random_actions",
+      "world": "B",
+      "episodes": 48,
+      "success_rate": 0.3958333333333333,
+      "mean_return": 0.15729166666666655,
+      "mean_shaped_return": 0.4001916666666668,
+      "mean_steps": 23.854166666666668
+    }
+  ],
+  "training_tail": [
+    {
+      "seed": 0,
+      "phase": "A",
+      "completed_episodes": 100,
+      "success_rate": 0.34
+    },
+    {
+      "seed": 0,
+      "phase": "B",
+      "completed_episodes": 100,
+      "success_rate": 0.23
+    },
+    {
+      "seed": 0,
+      "phase": "A_return",
+      "completed_episodes": 100,
+      "success_rate": 0.39
+    },
+    {
+      "seed": 1,
+      "phase": "A",
+      "completed_episodes": 100,
+      "success_rate": 0.41
+    },
+    {
+      "seed": 1,
+      "phase": "B",
+      "completed_episodes": 100,
+      "success_rate": 0.28
+    },
+    {
+      "seed": 1,
+      "phase": "A_return",
+      "completed_episodes": 100,
+      "success_rate": 0.27
+    },
+    {
+      "seed": 2,
+      "phase": "A",
+      "completed_episodes": 100,
+      "success_rate": 0.46
+    },
+    {
+      "seed": 2,
+      "phase": "B",
+      "completed_episodes": 100,
+      "success_rate": 0.21
+    },
+    {
+      "seed": 2,
+      "phase": "A_return",
+      "completed_episodes": 100,
+      "success_rate": 0.26
+    }
+  ],
+  "episodes": [
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900000,
+      "success": 1,
+      "steps": 5,
+      "base_return": 0.95,
+      "shaped_return": 1.162,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900001,
+      "success": 1,
+      "steps": 3,
+      "base_return": 0.97,
+      "shaped_return": 1.0936,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900002,
+      "success": 1,
+      "steps": 3,
+      "base_return": 0.97,
+      "shaped_return": 1.0936,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900003,
+      "success": 1,
+      "steps": 5,
+      "base_return": 0.95,
+      "shaped_return": 1.162,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900004,
+      "success": 1,
+      "steps": 1,
+      "base_return": 0.99,
+      "shaped_return": 1.03,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900005,
+      "success": 1,
+      "steps": 2,
+      "base_return": 0.98,
+      "shaped_return": 1.0612,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900006,
+      "success": 1,
+      "steps": 2,
+      "base_return": 0.98,
+      "shaped_return": 1.0612,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900007,
+      "success": 1,
+      "steps": 3,
+      "base_return": 0.97,
+      "shaped_return": 1.0936,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900008,
+      "success": 1,
+      "steps": 5,
+      "base_return": 0.95,
+      "shaped_return": 1.162,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900009,
+      "success": 1,
+      "steps": 5,
+      "base_return": 0.95,
+      "shaped_return": 1.162,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900010,
+      "success": 1,
+      "steps": 4,
+      "base_return": 0.96,
+      "shaped_return": 1.1272,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900011,
+      "success": 1,
+      "steps": 1,
+      "base_return": 0.99,
+      "shaped_return": 1.03,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900012,
+      "success": 1,
+      "steps": 3,
+      "base_return": 0.97,
+      "shaped_return": 1.0936,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900013,
+      "success": 1,
+      "steps": 6,
+      "base_return": 0.94,
+      "shaped_return": 1.198,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900014,
+      "success": 1,
+      "steps": 2,
+      "base_return": 0.98,
+      "shaped_return": 1.0612,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900015,
+      "success": 1,
+      "steps": 5,
+      "base_return": 0.95,
+      "shaped_return": 1.162,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900000,
+      "success": 1,
+      "steps": 25,
+      "base_return": 0.7499999999999999,
+      "shaped_return": 1.0388000000000002,
+      "parameter_hash": "random-actions-seed-0-map-900000"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900001,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.026800000000000268,
+      "parameter_hash": "random-actions-seed-0-map-900001"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900002,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.06559999999999983,
+      "parameter_hash": "random-actions-seed-0-map-900002"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900003,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.04680000000000015,
+      "parameter_hash": "random-actions-seed-0-map-900003"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900004,
+      "success": 1,
+      "steps": 4,
+      "base_return": 0.96,
+      "shaped_return": 1.0036,
+      "parameter_hash": "random-actions-seed-0-map-900004"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900005,
+      "success": 1,
+      "steps": 7,
+      "base_return": 0.9299999999999999,
+      "shaped_return": 1.0172,
+      "parameter_hash": "random-actions-seed-0-map-900005"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900006,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.1403999999999999,
+      "parameter_hash": "random-actions-seed-0-map-900006"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900007,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.1303999999999999,
+      "parameter_hash": "random-actions-seed-0-map-900007"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900008,
+      "success": 1,
+      "steps": 6,
+      "base_return": 0.94,
+      "shaped_return": 1.1532,
+      "parameter_hash": "random-actions-seed-0-map-900008"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900009,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.04560000000000011,
+      "parameter_hash": "random-actions-seed-0-map-900009"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900010,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.024399999999999922,
+      "parameter_hash": "random-actions-seed-0-map-900010"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900011,
+      "success": 1,
+      "steps": 21,
+      "base_return": 0.7899999999999999,
+      "shaped_return": 0.9068000000000002,
+      "parameter_hash": "random-actions-seed-0-map-900011"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900012,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.04159999999999983,
+      "parameter_hash": "random-actions-seed-0-map-900012"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900013,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.10600000000000012,
+      "parameter_hash": "random-actions-seed-0-map-900013"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900014,
+      "success": 1,
+      "steps": 26,
+      "base_return": 0.74,
+      "shaped_return": 0.9004000000000001,
+      "parameter_hash": "random-actions-seed-0-map-900014"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900015,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.1824000000000003,
+      "parameter_hash": "random-actions-seed-0-map-900015"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900000,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.033600000000000074,
+      "parameter_hash": "random-actions-seed-1-map-900000"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900001,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.05359999999999987,
+      "parameter_hash": "random-actions-seed-1-map-900001"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900002,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.04999999999999988,
+      "parameter_hash": "random-actions-seed-1-map-900002"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900003,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.02040000000000012,
+      "parameter_hash": "random-actions-seed-1-map-900003"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900004,
+      "success": 1,
+      "steps": 6,
+      "base_return": 0.94,
+      "shaped_return": 0.9884000000000001,
+      "parameter_hash": "random-actions-seed-1-map-900004"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900005,
+      "success": 1,
+      "steps": 6,
+      "base_return": 0.94,
+      "shaped_return": 1.0308,
+      "parameter_hash": "random-actions-seed-1-map-900005"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900006,
+      "success": 1,
+      "steps": 19,
+      "base_return": 0.8099999999999999,
+      "shaped_return": 0.9332,
+      "parameter_hash": "random-actions-seed-1-map-900006"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900007,
+      "success": 1,
+      "steps": 11,
+      "base_return": 0.89,
+      "shaped_return": 1.0328,
+      "parameter_hash": "random-actions-seed-1-map-900007"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900008,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.14160000000000028,
+      "parameter_hash": "random-actions-seed-1-map-900008"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900009,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.09600000000000017,
+      "parameter_hash": "random-actions-seed-1-map-900009"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900010,
+      "success": 1,
+      "steps": 8,
+      "base_return": 0.9199999999999999,
+      "shaped_return": 1.1016000000000001,
+      "parameter_hash": "random-actions-seed-1-map-900010"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900011,
+      "success": 1,
+      "steps": 1,
+      "base_return": 0.99,
+      "shaped_return": 1.03,
+      "parameter_hash": "random-actions-seed-1-map-900011"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900012,
+      "success": 1,
+      "steps": 29,
+      "base_return": 0.71,
+      "shaped_return": 0.9524000000000002,
+      "parameter_hash": "random-actions-seed-1-map-900012"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900013,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.11080000000000015,
+      "parameter_hash": "random-actions-seed-1-map-900013"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900014,
+      "success": 1,
+      "steps": 22,
+      "base_return": 0.7799999999999999,
+      "shaped_return": 0.9259999999999999,
+      "parameter_hash": "random-actions-seed-1-map-900014"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900015,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.13080000000000025,
+      "parameter_hash": "random-actions-seed-1-map-900015"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900000,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.03840000000000013,
+      "parameter_hash": "random-actions-seed-2-map-900000"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900001,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.052399999999999836,
+      "parameter_hash": "random-actions-seed-2-map-900001"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900002,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.08479999999999993,
+      "parameter_hash": "random-actions-seed-2-map-900002"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900003,
+      "success": 1,
+      "steps": 17,
+      "base_return": 0.83,
+      "shaped_return": 1.0972000000000002,
+      "parameter_hash": "random-actions-seed-2-map-900003"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900004,
+      "success": 1,
+      "steps": 3,
+      "base_return": 0.97,
+      "shaped_return": 1.0124,
+      "parameter_hash": "random-actions-seed-2-map-900004"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900005,
+      "success": 1,
+      "steps": 2,
+      "base_return": 0.98,
+      "shaped_return": 1.0612,
+      "parameter_hash": "random-actions-seed-2-map-900005"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900006,
+      "success": 1,
+      "steps": 29,
+      "base_return": 0.71,
+      "shaped_return": 0.8860000000000001,
+      "parameter_hash": "random-actions-seed-2-map-900006"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900007,
+      "success": 1,
+      "steps": 14,
+      "base_return": 0.86,
+      "shaped_return": 1.028,
+      "parameter_hash": "random-actions-seed-2-map-900007"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900008,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.08520000000000015,
+      "parameter_hash": "random-actions-seed-2-map-900008"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900009,
+      "success": 1,
+      "steps": 26,
+      "base_return": 0.74,
+      "shaped_return": 1.0264000000000002,
+      "parameter_hash": "random-actions-seed-2-map-900009"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900010,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.0051999999999998575,
+      "parameter_hash": "random-actions-seed-2-map-900010"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900011,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.14559999999999973,
+      "parameter_hash": "random-actions-seed-2-map-900011"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900012,
+      "success": 1,
+      "steps": 13,
+      "base_return": 0.87,
+      "shaped_return": 1.0284,
+      "parameter_hash": "random-actions-seed-2-map-900012"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900013,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.10720000000000014,
+      "parameter_hash": "random-actions-seed-2-map-900013"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900014,
+      "success": 1,
+      "steps": 15,
+      "base_return": 0.85,
+      "shaped_return": 0.9840000000000001,
+      "parameter_hash": "random-actions-seed-2-map-900014"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900015,
+      "success": 1,
+      "steps": 11,
+      "base_return": 0.89,
+      "shaped_return": 1.1236000000000002,
+      "parameter_hash": "random-actions-seed-2-map-900015"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900000,
+      "success": 1,
+      "steps": 5,
+      "base_return": 0.95,
+      "shaped_return": 1.162,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900001,
+      "success": 1,
+      "steps": 3,
+      "base_return": 0.97,
+      "shaped_return": 1.0936,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900002,
+      "success": 1,
+      "steps": 3,
+      "base_return": 0.97,
+      "shaped_return": 1.0936,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900003,
+      "success": 1,
+      "steps": 5,
+      "base_return": 0.95,
+      "shaped_return": 1.162,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900004,
+      "success": 1,
+      "steps": 1,
+      "base_return": 0.99,
+      "shaped_return": 1.03,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900005,
+      "success": 1,
+      "steps": 2,
+      "base_return": 0.98,
+      "shaped_return": 1.0612,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900006,
+      "success": 1,
+      "steps": 2,
+      "base_return": 0.98,
+      "shaped_return": 1.0612,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900007,
+      "success": 1,
+      "steps": 3,
+      "base_return": 0.97,
+      "shaped_return": 1.0936,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900008,
+      "success": 1,
+      "steps": 5,
+      "base_return": 0.95,
+      "shaped_return": 1.162,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900009,
+      "success": 1,
+      "steps": 5,
+      "base_return": 0.95,
+      "shaped_return": 1.162,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900010,
+      "success": 1,
+      "steps": 4,
+      "base_return": 0.96,
+      "shaped_return": 1.1272,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900011,
+      "success": 1,
+      "steps": 1,
+      "base_return": 0.99,
+      "shaped_return": 1.03,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900012,
+      "success": 1,
+      "steps": 3,
+      "base_return": 0.97,
+      "shaped_return": 1.0936,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900013,
+      "success": 1,
+      "steps": 6,
+      "base_return": 0.94,
+      "shaped_return": 1.198,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900014,
+      "success": 1,
+      "steps": 2,
+      "base_return": 0.98,
+      "shaped_return": 1.0612,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900015,
+      "success": 1,
+      "steps": 5,
+      "base_return": 0.95,
+      "shaped_return": 1.162,
+      "parameter_hash": "shortest-path-visible-observation-size-5"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900000,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.03120000000000009,
+      "parameter_hash": "random-actions-seed-0-map-900000"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900001,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.029599999999999904,
+      "parameter_hash": "random-actions-seed-0-map-900001"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900002,
+      "success": 1,
+      "steps": 3,
+      "base_return": 0.97,
+      "shaped_return": 1.0936,
+      "parameter_hash": "random-actions-seed-0-map-900002"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900003,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 8.326672684688674e-17,
+      "parameter_hash": "random-actions-seed-0-map-900003"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900004,
+      "success": 1,
+      "steps": 3,
+      "base_return": 0.97,
+      "shaped_return": 1.0124,
+      "parameter_hash": "random-actions-seed-0-map-900004"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900005,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.1271999999999999,
+      "parameter_hash": "random-actions-seed-0-map-900005"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900006,
+      "success": 1,
+      "steps": 2,
+      "base_return": 0.98,
+      "shaped_return": 1.0612,
+      "parameter_hash": "random-actions-seed-0-map-900006"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900007,
+      "success": 1,
+      "steps": 19,
+      "base_return": 0.8099999999999999,
+      "shaped_return": 0.9948000000000001,
+      "parameter_hash": "random-actions-seed-0-map-900007"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900008,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.12000000000000022,
+      "parameter_hash": "random-actions-seed-0-map-900008"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900009,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.02520000000000011,
+      "parameter_hash": "random-actions-seed-0-map-900009"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900010,
+      "success": 1,
+      "steps": 4,
+      "base_return": 0.96,
+      "shaped_return": 1.1272,
+      "parameter_hash": "random-actions-seed-0-map-900010"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900011,
+      "success": 1,
+      "steps": 1,
+      "base_return": 0.99,
+      "shaped_return": 1.03,
+      "parameter_hash": "random-actions-seed-0-map-900011"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900012,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.04639999999999986,
+      "parameter_hash": "random-actions-seed-0-map-900012"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900013,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.08560000000000012,
+      "parameter_hash": "random-actions-seed-0-map-900013"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900014,
+      "success": 1,
+      "steps": 27,
+      "base_return": 0.73,
+      "shaped_return": 0.9168000000000002,
+      "parameter_hash": "random-actions-seed-0-map-900014"
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900015,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.06960000000000025,
+      "parameter_hash": "random-actions-seed-0-map-900015"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900000,
+      "success": 1,
+      "steps": 13,
+      "base_return": 0.87,
+      "shaped_return": 1.1036000000000001,
+      "parameter_hash": "random-actions-seed-1-map-900000"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900001,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.029599999999999793,
+      "parameter_hash": "random-actions-seed-1-map-900001"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900002,
+      "success": 1,
+      "steps": 3,
+      "base_return": 0.97,
+      "shaped_return": 1.0936,
+      "parameter_hash": "random-actions-seed-1-map-900002"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900003,
+      "success": 1,
+      "steps": 24,
+      "base_return": 0.7599999999999999,
+      "shaped_return": 1.0608000000000002,
+      "parameter_hash": "random-actions-seed-1-map-900003"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900004,
+      "success": 1,
+      "steps": 3,
+      "base_return": 0.97,
+      "shaped_return": 1.0124,
+      "parameter_hash": "random-actions-seed-1-map-900004"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900005,
+      "success": 1,
+      "steps": 14,
+      "base_return": 0.86,
+      "shaped_return": 0.9736,
+      "parameter_hash": "random-actions-seed-1-map-900005"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900006,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.1476,
+      "parameter_hash": "random-actions-seed-1-map-900006"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900007,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.06439999999999971,
+      "parameter_hash": "random-actions-seed-1-map-900007"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900008,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.06840000000000016,
+      "parameter_hash": "random-actions-seed-1-map-900008"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900009,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.015600000000000086,
+      "parameter_hash": "random-actions-seed-1-map-900009"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900010,
+      "success": 1,
+      "steps": 13,
+      "base_return": 0.87,
+      "shaped_return": 1.06,
+      "parameter_hash": "random-actions-seed-1-map-900010"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900011,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.15639999999999993,
+      "parameter_hash": "random-actions-seed-1-map-900011"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900012,
+      "success": 1,
+      "steps": 24,
+      "base_return": 0.7599999999999999,
+      "shaped_return": 0.9772000000000001,
+      "parameter_hash": "random-actions-seed-1-map-900012"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900013,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.12160000000000015,
+      "parameter_hash": "random-actions-seed-1-map-900013"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900014,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.08399999999999991,
+      "parameter_hash": "random-actions-seed-1-map-900014"
+    },
+    {
+      "seed": 1,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900015,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.005999999999999915,
+      "parameter_hash": "random-actions-seed-1-map-900015"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900000,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.04200000000000012,
+      "parameter_hash": "random-actions-seed-2-map-900000"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900001,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.06319999999999987,
+      "parameter_hash": "random-actions-seed-2-map-900001"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900002,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.0055999999999998,
+      "parameter_hash": "random-actions-seed-2-map-900002"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900003,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.04800000000000017,
+      "parameter_hash": "random-actions-seed-2-map-900003"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900004,
+      "success": 1,
+      "steps": 7,
+      "base_return": 0.9299999999999999,
+      "shaped_return": 0.9808,
+      "parameter_hash": "random-actions-seed-2-map-900004"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900005,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.09959999999999972,
+      "parameter_hash": "random-actions-seed-2-map-900005"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900006,
+      "success": 1,
+      "steps": 21,
+      "base_return": 0.7899999999999999,
+      "shaped_return": 0.912,
+      "parameter_hash": "random-actions-seed-2-map-900006"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900007,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.030799999999999758,
+      "parameter_hash": "random-actions-seed-2-map-900007"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900008,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.01920000000000016,
+      "parameter_hash": "random-actions-seed-2-map-900008"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900009,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.031200000000000137,
+      "parameter_hash": "random-actions-seed-2-map-900009"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900010,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": -0.043599999999999875,
+      "parameter_hash": "random-actions-seed-2-map-900010"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900011,
+      "success": 1,
+      "steps": 18,
+      "base_return": 0.82,
+      "shaped_return": 0.902,
+      "parameter_hash": "random-actions-seed-2-map-900011"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900012,
+      "success": 1,
+      "steps": 16,
+      "base_return": 0.84,
+      "shaped_return": 0.9984000000000001,
+      "parameter_hash": "random-actions-seed-2-map-900012"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900013,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.06640000000000013,
+      "parameter_hash": "random-actions-seed-2-map-900013"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900014,
+      "success": 1,
+      "steps": 2,
+      "base_return": 0.98,
+      "shaped_return": 1.0612,
+      "parameter_hash": "random-actions-seed-2-map-900014"
+    },
+    {
+      "seed": 2,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900015,
+      "success": 0,
+      "steps": 32,
+      "base_return": -0.3200000000000001,
+      "shaped_return": 0.02760000000000011,
+      "parameter_hash": "random-actions-seed-2-map-900015"
+    }
+  ],
+  "trajectories": [
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900000,
+      "grid_size": 5,
+      "action_mapping": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "walls": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "pellets_initial": [
+        [
+          0,
+          1
+        ]
+      ],
+      "start": [
+        2,
+        4
+      ],
+      "steps": [
+        {
+          "position": [
+            1,
+            4
+          ],
+          "action": 0,
+          "reward": 0.0348,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 0,
+          "reward": 0.03360000000000002,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            3
+          ],
+          "action": 2,
+          "reward": 0.03239999999999999,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            2
+          ],
+          "action": 2,
+          "reward": 0.031200000000000006,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            1
+          ],
+          "action": 2,
+          "reward": 1.03,
+          "base_reward": 0.99,
+          "pellets": [],
+          "terminated": true,
+          "truncated": false
+        }
+      ],
+      "success": true
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "A",
+      "map_seed": 900000,
+      "grid_size": 5,
+      "action_mapping": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "walls": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "pellets_initial": [
+        [
+          0,
+          1
+        ]
+      ],
+      "start": [
+        2,
+        4
+      ],
+      "steps": [
+        {
+          "position": [
+            2,
+            3
+          ],
+          "action": 2,
+          "reward": 0.0348,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            3
+          ],
+          "action": 0,
+          "reward": 0.03360000000000002,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            2,
+            3
+          ],
+          "action": 1,
+          "reward": -0.04520000000000001,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            2,
+            4
+          ],
+          "action": 3,
+          "reward": -0.04399999999999999,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            4
+          ],
+          "action": 0,
+          "reward": 0.0348,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 0,
+          "reward": 0.03360000000000002,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 0,
+          "reward": -0.006399999999999997,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 0,
+          "reward": -0.006399999999999997,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            4
+          ],
+          "action": 1,
+          "reward": -0.04520000000000001,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            3
+          ],
+          "action": 2,
+          "reward": 0.03360000000000002,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            2,
+            3
+          ],
+          "action": 1,
+          "reward": -0.04520000000000001,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            3
+          ],
+          "action": 0,
+          "reward": 0.03360000000000002,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            3
+          ],
+          "action": 2,
+          "reward": -0.006399999999999997,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            2,
+            3
+          ],
+          "action": 1,
+          "reward": -0.04520000000000001,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            3
+          ],
+          "action": 0,
+          "reward": 0.03360000000000002,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            3
+          ],
+          "action": 0,
+          "reward": 0.03239999999999999,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            3
+          ],
+          "action": 0,
+          "reward": -0.007599999999999997,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 3,
+          "reward": -0.04639999999999999,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            3
+          ],
+          "action": 2,
+          "reward": 0.03239999999999999,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 3,
+          "reward": -0.04639999999999999,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 0,
+          "reward": -0.006399999999999997,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 3,
+          "reward": -0.006399999999999997,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            3
+          ],
+          "action": 2,
+          "reward": 0.03239999999999999,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            2
+          ],
+          "action": 2,
+          "reward": 0.031200000000000006,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            1
+          ],
+          "action": 2,
+          "reward": 1.03,
+          "base_reward": 0.99,
+          "pellets": [],
+          "terminated": true,
+          "truncated": false
+        }
+      ],
+      "success": true
+    },
+    {
+      "seed": 0,
+      "condition": "shortest_path",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900000,
+      "grid_size": 5,
+      "action_mapping": [
+        3,
+        2,
+        0,
+        1
+      ],
+      "walls": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "pellets_initial": [
+        [
+          0,
+          1
+        ]
+      ],
+      "start": [
+        2,
+        4
+      ],
+      "steps": [
+        {
+          "position": [
+            1,
+            4
+          ],
+          "action": 2,
+          "reward": 0.0348,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 2,
+          "reward": 0.03360000000000002,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            3
+          ],
+          "action": 1,
+          "reward": 0.03239999999999999,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            2
+          ],
+          "action": 1,
+          "reward": 0.031200000000000006,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            1
+          ],
+          "action": 1,
+          "reward": 1.03,
+          "base_reward": 0.99,
+          "pellets": [],
+          "terminated": true,
+          "truncated": false
+        }
+      ],
+      "success": true
+    },
+    {
+      "seed": 0,
+      "condition": "random_actions",
+      "checkpoint": "posthoc_reference",
+      "world": "B",
+      "map_seed": 900000,
+      "grid_size": 5,
+      "action_mapping": [
+        3,
+        2,
+        0,
+        1
+      ],
+      "walls": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "pellets_initial": [
+        [
+          0,
+          1
+        ]
+      ],
+      "start": [
+        2,
+        4
+      ],
+      "steps": [
+        {
+          "position": [
+            1,
+            4
+          ],
+          "action": 2,
+          "reward": 0.0348,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            4
+          ],
+          "action": 0,
+          "reward": -0.005199999999999995,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            3
+          ],
+          "action": 1,
+          "reward": 0.03360000000000002,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            2,
+            3
+          ],
+          "action": 3,
+          "reward": -0.04520000000000001,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            2,
+            4
+          ],
+          "action": 0,
+          "reward": -0.04399999999999999,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            2,
+            4
+          ],
+          "action": 0,
+          "reward": -0.003999999999999995,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            2,
+            4
+          ],
+          "action": 0,
+          "reward": -0.003999999999999995,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            2,
+            4
+          ],
+          "action": 0,
+          "reward": -0.003999999999999995,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            2,
+            3
+          ],
+          "action": 1,
+          "reward": 0.0348,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            3
+          ],
+          "action": 2,
+          "reward": 0.03360000000000002,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            3
+          ],
+          "action": 1,
+          "reward": -0.006399999999999997,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            4
+          ],
+          "action": 0,
+          "reward": -0.04520000000000001,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 2,
+          "reward": 0.03360000000000002,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            3
+          ],
+          "action": 1,
+          "reward": 0.03239999999999999,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 0,
+          "reward": -0.04639999999999999,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 0,
+          "reward": -0.006399999999999997,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 0,
+          "reward": -0.006399999999999997,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            4
+          ],
+          "action": 3,
+          "reward": -0.04520000000000001,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 2,
+          "reward": 0.03360000000000002,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            4
+          ],
+          "action": 3,
+          "reward": -0.04520000000000001,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            4
+          ],
+          "action": 0,
+          "reward": -0.005199999999999995,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            2,
+            4
+          ],
+          "action": 3,
+          "reward": -0.04399999999999999,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            4
+          ],
+          "action": 2,
+          "reward": 0.0348,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 2,
+          "reward": 0.03360000000000002,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            0,
+            4
+          ],
+          "action": 2,
+          "reward": -0.006399999999999997,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            1,
+            4
+          ],
+          "action": 3,
+          "reward": -0.04520000000000001,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            2,
+            4
+          ],
+          "action": 3,
+          "reward": -0.04399999999999999,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            3,
+            4
+          ],
+          "action": 3,
+          "reward": -0.04279999999999999,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            3,
+            4
+          ],
+          "action": 0,
+          "reward": -0.0027999999999999935,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            3,
+            4
+          ],
+          "action": 0,
+          "reward": -0.0027999999999999935,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            3,
+            4
+          ],
+          "action": 0,
+          "reward": -0.0027999999999999935,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": false
+        },
+        {
+          "position": [
+            4,
+            4
+          ],
+          "action": 3,
+          "reward": 0.22999999999999998,
+          "base_reward": -0.01,
+          "pellets": [
+            [
+              0,
+              1
+            ]
+          ],
+          "terminated": false,
+          "truncated": true
+        }
+      ],
+      "success": false
+    }
+  ]
+}

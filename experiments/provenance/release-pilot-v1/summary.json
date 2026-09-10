@@ -1,0 +1,389 @@
+{
+  "schema_version": 1,
+  "status": "exploratory",
+  "protocol": "docs/experiments/provenance-protocol.md",
+  "generated_at": "2026-09-06T04:06:03.658133+00:00",
+  "primary_metric": "Need-shortfall agent-ticks per 10,000 world ticks (lower is better)",
+  "policies": [
+    {
+      "id": "raw",
+      "label": "Calibrated raw count",
+      "selected_parameters": {
+        "threshold": 1.0
+      }
+    },
+    {
+      "id": "unique",
+      "label": "Calibrated unique count",
+      "selected_parameters": {
+        "threshold": 0.8
+      }
+    },
+    {
+      "id": "decay",
+      "label": "Calibrated bounded decay",
+      "selected_parameters": {
+        "threshold": 1.0
+      }
+    },
+    {
+      "id": "never",
+      "label": "Never mitigate",
+      "selected_parameters": {}
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "default",
+      "label": "Calibration distribution",
+      "config": {
+        "n_localities": 4,
+        "n_agents_per_locality": 6,
+        "n_ticks": 1000,
+        "shift_tick": 400,
+        "severity_low_blight": 0.0,
+        "severity_high_blight": 1.0,
+        "mitigation_severity_reduction": 0.75,
+        "base_food_yield_per_agent": 1.6,
+        "food_yield_penalty_per_severity": 1.1,
+        "base_sickness_prob": 0.03,
+        "sickness_prob_penalty_per_severity": 0.32,
+        "food_need_per_agent": 1.0,
+        "medicine_production_per_tick": 1.5,
+        "food_spoilage_rate": 0.1,
+        "medicine_spoilage_rate": 0.05,
+        "starting_food_stock": 10.0,
+        "starting_medicine_stock": 5.0,
+        "starting_wealth": 20.0,
+        "wealth_income_per_tick": 1.0,
+        "mitigation_wealth_cost": 3.0,
+        "report_sick_threshold": 3,
+        "forward_prob_per_tick": 0.4,
+        "hub_locality": 0,
+        "hub_forward_boost": 5.0
+      },
+      "policy_results": [
+        {
+          "policy_id": "raw",
+          "n": 24,
+          "mean_shortfall": 38304.166666666664,
+          "ci95_shortfall": [
+            37774.09375,
+            38891.666666666664
+          ],
+          "false_alarm_rate": 0.0,
+          "mean_false_mitigation_ticks": 0.0,
+          "missed_crisis_rate": 0.0,
+          "mean_response_delay_ticks": 17.041666666666668,
+          "paired_difference_vs_unique": {
+            "mean": 427.5,
+            "ci95": [
+              -180.51041666666666,
+              1109.3124999999986
+            ]
+          }
+        },
+        {
+          "policy_id": "unique",
+          "n": 24,
+          "mean_shortfall": 37876.666666666664,
+          "ci95_shortfall": [
+            37499.979166666664,
+            38250.84375
+          ],
+          "false_alarm_rate": 0.0,
+          "mean_false_mitigation_ticks": 0.0,
+          "missed_crisis_rate": 0.0,
+          "mean_response_delay_ticks": 18.666666666666668,
+          "paired_difference_vs_unique": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "policy_id": "decay",
+          "n": 24,
+          "mean_shortfall": 35388.75,
+          "ci95_shortfall": [
+            34855.385416666664,
+            35973.08333333333
+          ],
+          "false_alarm_rate": 0.0,
+          "mean_false_mitigation_ticks": 0.0,
+          "missed_crisis_rate": 0.0,
+          "mean_response_delay_ticks": 17.291666666666668,
+          "paired_difference_vs_unique": {
+            "mean": -2487.9166666666665,
+            "ci95": [
+              -3075.0104166666665,
+              -1842.9166666666667
+            ]
+          }
+        },
+        {
+          "policy_id": "never",
+          "n": 24,
+          "mean_shortfall": 112524.16666666667,
+          "ci95_shortfall": [
+            112304.14583333334,
+            112786.66666666667
+          ],
+          "false_alarm_rate": 0.0,
+          "mean_false_mitigation_ticks": 0.0,
+          "missed_crisis_rate": 1.0,
+          "mean_response_delay_ticks": 601.0,
+          "paired_difference_vs_unique": {
+            "mean": 74647.5,
+            "ci95": [
+              74351.21875,
+              74955.44791666667
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "forwarding_shift",
+      "label": "More forwarding",
+      "config": {
+        "n_localities": 4,
+        "n_agents_per_locality": 6,
+        "n_ticks": 1000,
+        "shift_tick": 400,
+        "severity_low_blight": 0.0,
+        "severity_high_blight": 1.0,
+        "mitigation_severity_reduction": 0.75,
+        "base_food_yield_per_agent": 1.6,
+        "food_yield_penalty_per_severity": 1.1,
+        "base_sickness_prob": 0.03,
+        "sickness_prob_penalty_per_severity": 0.32,
+        "food_need_per_agent": 1.0,
+        "medicine_production_per_tick": 1.5,
+        "food_spoilage_rate": 0.1,
+        "medicine_spoilage_rate": 0.05,
+        "starting_food_stock": 10.0,
+        "starting_medicine_stock": 5.0,
+        "starting_wealth": 20.0,
+        "wealth_income_per_tick": 1.0,
+        "mitigation_wealth_cost": 3.0,
+        "report_sick_threshold": 3,
+        "forward_prob_per_tick": 0.8,
+        "hub_locality": 0,
+        "hub_forward_boost": 10.0
+      },
+      "policy_results": [
+        {
+          "policy_id": "raw",
+          "n": 24,
+          "mean_shortfall": 40404.583333333336,
+          "ci95_shortfall": [
+            40097.479166666664,
+            40754.645833333336
+          ],
+          "false_alarm_rate": 0.0,
+          "mean_false_mitigation_ticks": 0.0,
+          "missed_crisis_rate": 0.0,
+          "mean_response_delay_ticks": 12.541666666666666,
+          "paired_difference_vs_unique": {
+            "mean": 387.08333333333366,
+            "ci95": [
+              178.75000000000057,
+              610.4583333333328
+            ]
+          }
+        },
+        {
+          "policy_id": "unique",
+          "n": 24,
+          "mean_shortfall": 40017.5,
+          "ci95_shortfall": [
+            39737.0625,
+            40309.60416666667
+          ],
+          "false_alarm_rate": 0.0,
+          "mean_false_mitigation_ticks": 0.0,
+          "missed_crisis_rate": 0.0,
+          "mean_response_delay_ticks": 18.625,
+          "paired_difference_vs_unique": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "policy_id": "decay",
+          "n": 24,
+          "mean_shortfall": 40655.833333333336,
+          "ci95_shortfall": [
+            40283.333333333336,
+            41065.0625
+          ],
+          "false_alarm_rate": 0.0,
+          "mean_false_mitigation_ticks": 0.0,
+          "missed_crisis_rate": 0.0,
+          "mean_response_delay_ticks": 11.791666666666666,
+          "paired_difference_vs_unique": {
+            "mean": 638.333333333333,
+            "ci95": [
+              384.1458333333333,
+              892.0833333333325
+            ]
+          }
+        },
+        {
+          "policy_id": "never",
+          "n": 24,
+          "mean_shortfall": 112540.41666666667,
+          "ci95_shortfall": [
+            112310.41666666667,
+            112787.52083333333
+          ],
+          "false_alarm_rate": 0.0,
+          "mean_false_mitigation_ticks": 0.0,
+          "missed_crisis_rate": 1.0,
+          "mean_response_delay_ticks": 601.0,
+          "paired_difference_vs_unique": {
+            "mean": 72522.91666666667,
+            "ci95": [
+              72300.83333333333,
+              72758.44791666666
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "reporting_and_timing_shift",
+      "label": "Rarer reports, later shift",
+      "config": {
+        "n_localities": 4,
+        "n_agents_per_locality": 6,
+        "n_ticks": 1000,
+        "shift_tick": 600,
+        "severity_low_blight": 0.0,
+        "severity_high_blight": 1.0,
+        "mitigation_severity_reduction": 0.75,
+        "base_food_yield_per_agent": 1.6,
+        "food_yield_penalty_per_severity": 1.1,
+        "base_sickness_prob": 0.03,
+        "sickness_prob_penalty_per_severity": 0.32,
+        "food_need_per_agent": 1.0,
+        "medicine_production_per_tick": 1.5,
+        "food_spoilage_rate": 0.1,
+        "medicine_spoilage_rate": 0.05,
+        "starting_food_stock": 10.0,
+        "starting_medicine_stock": 5.0,
+        "starting_wealth": 20.0,
+        "wealth_income_per_tick": 1.0,
+        "mitigation_wealth_cost": 3.0,
+        "report_sick_threshold": 4,
+        "forward_prob_per_tick": 0.4,
+        "hub_locality": 0,
+        "hub_forward_boost": 5.0
+      },
+      "policy_results": [
+        {
+          "policy_id": "raw",
+          "n": 24,
+          "mean_shortfall": 69301.66666666667,
+          "ci95_shortfall": [
+            68244.0625,
+            70397.11458333333
+          ],
+          "false_alarm_rate": 0.0,
+          "mean_false_mitigation_ticks": 0.0,
+          "missed_crisis_rate": 0.0,
+          "mean_response_delay_ticks": 69.41666666666667,
+          "paired_difference_vs_unique": {
+            "mean": 5692.499999999999,
+            "ci95": [
+              4576.25,
+              6798.458333333331
+            ]
+          }
+        },
+        {
+          "policy_id": "unique",
+          "n": 24,
+          "mean_shortfall": 63609.166666666664,
+          "ci95_shortfall": [
+            62177.70833333333,
+            65030.93749999999
+          ],
+          "false_alarm_rate": 0.0,
+          "mean_false_mitigation_ticks": 0.0,
+          "missed_crisis_rate": 0.0,
+          "mean_response_delay_ticks": 115.125,
+          "paired_difference_vs_unique": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "policy_id": "decay",
+          "n": 24,
+          "mean_shortfall": 71084.58333333333,
+          "ci95_shortfall": [
+            70397.78125,
+            71795.5
+          ],
+          "false_alarm_rate": 0.0,
+          "mean_false_mitigation_ticks": 0.0,
+          "missed_crisis_rate": 0.0,
+          "mean_response_delay_ticks": 117.54166666666667,
+          "paired_difference_vs_unique": {
+            "mean": 7475.416666666665,
+            "ci95": [
+              6343.739583333332,
+              8606.67708333333
+            ]
+          }
+        },
+        {
+          "policy_id": "never",
+          "n": 24,
+          "mean_shortfall": 74713.33333333333,
+          "ci95_shortfall": [
+            74492.91666666667,
+            74949.20833333334
+          ],
+          "false_alarm_rate": 0.0,
+          "mean_false_mitigation_ticks": 0.0,
+          "missed_crisis_rate": 1.0,
+          "mean_response_delay_ticks": 401.0,
+          "paired_difference_vs_unique": {
+            "mean": 11104.166666666666,
+            "ci95": [
+              9520.36458333333,
+              12683.33333333333
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Exploratory synthetic pilot; equal tuning budget does not establish optimal policies or novelty.",
+    "24 evaluation seeds per scenario; uncertainty intervals resample seeds, not individual ticks.",
+    "Response delay includes missed crises at the full post-shift window length; missed rate is reported separately.",
+    "Unique-origin counting is supplied; no learner discovers provenance in this experiment.",
+    "A centralized binary controller over shared resources; no independently learning citizens or spatial grid."
+  ],
+  "artifacts": {
+    "metadata": "experiments/provenance/release-pilot-v1/metadata.json",
+    "calibration": "experiments/provenance/release-pilot-v1/calibration.csv",
+    "evaluation": "experiments/provenance/release-pilot-v1/evaluation.csv",
+    "traces": "experiments/provenance/release-pilot-v1/evaluation-traces.jsonl.gz",
+    "results": "experiments/provenance/release-pilot-v1/results.json",
+    "manifest": "experiments/provenance/release-pilot-v1/manifest.json",
+    "report": "experiments/provenance/release-pilot-v1/RESULTS.md"
+  }
+}

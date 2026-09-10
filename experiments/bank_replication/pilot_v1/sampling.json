@@ -1,0 +1,344 @@
+{
+  "1": {
+    "collected_unique": {
+      "0": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59839,
+        "support_states": 59839,
+        "local_batch_index_sha256": "7d4f9a311795e49339f799a3e2b36b9e55309d6b9bd2702d8217ba195be80f74",
+        "global_batch_index_sha256": "3d406255dfea36259869942683611b46de87a52201231f60e2de4d7cb2bd1a3c",
+        "rng_seed_tuple": [
+          0,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7303573,
+          "outside_support_queries": 2515558,
+          "outside_support_fraction": 0.3444284051107588
+        }
+      },
+      "1": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59839,
+        "support_states": 59839,
+        "local_batch_index_sha256": "f74b53402e377a8cf8a606a2154d917b6f14b9af4f74b228791cb9a0f6ed4a07",
+        "global_batch_index_sha256": "7d873a565152df37d84fc6752ace16a7d2b850de100f6817b200867a152118f7",
+        "rng_seed_tuple": [
+          1,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7304174,
+          "outside_support_queries": 2516164,
+          "outside_support_fraction": 0.3444830312092784
+        }
+      },
+      "2": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59839,
+        "support_states": 59839,
+        "local_batch_index_sha256": "a3acced312cfabd6fdf84c42572d318165b045a69dfdd57e2fff91f066a54722",
+        "global_batch_index_sha256": "e717b0710314eabb9f2e1d270d3d564c8c5414a75c0c0defb5812ee5dbbc6419",
+        "rng_seed_tuple": [
+          2,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7302617,
+          "outside_support_queries": 2515849,
+          "outside_support_fraction": 0.3445133436410536
+        }
+      }
+    },
+    "uniform_subset": {
+      "0": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59839,
+        "support_states": 59839,
+        "local_batch_index_sha256": "7d4f9a311795e49339f799a3e2b36b9e55309d6b9bd2702d8217ba195be80f74",
+        "global_batch_index_sha256": "295552cfde0942caddf09b68ae77642b192b52abf722afe09401d139fc9633a6",
+        "rng_seed_tuple": [
+          0,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7194454,
+          "outside_support_queries": 4565778,
+          "outside_support_fraction": 0.6346246706143371
+        }
+      },
+      "1": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59839,
+        "support_states": 59839,
+        "local_batch_index_sha256": "f74b53402e377a8cf8a606a2154d917b6f14b9af4f74b228791cb9a0f6ed4a07",
+        "global_batch_index_sha256": "0f1fe080d933ca18dbdb820a98c58ce9d03ecf718f284086fb6f786acd209c36",
+        "rng_seed_tuple": [
+          1,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7194888,
+          "outside_support_queries": 4563686,
+          "outside_support_fraction": 0.634295627673426
+        }
+      },
+      "2": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59839,
+        "support_states": 59839,
+        "local_batch_index_sha256": "a3acced312cfabd6fdf84c42572d318165b045a69dfdd57e2fff91f066a54722",
+        "global_batch_index_sha256": "ef11a48f927603435b77ea587091dae4b478f8e631e5c04c6b042bac68e6107d",
+        "rng_seed_tuple": [
+          2,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7194253,
+          "outside_support_queries": 4563881,
+          "outside_support_fraction": 0.6343787186800353
+        }
+      }
+    }
+  },
+  "2": {
+    "collected_unique": {
+      "0": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59984,
+        "support_states": 59984,
+        "local_batch_index_sha256": "09f58b42768319dce8f5f4de7016266381ef8f45c6233ed42d20ac4ba99c15ca",
+        "global_batch_index_sha256": "eefa755279ad89de7a7b0c5b5087fec4fe16811c98f6003db5903751fb4ec801",
+        "rng_seed_tuple": [
+          0,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7299915,
+          "outside_support_queries": 2522976,
+          "outside_support_fraction": 0.34561717499450334
+        }
+      },
+      "1": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59984,
+        "support_states": 59984,
+        "local_batch_index_sha256": "7547a14edc5cf2df06398decba788ab9776f4bb20f30fddb6a68f1cdb6e6bd61",
+        "global_batch_index_sha256": "2e12f8748cb38d7c102ed7e3a14474a3d15daeb8a3c97265b22aa2ae239c7e0b",
+        "rng_seed_tuple": [
+          1,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7302260,
+          "outside_support_queries": 2522845,
+          "outside_support_fraction": 0.34548824610463064
+        }
+      },
+      "2": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59984,
+        "support_states": 59984,
+        "local_batch_index_sha256": "4580f714fd3e3fd82d3a8f2e7d91aac34a2a9f6810e1ec338beffa28bf017dfc",
+        "global_batch_index_sha256": "dde87e272af44bd9be8adee72c19237ffcf011b34197d749a85cd18361bbae83",
+        "rng_seed_tuple": [
+          2,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7300373,
+          "outside_support_queries": 2523858,
+          "outside_support_fraction": 0.34571630792015695
+        }
+      }
+    },
+    "uniform_subset": {
+      "0": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59984,
+        "support_states": 59984,
+        "local_batch_index_sha256": "09f58b42768319dce8f5f4de7016266381ef8f45c6233ed42d20ac4ba99c15ca",
+        "global_batch_index_sha256": "2e3c5c4f388d39a65798f7ba7a91cacdf1db798ba99a09571d8f5bb95fb18a8b",
+        "rng_seed_tuple": [
+          0,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7198147,
+          "outside_support_queries": 4563873,
+          "outside_support_fraction": 0.6340344258043077
+        }
+      },
+      "1": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59984,
+        "support_states": 59984,
+        "local_batch_index_sha256": "7547a14edc5cf2df06398decba788ab9776f4bb20f30fddb6a68f1cdb6e6bd61",
+        "global_batch_index_sha256": "227ac2cf9174c6958f11af47e224d131875e79cc752a1dd93a07224645197da2",
+        "rng_seed_tuple": [
+          1,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7197005,
+          "outside_support_queries": 4562845,
+          "outside_support_fraction": 0.6339921953645996
+        }
+      },
+      "2": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59984,
+        "support_states": 59984,
+        "local_batch_index_sha256": "4580f714fd3e3fd82d3a8f2e7d91aac34a2a9f6810e1ec338beffa28bf017dfc",
+        "global_batch_index_sha256": "505e51c13eb05cfee9bd6bf11f42502bca4c1b6e900406aa64533f9bd3c16e33",
+        "rng_seed_tuple": [
+          2,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7196282,
+          "outside_support_queries": 4564556,
+          "outside_support_fraction": 0.6342936533059711
+        }
+      }
+    }
+  },
+  "3": {
+    "collected_unique": {
+      "0": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59838,
+        "support_states": 59838,
+        "local_batch_index_sha256": "6f029ef8e481bc5baaa48e4b8a343520ccdf4e47c7618874e3dfebdd137dd82e",
+        "global_batch_index_sha256": "563d734f733ff5659418abcfe95a62e9907c2145af09a96fb8278100b73041cb",
+        "rng_seed_tuple": [
+          0,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7298549,
+          "outside_support_queries": 2512230,
+          "outside_support_fraction": 0.34420951342520273
+        }
+      },
+      "1": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59838,
+        "support_states": 59838,
+        "local_batch_index_sha256": "169e2838b90f5ee6aaf4ea9af3eb8a8d435891a9c762bace392499aa93df789c",
+        "global_batch_index_sha256": "5e334a396b6350972904db421d8825f0708c8668e8065ef97b8bbea28ad70760",
+        "rng_seed_tuple": [
+          1,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7299891,
+          "outside_support_queries": 2514104,
+          "outside_support_fraction": 0.344402950674195
+        }
+      },
+      "2": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59838,
+        "support_states": 59838,
+        "local_batch_index_sha256": "72f90d41ed5408862598c8175f09b616e00b126b16f6c840f954ba65bb82d2a8",
+        "global_batch_index_sha256": "144c01fd97ba1a38654ce052cde47c976923f19a89cb00a408744947001084b8",
+        "rng_seed_tuple": [
+          2,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7299451,
+          "outside_support_queries": 2513502,
+          "outside_support_fraction": 0.34434123881371353
+        }
+      }
+    },
+    "uniform_subset": {
+      "0": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59838,
+        "support_states": 59838,
+        "local_batch_index_sha256": "6f029ef8e481bc5baaa48e4b8a343520ccdf4e47c7618874e3dfebdd137dd82e",
+        "global_batch_index_sha256": "5b7242743105428c1e7f73c41a7329b55766e277478b12330600fd24729a8c17",
+        "rng_seed_tuple": [
+          0,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7186321,
+          "outside_support_queries": 4561378,
+          "outside_support_fraction": 0.6347306222474616
+        }
+      },
+      "1": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59838,
+        "support_states": 59838,
+        "local_batch_index_sha256": "169e2838b90f5ee6aaf4ea9af3eb8a8d435891a9c762bace392499aa93df789c",
+        "global_batch_index_sha256": "ab56d934e70c7c2452494cf80b6cf39374dad350328d6fe25ba9ad8538a15fd7",
+        "rng_seed_tuple": [
+          1,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7187790,
+          "outside_support_queries": 4563730,
+          "outside_support_fraction": 0.6349281211610245
+        }
+      },
+      "2": {
+        "updates": 30000,
+        "examples_seen": 1920000,
+        "unique_states_sampled": 59838,
+        "support_states": 59838,
+        "local_batch_index_sha256": "72f90d41ed5408862598c8175f09b616e00b126b16f6c840f954ba65bb82d2a8",
+        "global_batch_index_sha256": "ef12db4d82e729f90bd8a500f9c4abe2a12b2504231d6cae7517d216cb8a2589",
+        "rng_seed_tuple": [
+          2,
+          66301
+        ],
+        "outside_support_direct_samples": 0,
+        "successor_queries": {
+          "nonterminal_queries": 7188706,
+          "outside_support_queries": 4564960,
+          "outside_support_fraction": 0.6350183190131854
+        }
+      }
+    }
+  }
+}

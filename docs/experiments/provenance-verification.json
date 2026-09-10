@@ -1,0 +1,15 @@
+{
+  "manifest_files_verified": 26,
+  "source_hashes_match_current_and_snapshot": true,
+  "traces_recomputed": 288,
+  "full_policy_scenario_reruns_identical": 12,
+  "packaging_rerun_data_byte_identical": [
+    "calibration.csv",
+    "calibration.json",
+    "evaluation.csv",
+    "evaluation.json",
+    "evaluation-traces.jsonl.gz"
+  ],
+  "test_suite": "39 passed in106.66s",
+  "new_test_suite": "7 passed in0.11s"
+}

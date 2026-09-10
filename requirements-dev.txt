@@ -1,0 +1,2 @@
+# Editable checkout plus test/build tools; see CONTRIBUTING.md.
+-e .[dev]

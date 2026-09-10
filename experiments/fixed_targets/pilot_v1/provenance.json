@@ -1,0 +1,70 @@
+{
+  "archive": "experiments/supervised/pilot_v1",
+  "files": {
+    "dataset.npz": "59ba1901cea10652cfc60543d9cf96ed6e68ea643aab1efd3cc51302e36605de",
+    "dataset_metadata.json": "1b58d07e9cfc15a93fb28bf06abb53175d3a7eec2e3d6230831be894dbecc553",
+    "sampling.json": "a621792f9a3851978ab2f7782a5a9a45d65eebe1560889066d425f428d3493f3",
+    "results.json": "b1e009b149d5d2f65d4882ce479773f02dcce69a3acc2c65db89631dc028486d",
+    "protocol.json": "2c0b50214afa5d2434e70ac962d99ad8e23a79bbd498a1f2b1d2cd8e7aa6afba",
+    "manifest.json": "8d60e38c56e35663403bb940f761bc594e58bda36ae7825a0855194d5d1da0e0"
+  },
+  "archive_initial_policy_hashes": {
+    "0": "3bd6ff96595f8c611e7133f0ff8a75af3fb01aa4a8398e7e9601b7f2869bc07c",
+    "1": "94fea64ba15bd2b623af5b3a1976173faaa632e5b9278b2b745b7fbe54cdcd9b",
+    "2": "7c1bee2b5a86d7ff02f8f768e11883d989116c0b3d6d6687b88671a10849b5d4"
+  },
+  "exact_replication": [
+    {
+      "seed": 0,
+      "applicable": true,
+      "final_weights_identical": true,
+      "batch_index_sha256_identical": true,
+      "initial_weights_identical": true,
+      "archive_model": "experiments/supervised/pilot_v1/models/supervised_q_seed0_update30000.pt",
+      "archive_model_sha256": "ec8e1e8bd269e4359f8cdfac8fe0f70f8b7c29232bd7dac42b2a60d75c465c00"
+    },
+    {
+      "seed": 1,
+      "applicable": true,
+      "final_weights_identical": true,
+      "batch_index_sha256_identical": true,
+      "initial_weights_identical": true,
+      "archive_model": "experiments/supervised/pilot_v1/models/supervised_q_seed1_update30000.pt",
+      "archive_model_sha256": "7e1e8681ad1b326dafb2729ef10987def6fd65ec4353e3971c89959f0d5a94d4"
+    },
+    {
+      "seed": 2,
+      "applicable": true,
+      "final_weights_identical": true,
+      "batch_index_sha256_identical": true,
+      "initial_weights_identical": true,
+      "archive_model": "experiments/supervised/pilot_v1/models/supervised_q_seed2_update30000.pt",
+      "archive_model_sha256": "90d40a47a5ddf0d2f6fe4a4ceac163b2832c4e859ea05d176a81079b7e55ee6f"
+    }
+  ],
+  "training_arrays_identical": true,
+  "replication_required": true,
+  "paired_consistency": [
+    {
+      "seed": 0,
+      "complete": true,
+      "initial_weights_identical": true,
+      "batch_index_sha256_identical": true,
+      "per_row_counts_identical": true
+    },
+    {
+      "seed": 1,
+      "complete": true,
+      "initial_weights_identical": true,
+      "batch_index_sha256_identical": true,
+      "per_row_counts_identical": true
+    },
+    {
+      "seed": 2,
+      "complete": true,
+      "initial_weights_identical": true,
+      "batch_index_sha256_identical": true,
+      "per_row_counts_identical": true
+    }
+  ]
+}

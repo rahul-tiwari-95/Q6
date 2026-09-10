@@ -1,0 +1,879 @@
+{
+  "per_bank": [
+    {
+      "bank_id": 1,
+      "condition": "guided_collection",
+      "supported_states": 38619,
+      "recorded_edges": 47737,
+      "all_action_edges": 154476,
+      "observed_action_fraction": 0.3090253502162148,
+      "collector_steps": 67981,
+      "duplicate_records": 20244,
+      "states_by_observed_actions": [
+        {
+          "actions": 1,
+          "states": 31142
+        },
+        {
+          "actions": 2,
+          "states": 6119
+        },
+        {
+          "actions": 3,
+          "states": 1075
+        },
+        {
+          "actions": 4,
+          "states": 283
+        }
+      ],
+      "nonterminal_recorded_edges": 45575,
+      "terminal_recorded_edges": 2162,
+      "nonterminal_successors_in_support": 45575,
+      "nonterminal_successors_outside_support": 0,
+      "all_nonterminal_successors_in_support_verified": true,
+      "distinct_nonterminal_successor_states": 38363,
+      "unobserved_outcomes": "NaN reward, ended=true, next=-1 are absent-entry sentinels; observed mask is authoritative",
+      "arrays": {
+        "observed": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "5441d477c34abcffaee8bc040589b4531346d1f32ea3c3f480c3a91062f18261"
+        },
+        "rewards": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "float64",
+          "sha256": "aa2c974311f4f7cf6caa7e7ec5401cd15fe2093a54a18cd05676c879f5370015"
+        },
+        "ends": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "dd461875de46fefb39ebf62c7a59fa8b314d1b33bfdfa2fe077f1aaefa1cc310"
+        },
+        "terminated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "1d462df7aaefea6888b64a400823fea5aedb08043aa730944c96e24a502a845d"
+        },
+        "truncated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "ab63ea3e7d915427e5af853499b9aad3d7dab0537e1b9413bc28d2aaa13223d4"
+        },
+        "successor_indices": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "int32",
+          "sha256": "1a7851f632e94e3f6d61837c06b8c0751fba2ee40cac3842c0d65ab1d9c3f93f"
+        },
+        "occurrences": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "uint32",
+          "sha256": "457f4871dbd1d43e3e8f4a08062292298f897535109ca7b2f6cdbaed0160c423"
+        }
+      },
+      "source": "experiments/guided_collection/pilot_v1/banks/bank1/collection_steps.csv",
+      "source_sha256": "447f00481da09ed40d94d4baf107bc2aefff9748cc88be0b2312a54e8ddc1a7a",
+      "optimizer_inputs": "only own recorded outcomes/successor masks, never all-action oracle targets"
+    },
+    {
+      "bank_id": 2,
+      "condition": "guided_collection",
+      "supported_states": 38646,
+      "recorded_edges": 47596,
+      "all_action_edges": 154584,
+      "observed_action_fraction": 0.307897324432024,
+      "collector_steps": 67763,
+      "duplicate_records": 20167,
+      "states_by_observed_actions": [
+        {
+          "actions": 1,
+          "states": 31222
+        },
+        {
+          "actions": 2,
+          "states": 6156
+        },
+        {
+          "actions": 3,
+          "states": 1010
+        },
+        {
+          "actions": 4,
+          "states": 258
+        }
+      ],
+      "nonterminal_recorded_edges": 45475,
+      "terminal_recorded_edges": 2121,
+      "nonterminal_successors_in_support": 45475,
+      "nonterminal_successors_outside_support": 0,
+      "all_nonterminal_successors_in_support_verified": true,
+      "distinct_nonterminal_successor_states": 38390,
+      "unobserved_outcomes": "NaN reward, ended=true, next=-1 are absent-entry sentinels; observed mask is authoritative",
+      "arrays": {
+        "observed": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "063ffcb1ad383bf3da5099dfaf1f79a354595bc783ab6cce1b5a6a6a7e4489f2"
+        },
+        "rewards": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "float64",
+          "sha256": "64e3d8be534036d6b6525994a866a85a398051314c1c0303f3ebe31ecc8bfe20"
+        },
+        "ends": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "e24d4a2c024cfbdecccdfb44655d63c597e62174faead384492cffcef3cf9c21"
+        },
+        "terminated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "86b463fc5ad4ca32db77ed84b1324ba82b6cdebcab661494e8867fa3f3dcd038"
+        },
+        "truncated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "f4f2243f14bb93c2dee4bc71e9efca1a7730538b2f7c83e3bfab47311c96b0db"
+        },
+        "successor_indices": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "int32",
+          "sha256": "055bf13231c924fe4c5e74e24a0553b68975053c70faf31c5ec5080068f6b029"
+        },
+        "occurrences": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "uint32",
+          "sha256": "71aff6a0a0440a5790ef390a59cf493f6a6fc2f744e646c325b58758b27ec6f5"
+        }
+      },
+      "source": "experiments/guided_collection/pilot_v1/banks/bank2/collection_steps.csv",
+      "source_sha256": "cb90e0d7660c759bb9860c199498350888363150ca1180d238322c7ade7d3eb1",
+      "optimizer_inputs": "only own recorded outcomes/successor masks, never all-action oracle targets"
+    },
+    {
+      "bank_id": 3,
+      "condition": "guided_collection",
+      "supported_states": 38256,
+      "recorded_edges": 47209,
+      "all_action_edges": 153024,
+      "observed_action_fraction": 0.30850716227519864,
+      "collector_steps": 67369,
+      "duplicate_records": 20160,
+      "states_by_observed_actions": [
+        {
+          "actions": 1,
+          "states": 30894
+        },
+        {
+          "actions": 2,
+          "states": 6065
+        },
+        {
+          "actions": 3,
+          "states": 1003
+        },
+        {
+          "actions": 4,
+          "states": 294
+        }
+      ],
+      "nonterminal_recorded_edges": 45076,
+      "terminal_recorded_edges": 2133,
+      "nonterminal_successors_in_support": 45076,
+      "nonterminal_successors_outside_support": 0,
+      "all_nonterminal_successors_in_support_verified": true,
+      "distinct_nonterminal_successor_states": 38000,
+      "unobserved_outcomes": "NaN reward, ended=true, next=-1 are absent-entry sentinels; observed mask is authoritative",
+      "arrays": {
+        "observed": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "916f9baf257481e06d986f158d2fa114a92d9b7d3a3296ee68cd45c02f47af60"
+        },
+        "rewards": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "float64",
+          "sha256": "16e487305a5f86b079c379eeb1be0513d0d8afad780a6a2d93583d03654b9413"
+        },
+        "ends": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "6e47735e7a3f09eb55a59b985ef7572be8949237c4307e74c74cc203ab2e5031"
+        },
+        "terminated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "24a28fe1dbcbdb1d154f3769ddeccdfd305827bfa40d049bf1ec648d804845d7"
+        },
+        "truncated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "58a4e92c48759fa568261aba5eab6c19a16ddfa15ec8c55f821ccb76a4883fc1"
+        },
+        "successor_indices": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "int32",
+          "sha256": "ab1d2e69d9abfb13402f4569e29f49ebf57502108a5fda43505a9178a3111803"
+        },
+        "occurrences": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "uint32",
+          "sha256": "f3e439f3c5d0535d7a3f8fadcacabf74e6c6a421381721a1c58bf7a241a6169b"
+        }
+      },
+      "source": "experiments/guided_collection/pilot_v1/banks/bank3/collection_steps.csv",
+      "source_sha256": "44e4347c4529315a1b50830179644ca44f5b260db3b9e3c950a52371dc02bbe6",
+      "optimizer_inputs": "only own recorded outcomes/successor masks, never all-action oracle targets"
+    }
+  ],
+  "per_condition": [
+    {
+      "bank_id": 1,
+      "supported_states": 59839,
+      "recorded_edges": 84305,
+      "all_action_edges": 239356,
+      "observed_action_fraction": 0.3522159461220943,
+      "collector_steps": 100878,
+      "duplicate_records": 16573,
+      "states_by_observed_actions": [
+        {
+          "actions": 1,
+          "states": 41040
+        },
+        {
+          "actions": 2,
+          "states": 14093
+        },
+        {
+          "actions": 3,
+          "states": 3745
+        },
+        {
+          "actions": 4,
+          "states": 961
+        }
+      ],
+      "nonterminal_recorded_edges": 80621,
+      "terminal_recorded_edges": 3684,
+      "nonterminal_successors_in_support": 80621,
+      "nonterminal_successors_outside_support": 0,
+      "all_nonterminal_successors_in_support_verified": true,
+      "distinct_nonterminal_successor_states": 59583,
+      "unobserved_outcomes": "NaN reward, ended=true, next=-1 are absent-entry sentinels; observed mask is authoritative",
+      "arrays": {
+        "observed": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "803dc581b7c553a577b21ba5c55d3a2d0d0f217d35aa6a3f9fb3f152a1f083de"
+        },
+        "rewards": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "float64",
+          "sha256": "354a0bc253c27b2114aeaef4299c50034c680b1dc7b234af612883b627419beb"
+        },
+        "ends": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "5e3be84aa579876dd51dfba8b90978226cd5485de3c132c45d71e5125b56cf9e"
+        },
+        "terminated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "4a24239111df3d3618cf10fb31b72473e8a32c548bb1cde8b203bc59f6314d8f"
+        },
+        "truncated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "2cbb1771c0b71d2dfaf1b634e49193e82f520c3e30548218a00b2aac9ed99d03"
+        },
+        "successor_indices": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "int32",
+          "sha256": "d8b00da11a45596d17d09856bd67955a8a63c63886509bdf1d5e2ad066f8d56b"
+        },
+        "occurrences": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "uint32",
+          "sha256": "82d1fae55c1c5736abf28c75f9a135807df9d6cb24b36e1dd331ac4fdbfa489d"
+        }
+      },
+      "source": "experiments/bank_replication/pilot_v1/banks/bank1/collection_steps.csv",
+      "source_sha256": "da8c44b57aa55ab1247a60f466634dd4c3568035e2a190f9813a7c23c231da31",
+      "copied": "control_banks/bank1/collection_steps.csv",
+      "copied_sha256": "da8c44b57aa55ab1247a60f466634dd4c3568035e2a190f9813a7c23c231da31",
+      "observed_outcomes_match_integrity_reference": true,
+      "optimizer_inputs": "observations, recorded tensors, sampled state indices; no exact or full-transition argument",
+      "condition": "constrained_bootstrap"
+    },
+    {
+      "bank_id": 2,
+      "supported_states": 59984,
+      "recorded_edges": 84091,
+      "all_action_edges": 239936,
+      "observed_action_fraction": 0.35047262603360896,
+      "collector_steps": 100326,
+      "duplicate_records": 16235,
+      "states_by_observed_actions": [
+        {
+          "actions": 1,
+          "states": 41283
+        },
+        {
+          "actions": 2,
+          "states": 14208
+        },
+        {
+          "actions": 3,
+          "states": 3580
+        },
+        {
+          "actions": 4,
+          "states": 913
+        }
+      ],
+      "nonterminal_recorded_edges": 80415,
+      "terminal_recorded_edges": 3676,
+      "nonterminal_successors_in_support": 80415,
+      "nonterminal_successors_outside_support": 0,
+      "all_nonterminal_successors_in_support_verified": true,
+      "distinct_nonterminal_successor_states": 59728,
+      "unobserved_outcomes": "NaN reward, ended=true, next=-1 are absent-entry sentinels; observed mask is authoritative",
+      "arrays": {
+        "observed": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "349032c914e7e095b3108bc389c8193c0ff682f70e225e11e9b8f20f6b6fcd0e"
+        },
+        "rewards": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "float64",
+          "sha256": "c0dcba148fc6dcf5bc653d0e23689eb1d3b7a241015c715289a3d00a88362055"
+        },
+        "ends": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "3553ca680e4040bc61b42209a6d8abda5806abffb2aa10a42bbb41bad629e714"
+        },
+        "terminated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "877b05833b1cc0fe5ab58321279d618b0303864960b10ab26bd40349269465e1"
+        },
+        "truncated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "bb4152f15973f208a0cc2d299cb5fed89a77065af7f117406fc67b435bf79b7a"
+        },
+        "successor_indices": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "int32",
+          "sha256": "3bbd841b939edc2a22cb30f720d9db2152a6fd7a29c0825a0d7c8e462cf58c00"
+        },
+        "occurrences": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "uint32",
+          "sha256": "1468384ee15821a960513db51cb90964c0751a0c1ab0bea445f17e1ea23ab049"
+        }
+      },
+      "source": "experiments/bank_replication/pilot_v1/banks/bank2/collection_steps.csv",
+      "source_sha256": "74d3172ba9359ebef77348a0c3414868a0b49483bcbb6a42007773362df808d1",
+      "copied": "control_banks/bank2/collection_steps.csv",
+      "copied_sha256": "74d3172ba9359ebef77348a0c3414868a0b49483bcbb6a42007773362df808d1",
+      "observed_outcomes_match_integrity_reference": true,
+      "optimizer_inputs": "observations, recorded tensors, sampled state indices; no exact or full-transition argument",
+      "condition": "constrained_bootstrap"
+    },
+    {
+      "bank_id": 3,
+      "supported_states": 59838,
+      "recorded_edges": 83933,
+      "all_action_edges": 239352,
+      "observed_action_fraction": 0.3506676359503994,
+      "collector_steps": 100381,
+      "duplicate_records": 16448,
+      "states_by_observed_actions": [
+        {
+          "actions": 1,
+          "states": 41215
+        },
+        {
+          "actions": 2,
+          "states": 14103
+        },
+        {
+          "actions": 3,
+          "states": 3568
+        },
+        {
+          "actions": 4,
+          "states": 952
+        }
+      ],
+      "nonterminal_recorded_edges": 80259,
+      "terminal_recorded_edges": 3674,
+      "nonterminal_successors_in_support": 80259,
+      "nonterminal_successors_outside_support": 0,
+      "all_nonterminal_successors_in_support_verified": true,
+      "distinct_nonterminal_successor_states": 59582,
+      "unobserved_outcomes": "NaN reward, ended=true, next=-1 are absent-entry sentinels; observed mask is authoritative",
+      "arrays": {
+        "observed": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "d7f8e5158b75b87439eb49d2b469ec186aebc0db2efd1b461e197ee4fbeb73a2"
+        },
+        "rewards": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "float64",
+          "sha256": "e6dceecc5feee20d9ef1f136a1e913faec84688297dcd0e99305ee6aaad5dba1"
+        },
+        "ends": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "e257ad3cd48572d98be488b3bc2afd745f4b7c5f7f881c58bfa38f2a7fa92de2"
+        },
+        "terminated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "a8c8a407a29027af2658a4c2173bf9fd7c26718f5d750b085f68635f59656897"
+        },
+        "truncated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "383b34e9f8676e0064aa4dcc6d1811de6275e4a48503062d809c63280ea13484"
+        },
+        "successor_indices": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "int32",
+          "sha256": "7bd27078bb7797239a8108f89d24f948f5123a58711464e716ba1dc168131a23"
+        },
+        "occurrences": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "uint32",
+          "sha256": "653f639e8e1209f1672870161b93e900eeafe4f6bd2bf19e99d1039bbe782dad"
+        }
+      },
+      "source": "experiments/bank_replication/pilot_v1/banks/bank3/collection_steps.csv",
+      "source_sha256": "c9f5dffeda696027e1fc4b6d5017a9b5b75c6bd86515ae3207a7e48f337ca506",
+      "copied": "control_banks/bank3/collection_steps.csv",
+      "copied_sha256": "c9f5dffeda696027e1fc4b6d5017a9b5b75c6bd86515ae3207a7e48f337ca506",
+      "observed_outcomes_match_integrity_reference": true,
+      "optimizer_inputs": "observations, recorded tensors, sampled state indices; no exact or full-transition argument",
+      "condition": "constrained_bootstrap"
+    },
+    {
+      "bank_id": 1,
+      "condition": "guided_collection",
+      "supported_states": 38619,
+      "recorded_edges": 47737,
+      "all_action_edges": 154476,
+      "observed_action_fraction": 0.3090253502162148,
+      "collector_steps": 67981,
+      "duplicate_records": 20244,
+      "states_by_observed_actions": [
+        {
+          "actions": 1,
+          "states": 31142
+        },
+        {
+          "actions": 2,
+          "states": 6119
+        },
+        {
+          "actions": 3,
+          "states": 1075
+        },
+        {
+          "actions": 4,
+          "states": 283
+        }
+      ],
+      "nonterminal_recorded_edges": 45575,
+      "terminal_recorded_edges": 2162,
+      "nonterminal_successors_in_support": 45575,
+      "nonterminal_successors_outside_support": 0,
+      "all_nonterminal_successors_in_support_verified": true,
+      "distinct_nonterminal_successor_states": 38363,
+      "unobserved_outcomes": "NaN reward, ended=true, next=-1 are absent-entry sentinels; observed mask is authoritative",
+      "arrays": {
+        "observed": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "5441d477c34abcffaee8bc040589b4531346d1f32ea3c3f480c3a91062f18261"
+        },
+        "rewards": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "float64",
+          "sha256": "aa2c974311f4f7cf6caa7e7ec5401cd15fe2093a54a18cd05676c879f5370015"
+        },
+        "ends": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "dd461875de46fefb39ebf62c7a59fa8b314d1b33bfdfa2fe077f1aaefa1cc310"
+        },
+        "terminated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "1d462df7aaefea6888b64a400823fea5aedb08043aa730944c96e24a502a845d"
+        },
+        "truncated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "ab63ea3e7d915427e5af853499b9aad3d7dab0537e1b9413bc28d2aaa13223d4"
+        },
+        "successor_indices": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "int32",
+          "sha256": "1a7851f632e94e3f6d61837c06b8c0751fba2ee40cac3842c0d65ab1d9c3f93f"
+        },
+        "occurrences": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "uint32",
+          "sha256": "457f4871dbd1d43e3e8f4a08062292298f897535109ca7b2f6cdbaed0160c423"
+        }
+      },
+      "source": "experiments/guided_collection/pilot_v1/banks/bank1/collection_steps.csv",
+      "source_sha256": "447f00481da09ed40d94d4baf107bc2aefff9748cc88be0b2312a54e8ddc1a7a",
+      "optimizer_inputs": "only own recorded outcomes/successor masks, never all-action oracle targets"
+    },
+    {
+      "bank_id": 2,
+      "condition": "guided_collection",
+      "supported_states": 38646,
+      "recorded_edges": 47596,
+      "all_action_edges": 154584,
+      "observed_action_fraction": 0.307897324432024,
+      "collector_steps": 67763,
+      "duplicate_records": 20167,
+      "states_by_observed_actions": [
+        {
+          "actions": 1,
+          "states": 31222
+        },
+        {
+          "actions": 2,
+          "states": 6156
+        },
+        {
+          "actions": 3,
+          "states": 1010
+        },
+        {
+          "actions": 4,
+          "states": 258
+        }
+      ],
+      "nonterminal_recorded_edges": 45475,
+      "terminal_recorded_edges": 2121,
+      "nonterminal_successors_in_support": 45475,
+      "nonterminal_successors_outside_support": 0,
+      "all_nonterminal_successors_in_support_verified": true,
+      "distinct_nonterminal_successor_states": 38390,
+      "unobserved_outcomes": "NaN reward, ended=true, next=-1 are absent-entry sentinels; observed mask is authoritative",
+      "arrays": {
+        "observed": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "063ffcb1ad383bf3da5099dfaf1f79a354595bc783ab6cce1b5a6a6a7e4489f2"
+        },
+        "rewards": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "float64",
+          "sha256": "64e3d8be534036d6b6525994a866a85a398051314c1c0303f3ebe31ecc8bfe20"
+        },
+        "ends": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "e24d4a2c024cfbdecccdfb44655d63c597e62174faead384492cffcef3cf9c21"
+        },
+        "terminated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "86b463fc5ad4ca32db77ed84b1324ba82b6cdebcab661494e8867fa3f3dcd038"
+        },
+        "truncated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "f4f2243f14bb93c2dee4bc71e9efca1a7730538b2f7c83e3bfab47311c96b0db"
+        },
+        "successor_indices": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "int32",
+          "sha256": "055bf13231c924fe4c5e74e24a0553b68975053c70faf31c5ec5080068f6b029"
+        },
+        "occurrences": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "uint32",
+          "sha256": "71aff6a0a0440a5790ef390a59cf493f6a6fc2f744e646c325b58758b27ec6f5"
+        }
+      },
+      "source": "experiments/guided_collection/pilot_v1/banks/bank2/collection_steps.csv",
+      "source_sha256": "cb90e0d7660c759bb9860c199498350888363150ca1180d238322c7ade7d3eb1",
+      "optimizer_inputs": "only own recorded outcomes/successor masks, never all-action oracle targets"
+    },
+    {
+      "bank_id": 3,
+      "condition": "guided_collection",
+      "supported_states": 38256,
+      "recorded_edges": 47209,
+      "all_action_edges": 153024,
+      "observed_action_fraction": 0.30850716227519864,
+      "collector_steps": 67369,
+      "duplicate_records": 20160,
+      "states_by_observed_actions": [
+        {
+          "actions": 1,
+          "states": 30894
+        },
+        {
+          "actions": 2,
+          "states": 6065
+        },
+        {
+          "actions": 3,
+          "states": 1003
+        },
+        {
+          "actions": 4,
+          "states": 294
+        }
+      ],
+      "nonterminal_recorded_edges": 45076,
+      "terminal_recorded_edges": 2133,
+      "nonterminal_successors_in_support": 45076,
+      "nonterminal_successors_outside_support": 0,
+      "all_nonterminal_successors_in_support_verified": true,
+      "distinct_nonterminal_successor_states": 38000,
+      "unobserved_outcomes": "NaN reward, ended=true, next=-1 are absent-entry sentinels; observed mask is authoritative",
+      "arrays": {
+        "observed": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "916f9baf257481e06d986f158d2fa114a92d9b7d3a3296ee68cd45c02f47af60"
+        },
+        "rewards": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "float64",
+          "sha256": "16e487305a5f86b079c379eeb1be0513d0d8afad780a6a2d93583d03654b9413"
+        },
+        "ends": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "6e47735e7a3f09eb55a59b985ef7572be8949237c4307e74c74cc203ab2e5031"
+        },
+        "terminated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "24a28fe1dbcbdb1d154f3769ddeccdfd305827bfa40d049bf1ec648d804845d7"
+        },
+        "truncated": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "bool",
+          "sha256": "58a4e92c48759fa568261aba5eab6c19a16ddfa15ec8c55f821ccb76a4883fc1"
+        },
+        "successor_indices": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "int32",
+          "sha256": "ab1d2e69d9abfb13402f4569e29f49ebf57502108a5fda43505a9178a3111803"
+        },
+        "occurrences": {
+          "shape": [
+            163840,
+            4
+          ],
+          "dtype": "uint32",
+          "sha256": "f3e439f3c5d0535d7a3f8fadcacabf74e6c6a421381721a1c58bf7a241a6169b"
+        }
+      },
+      "source": "experiments/guided_collection/pilot_v1/banks/bank3/collection_steps.csv",
+      "source_sha256": "44e4347c4529315a1b50830179644ca44f5b260db3b9e3c950a52371dc02bbe6",
+      "optimizer_inputs": "only own recorded outcomes/successor masks, never all-action oracle targets"
+    }
+  ]
+}

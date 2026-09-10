@@ -1,0 +1,5109 @@
+{
+  "id": "constrained-bootstrap-v1",
+  "question": "Does limiting bootstrap action selection to logged successor actions help under matched recorded data and target count?",
+  "conditions": [
+    {
+      "id": "recorded_actions",
+      "label": "Recorded outcomes, unrestricted backup (frozen)"
+    },
+    {
+      "id": "constrained_bootstrap",
+      "label": "Logged-successor constrained backup"
+    }
+  ],
+  "bank_ids": [
+    1,
+    2,
+    3
+  ],
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "checkpoints": [
+    0,
+    1000,
+    3000,
+    10000,
+    30000
+  ],
+  "evaluation_checkpoints": {
+    "recorded_actions": 30000,
+    "constrained_bootstrap": 30000
+  },
+  "panels": [
+    {
+      "id": "panel_0",
+      "scan_start": 1100000,
+      "layouts": [
+        {
+          "map_seed": 1100000,
+          "layout_hash": "657980976209d27eb6e38e8e1a3b251f8873dad291bc2e39598af58ca1c4f453",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1100001,
+          "layout_hash": "bfef8c1cdf035a4d240573fdf4715d17e3db94219c50bd757eec5d4a34fb64fb",
+          "original_start": [
+            0,
+            0
+          ]
+        },
+        {
+          "map_seed": 1100002,
+          "layout_hash": "2004f8ef2848711eeeb9c6f455eddc96ef945aed4fe57ef7a648da7c8f43101d",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1100003,
+          "layout_hash": "90383adeefdc2217d14de1bc58e7504d9f5e9873af1c316ee1cbe7016170bd4b",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1100004,
+          "layout_hash": "3e7fd9610e255ceaeb53b56b3075852ed1927cb59b752bf7143646fb0c3fde55",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1100005,
+          "layout_hash": "dc6e2f3898ca8bd94ce20b6e8552169eb3e5c5df19fb1e3b5eb24a798246342a",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100006,
+          "layout_hash": "d767f2a668ca2c731aa31ff1c0185e8cde0fa303e19b1ac83a06dcceb5643f76",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1100007,
+          "layout_hash": "b21a20f75a9233bfe2e1e4fbdbbef997e73b0467b3ab158478f354eab69c2f6d",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100008,
+          "layout_hash": "b8bcb036ddd15f75dc52dd079eafec1c2dc023ae3df2859a13e301ef8dce0e3e",
+          "original_start": [
+            2,
+            4
+          ]
+        },
+        {
+          "map_seed": 1100009,
+          "layout_hash": "dd45a802baaa999adfbad961858d46c6350cca579b8f8f3769d9f950fb620c5b",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100010,
+          "layout_hash": "5324f96d44397104e085286cc44bcf6af9e66ad5bebe5a6edc0e19caaf06a497",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100011,
+          "layout_hash": "e8e16d55e1730c719e839704e0c35d5c203d0159aa00158efa52a6581f688583",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1100012,
+          "layout_hash": "be77825dc4d4912c960ffb10347b789bf7b8aa5a6ebdbfb4440dd8172a58aa4e",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100013,
+          "layout_hash": "dcafa10e877fc1f04f216ada6c5c0a4a27f518038f87316e56dabee5527c3dd1",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100014,
+          "layout_hash": "d32cdec54cb6f24eb1496131097a1d4642110ad6d094de0dd28a4ddfc69e7916",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1100015,
+          "layout_hash": "2b9087cf88c5e756a026a42393468b44dcdf5d29a25d69d72986b5c1afe46bb7",
+          "original_start": [
+            4,
+            4
+          ]
+        },
+        {
+          "map_seed": 1100016,
+          "layout_hash": "c119ba9ac644a4bc243fcab3dbb3e8bbaea01fc276abcd0b4a19f64f5348ac14",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100017,
+          "layout_hash": "46cc964df37d05a1d8e6e449d91783162a8f4566a468148395c91e06f5ffd484",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100019,
+          "layout_hash": "f0b58ff851c9e9f6ce80d7ddb88b7d30e333e1c30e9e524c111040937e3d803e",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100020,
+          "layout_hash": "295ff8d79dd4332bb8578cab42bffc49310fd226334f625142296ce7cadbe556",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100021,
+          "layout_hash": "c19a2c7f4e428e9cc6fd44fccd765e01b002754ca54fb6634539658f5e009bf6",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100022,
+          "layout_hash": "ab1676fda7066f8000966e43b160e50b44f24eaa742452f11c4fbf8b30122005",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1100023,
+          "layout_hash": "9ab8bd252892994cb81e38e36a8bd2a99d0511623ba92e3802ff967a3262f4ab",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1100024,
+          "layout_hash": "3c9263d3ce6029658302f333969a27b8af89b051874f260d834e4354214c3c4f",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100025,
+          "layout_hash": "396f751aa92899731b674abb6a618c52039453750762b43c14c2d1453ff351e8",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100026,
+          "layout_hash": "5842d0e2d98347081c8997e3fe9e2b17a40b2f8ff3ef24c6b1ef2e3f6e96f3e5",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100027,
+          "layout_hash": "10b13dfa3c95de9f4bcd46e9dfcad28b796a86dbaddcae6b39f1bdfa7254159e",
+          "original_start": [
+            4,
+            4
+          ]
+        },
+        {
+          "map_seed": 1100028,
+          "layout_hash": "6f3174dce955f07c19cce6375ba17f7158fcb0d9b9a84471b0b0d1be60ce653f",
+          "original_start": [
+            0,
+            3
+          ]
+        },
+        {
+          "map_seed": 1100029,
+          "layout_hash": "3914a8cf16c33848b6597bd36d6bfadb50ead9fd58866f970e55bd40a9ea90f6",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100030,
+          "layout_hash": "4856f04b27130d832eaca864a6a6c5cbcb2f538b740ffc1739e42fc56268613e",
+          "original_start": [
+            4,
+            4
+          ]
+        },
+        {
+          "map_seed": 1100031,
+          "layout_hash": "a2978c4cb9bb88ba82f75a94e15eb403bd45066b7b002ff0ceaf98b5655ac28b",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100032,
+          "layout_hash": "314540cf10165d1da9fbb7fd37c0f18ed1f1341fb464b73f81d54e93ecf23052",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1100033,
+          "layout_hash": "f42fea5b79eb7a7172864698dc9d3deddb0f9bf1863ca617e752aae7274755f4",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100034,
+          "layout_hash": "66707be838e0685c37b52b8008d9be15bc8d11d9e90cad83fe41fc2c1b3358e5",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1100035,
+          "layout_hash": "713ee21a427c248ebe542c24cc473c38f775c20a49540aaed231312b7f1ad91c",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1100036,
+          "layout_hash": "b7085d8eb821d80aacaa5bb3e6283d76f3e4c80414d8e32bffc505b65d4d3ccf",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100037,
+          "layout_hash": "610445b25d6a871e5c9856a06e92103ede46368a64fd9742943a29faf80ba2f0",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100038,
+          "layout_hash": "8fcc91b800084cd439e23548e04325b1ce42888bf1962fd1d67c421289f04a2b",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100039,
+          "layout_hash": "604028657180df5c06767a9d6aef2c9949f1684daf1a17a3ffba91fa77ff6370",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100040,
+          "layout_hash": "bdd43718bf970854d6b539c46c21eb3aa1c0a0f15e1ac8ea8a9723a49d355554",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1100041,
+          "layout_hash": "9614b5cffa89edb3d1a9cbf1deb542b6f5f5286ba32499384395940d402cf602",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100042,
+          "layout_hash": "09dd50ab45d01cb5f91ebfb8de866320a706e194e859be91dd69b81ee8ed5e58",
+          "original_start": [
+            4,
+            3
+          ]
+        },
+        {
+          "map_seed": 1100043,
+          "layout_hash": "cd38999ad2a7ac1dff69168477c5e9b1fc4c2105b29c02c7e8c6b8643c38cc62",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100044,
+          "layout_hash": "48e34959363f96ac410f68ab3c9bd6620403259f35222521812be673c7fb4799",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100045,
+          "layout_hash": "6eecdeb3445684372293ebe6a502d7b65ec7768dbbad5e3d2f42b9679d51e88c",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100046,
+          "layout_hash": "14421db7938b075af7f48c5beea60b7d0b38cf8bfbbe9d472282d7a907ca007a",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100047,
+          "layout_hash": "910060695ea8940341e80c69c370122f87669183f048e726a8e6659eca5b5888",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100048,
+          "layout_hash": "fccf1496d8bf51a73ab0df12d223983788d9123dd180b647110b66e0173fee4d",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1100049,
+          "layout_hash": "a422f7037926ee83313ac40b3b69dca39f7ff07671bf3521b16d9530c7c06cf3",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100050,
+          "layout_hash": "e70c4cb258b319aadf39166961e34883ce28ea331ff3a0422a8998c939e6c570",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100051,
+          "layout_hash": "14c4c49b6bc333d1d4e967f674da91230d52d98e24d6464619ec4b07151c8a94",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100052,
+          "layout_hash": "20054240b6c5a19d373a5c8b92710516d4a0bde6ebc6594e7c9c0055a48869c6",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1100053,
+          "layout_hash": "b83325a0897fb306b72f10dfefad9b894ac9b2e5eaf250c0db041e47ec51475e",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1100054,
+          "layout_hash": "1af22dc888969c8680ceffc2419ae59748a87aed5f1e21405aa85ec0cd89cd57",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100055,
+          "layout_hash": "3d57bb48a48caf41bb82f80235b99f751ca16030ff308734b23f8d83f0ac3e53",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100056,
+          "layout_hash": "ed2fdee929fcf02cb666505945763dd5dc5d7e9160aaa1ed5d8884a85dfe72ee",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100057,
+          "layout_hash": "ef0542cacc0c0812413d4a869b11548694c771ba84e97151dc5f16e98469823f",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1100058,
+          "layout_hash": "392c16e40c3d46a275688b94ab6d08769efd9e0ff9f53de6d68246771b15c99a",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1100059,
+          "layout_hash": "e2c9455f19693ed82cbb65fbd8eada49e21471a0644f8539072665e205176dd2",
+          "original_start": [
+            0,
+            0
+          ]
+        },
+        {
+          "map_seed": 1100060,
+          "layout_hash": "b80e0e63e94498467f8a3921a6dce6145e64c40871de6e6664483e4404f9a821",
+          "original_start": [
+            4,
+            4
+          ]
+        },
+        {
+          "map_seed": 1100061,
+          "layout_hash": "45b076acf37440b9dd9a469441eccf7715b031534cbacecf0f2fc08dd31178e2",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100062,
+          "layout_hash": "0f9c748cde95b5fde379e3953e2253bfc11f50af1a6dd01d4a9fa8d002b268c3",
+          "original_start": [
+            0,
+            3
+          ]
+        },
+        {
+          "map_seed": 1100063,
+          "layout_hash": "d80c7dfbf5dc5d714b3694af8a9e9fa2dc4e58aa47e8138ab8b29a1d57941de4",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1100064,
+          "layout_hash": "590a0179fcdc68957ebaf798348cedbda2a17a863900f48edddb58c2c8776055",
+          "original_start": [
+            3,
+            0
+          ]
+        }
+      ],
+      "map_seeds": [
+        1100000,
+        1100001,
+        1100002,
+        1100003,
+        1100004,
+        1100005,
+        1100006,
+        1100007,
+        1100008,
+        1100009,
+        1100010,
+        1100011,
+        1100012,
+        1100013,
+        1100014,
+        1100015,
+        1100016,
+        1100017,
+        1100019,
+        1100020,
+        1100021,
+        1100022,
+        1100023,
+        1100024,
+        1100025,
+        1100026,
+        1100027,
+        1100028,
+        1100029,
+        1100030,
+        1100031,
+        1100032,
+        1100033,
+        1100034,
+        1100035,
+        1100036,
+        1100037,
+        1100038,
+        1100039,
+        1100040,
+        1100041,
+        1100042,
+        1100043,
+        1100044,
+        1100045,
+        1100046,
+        1100047,
+        1100048,
+        1100049,
+        1100050,
+        1100051,
+        1100052,
+        1100053,
+        1100054,
+        1100055,
+        1100056,
+        1100057,
+        1100058,
+        1100059,
+        1100060,
+        1100061,
+        1100062,
+        1100063,
+        1100064
+      ]
+    },
+    {
+      "id": "panel_1",
+      "scan_start": 1101000,
+      "layouts": [
+        {
+          "map_seed": 1101000,
+          "layout_hash": "55f95073b9073678309337d9b15822cd8ef3cc0a62467ae885ce31af9fc3717d",
+          "original_start": [
+            4,
+            4
+          ]
+        },
+        {
+          "map_seed": 1101001,
+          "layout_hash": "f731ff6100bb0b34d8d59584c5d3c7e067ab3bab0c0d3349ec76445c2bcf94a9",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1101002,
+          "layout_hash": "cb4c2a8e594213e76411321f44e41df4e9d28e4df7804e90ed25c07d3c312fdb",
+          "original_start": [
+            0,
+            2
+          ]
+        },
+        {
+          "map_seed": 1101003,
+          "layout_hash": "a53bee4152c7388deab4799e6aff7323e9418fd9daa6aac76ab701bdb3a11f67",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1101004,
+          "layout_hash": "07ebb6a7e4eea09f10db477f0ec9e775c3ebba01665fa2329d131bbc2ba5df8f",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1101005,
+          "layout_hash": "afc1c411b968b475e1a03d2c006e87a43515a038a60108f7b46d15612ceba433",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1101006,
+          "layout_hash": "8b615f6d7235018c6cc672593884d9f1b13a9455468e6b33b154ba025ba2a039",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1101007,
+          "layout_hash": "2411d3f0311fbb422fa3039589cfc0e23874108b022305cdd1f8bfa242a2e36b",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1101008,
+          "layout_hash": "d2f3f8e5a63512989b390fc4f9b0d6d43baecf203b69ebe99d324c89d9f97dcf",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1101009,
+          "layout_hash": "2c31f338b80d3909838b83ef6f7a12597ba6c09cb54fcd907fe3bc6b8072701c",
+          "original_start": [
+            0,
+            3
+          ]
+        },
+        {
+          "map_seed": 1101010,
+          "layout_hash": "6c4ce960d61867e1aef6ccec73c15937338963378c4ea2627d522afe6d490fd4",
+          "original_start": [
+            4,
+            4
+          ]
+        },
+        {
+          "map_seed": 1101011,
+          "layout_hash": "5d5d39318fca23af26f7fad1ddffaf1d2222fa5479f57e9dfd0f7aeefd5cae8a",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1101012,
+          "layout_hash": "dcd15a2e7226ea5da14d977b75b37389a93fb2faa8287bc6023cab70d0f01f54",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1101013,
+          "layout_hash": "b2d58b61eaddb535cc40e5587e59fb25106feaa747980f463c94380055e98af4",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1101014,
+          "layout_hash": "497634949ab52706e85e00d4659d94c292c55ea87331896c0bdb7bdf8fe1f540",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1101015,
+          "layout_hash": "fb7b74250fdd07ac65e2e30e48bea7320f1b409a46b501674652b47b7569974e",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1101016,
+          "layout_hash": "9b1bbbd24638cb5b2fead91c75fae4b34611497992d830b267e14279d1cb09ea",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1101017,
+          "layout_hash": "a8fbd890493c59db7cbb53191c7821f496fdf040bce3531ec4f305f56f133187",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1101018,
+          "layout_hash": "e503f2122e379a979a003dc0db526732312d2c83b1e6dbb42233dc4368046947",
+          "original_start": [
+            1,
+            3
+          ]
+        },
+        {
+          "map_seed": 1101019,
+          "layout_hash": "f242ed73ec823694930b7a6edf414c875a91ad57d6a948602d5e3d9cacd3e94d",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1101020,
+          "layout_hash": "adbd08b4a20a5094de1ce20fe8022fc71007a0a12bf4570caf99acf3de795745",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1101021,
+          "layout_hash": "139f56936c98b6ea9f1770611b2ec006079a3d0c04d592f3396b58a7dda39ec4",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1101022,
+          "layout_hash": "dea97bf6a2476a07dce671787f88a43c360c2dfcc19d1af6445c9b10f10cdf9b",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1101024,
+          "layout_hash": "683b383368546e8f8fd6d374a848f039a9811ca9bc816b884411695836285e4d",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1101025,
+          "layout_hash": "b42cb6f73c6ad417f80c99a2231e15b85aff33ddcfc8365fd85d85b427927ac5",
+          "original_start": [
+            0,
+            0
+          ]
+        },
+        {
+          "map_seed": 1101026,
+          "layout_hash": "7f77f38243d4ca0b4a7f3ad0a810f40791d20c592cae7d0ac8002246c673bf23",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1101027,
+          "layout_hash": "260721a2f0a5159add00d3000aaf9c149edd0e013bf09ac43f859ecc08171e52",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1101028,
+          "layout_hash": "77480cecd5bb28ca016278790ec9ea8a43a36746c9a77de4c93cc8df2fe1f30d",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1101029,
+          "layout_hash": "783e79036af1ced94ffca59b6b56c9e45eee9fb5165ebf32960d0f35bdf78300",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1101030,
+          "layout_hash": "989bf20e2977912f3ce8768cefadf0e0ca648db3141e9af16318008948fa3c24",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1101031,
+          "layout_hash": "3c69546bf6bf0a9b4b3ba3f6c5254fb00ff6fd061c7799a1fd62a5ea194a06ce",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1101032,
+          "layout_hash": "9d098821561682d2e38e7cf5560afe9af770a00b5ba1f8a6360d30182d22293f",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1101033,
+          "layout_hash": "32c247da16e7847d957e6feddfff67092db075b7ff3ea29edcb2ea4d4e681024",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1101034,
+          "layout_hash": "eea8139a03561777a6e0e9f88e847424c2758ed3b00f49628df8db11a6b6f903",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1101035,
+          "layout_hash": "a3049807395ae087c128b950f80d519989c7d62cbdf3edaf4f8a930b4688b436",
+          "original_start": [
+            1,
+            3
+          ]
+        },
+        {
+          "map_seed": 1101036,
+          "layout_hash": "ab48ef68b9a7c8c53eb997f1c7cc607101764bcdff069dba1ca93383a7eefbbc",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1101037,
+          "layout_hash": "7bdb538d468ce762c7faaa0f0913b4762dc33067c4119fa707082bb9e1a51ee6",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1101038,
+          "layout_hash": "1cfbce74f1fca60f94dfc34d328a68ee70ca3522e69930095375d9537cad5d8f",
+          "original_start": [
+            4,
+            3
+          ]
+        },
+        {
+          "map_seed": 1101039,
+          "layout_hash": "869533af8461d57bf2a49175f06750dc817c7b07440df3a147e552a3c01b9660",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1101040,
+          "layout_hash": "78f52ce2d6a46352e950be12916b0354c9d51f948f87633154647910136f13b4",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1101041,
+          "layout_hash": "58f73404b90f99476f048352a90d7000acb292a5e05bc80f6354f12dedc36674",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1101042,
+          "layout_hash": "518f2c018d04245bbf50bf28417034b38af054ef4fa7738caf6d632177f880f9",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1101043,
+          "layout_hash": "a29331f40c4251769f9ccf55959155731119eaf2461d4ffaf11cbc736df4f370",
+          "original_start": [
+            4,
+            4
+          ]
+        },
+        {
+          "map_seed": 1101044,
+          "layout_hash": "7e95605b79cf524750ed5db304084167d881256df81907ad2be03ce88c5ede60",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1101045,
+          "layout_hash": "9c4414fe877c832fee7d550fbc6c436f0ba5c6583f9bdf2f8bfe3b041c6c0337",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1101046,
+          "layout_hash": "bd533fcf64c7fd88e4cc0702d548f032137f33abafd564af46a5ee86f8649cdd",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1101047,
+          "layout_hash": "3ca1d30f8d6cfbfafd8fc82a16a7ffb55cfbcd460bedd8ebbb5595227b1391d0",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1101048,
+          "layout_hash": "6ae4dd2ad74f8f02bd821f6bdacb778893c97258243fd646633bc1eb7907614b",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1101049,
+          "layout_hash": "cf60c041dbf80f3c542789414f293eef0bb1b2fd7b20574a24f0554b71223287",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1101050,
+          "layout_hash": "0e5a66f92f3480a8cc8f24e3beb850009319ca4eae6775f960fe57daf675f2b9",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1101051,
+          "layout_hash": "7cc4cb0ef6e021ca95cf746a32777b55ef25420fef7439e0a32ed9ccea22fec4",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1101052,
+          "layout_hash": "72f8227500c3bd197f36116dd595f7ce41e91495c79d1759abb5d21184ddee9e",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1101053,
+          "layout_hash": "67b5bf07e98cfc3a007ce2750bd55842d57171dd84524b64cb0cd65a01ab5e38",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1101054,
+          "layout_hash": "068642faef7d2ed85742bd61b8148b677dcd23bc73e392dbca528768c174284f",
+          "original_start": [
+            2,
+            4
+          ]
+        },
+        {
+          "map_seed": 1101055,
+          "layout_hash": "2cf4af5c0e38842b27e8be9a3f3944a87f9865635ca2e75c33ce5ebe864f0c2d",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1101056,
+          "layout_hash": "ab20fd10752eb57dac5fcaf61eb9806d7e31c29a008e57892fcb73d9ff350286",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1101057,
+          "layout_hash": "9874723c1db2aa7f8677118d88207327ef3553c53bca482c68fca96b282c60eb",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1101058,
+          "layout_hash": "95dd26d3037b62a4f0f90a230fe114d5e683cec838564b5c060c5658fda664f9",
+          "original_start": [
+            1,
+            3
+          ]
+        },
+        {
+          "map_seed": 1101059,
+          "layout_hash": "3ae346972c91bd8b66a6454adadff61cfd3a89b3c950917f2cffc7ea9f064baa",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1101060,
+          "layout_hash": "e83f86b7c98661da858a1d04426205fd204a8f36ffc8125199b9694bc71a0c02",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1101061,
+          "layout_hash": "8aa6302ca7f97daf9634e0a704a65993cfd6d2c725c6f979f95b0924ef8e039a",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1101062,
+          "layout_hash": "2937e0f9435beb784ddefcd80c183ac29d82cb9d60628ed7af3d5ffdde30eae8",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1101063,
+          "layout_hash": "0dde04abbe0fa63717054a576594b81b20923f5287803a7766daa8e9c4064176",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1101064,
+          "layout_hash": "eb1fe01279877ef4ffc9893229c37c946f1b47136b1bf719bafdd48092c7aef0",
+          "original_start": [
+            0,
+            3
+          ]
+        }
+      ],
+      "map_seeds": [
+        1101000,
+        1101001,
+        1101002,
+        1101003,
+        1101004,
+        1101005,
+        1101006,
+        1101007,
+        1101008,
+        1101009,
+        1101010,
+        1101011,
+        1101012,
+        1101013,
+        1101014,
+        1101015,
+        1101016,
+        1101017,
+        1101018,
+        1101019,
+        1101020,
+        1101021,
+        1101022,
+        1101024,
+        1101025,
+        1101026,
+        1101027,
+        1101028,
+        1101029,
+        1101030,
+        1101031,
+        1101032,
+        1101033,
+        1101034,
+        1101035,
+        1101036,
+        1101037,
+        1101038,
+        1101039,
+        1101040,
+        1101041,
+        1101042,
+        1101043,
+        1101044,
+        1101045,
+        1101046,
+        1101047,
+        1101048,
+        1101049,
+        1101050,
+        1101051,
+        1101052,
+        1101053,
+        1101054,
+        1101055,
+        1101056,
+        1101057,
+        1101058,
+        1101059,
+        1101060,
+        1101061,
+        1101062,
+        1101063,
+        1101064
+      ]
+    },
+    {
+      "id": "panel_2",
+      "scan_start": 1102000,
+      "layouts": [
+        {
+          "map_seed": 1102000,
+          "layout_hash": "ee778a0028e3c41a654d01f0731cf78feadb27e876020779067a6a758dc6d991",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1102001,
+          "layout_hash": "5f7220a04b38b64840e49bbd8054a13cf082a0793d0885bc6ca1741fcf873da2",
+          "original_start": [
+            0,
+            3
+          ]
+        },
+        {
+          "map_seed": 1102002,
+          "layout_hash": "ac1ce04c448ad6af173fc5bb0bc2c7db591685eee0048b90be28361e3bff2960",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1102003,
+          "layout_hash": "3e143a25ef3f666c598e1eb8479ed8154b6243b58d67b1e92f6f3b1b3b9f2ba8",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1102004,
+          "layout_hash": "7ed763c6ed1b106fb3111e0b6181bfa883b6f4f8a64c06b73ce907592487a449",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1102005,
+          "layout_hash": "7ec56dc502e089121952c20d154ffdf12d9ad7a25233c42caadfb6069efe41c2",
+          "original_start": [
+            0,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102006,
+          "layout_hash": "066aed741d4fc945c131414b289ca1042f8c008e7409d732724fbbe8c9ba1d6b",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1102007,
+          "layout_hash": "1c4edf8dca6dd431cab53afa02b0f611c814c86b3eaccd50d15a2bbd1b8f3ac6",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102008,
+          "layout_hash": "17662b660edc986d22d4ae5e00402b90238cb4242c021906cced142c1853de34",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1102009,
+          "layout_hash": "faf7111451d76755ec54a800544e7788fd16809f46a6401571e77ab275189011",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1102010,
+          "layout_hash": "9ad775e432250148e7b6c88527c99628ce1c511960775bc13b93e3c0c0608ccc",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102011,
+          "layout_hash": "2d70b61aadd161d4a234b7231069e10cd7ced3fa0ca399716c589ff16ec68dc6",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102012,
+          "layout_hash": "74f0b943d5c4fc945cbaa37c5868b3f3d1ffeb9eaa57274104e6b6209b6b2761",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1102013,
+          "layout_hash": "b402449f0cb251eacbdce8a60e3f57796b9163c8166c96d25210853a570536ec",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1102014,
+          "layout_hash": "82dd94e807185f619ed681100bd515161a918a5604f789813b434f7c03c56a64",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102015,
+          "layout_hash": "85576b2c525d89b3b0e53bd0e29b2a49038a4d8bf13fc8d82eb33648a471d739",
+          "original_start": [
+            0,
+            3
+          ]
+        },
+        {
+          "map_seed": 1102016,
+          "layout_hash": "25a0ed9d92c371d1f93b3caa88c26fb2f4e5d51ebbd5d5cb9383e08dd355c28e",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1102017,
+          "layout_hash": "e60ab6d063877f9475198f77a435e82e0409312be907cc9aa26bc34f63af6132",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1102018,
+          "layout_hash": "753a0ac930f5f52647db4359d5976c0cb1c8b763a29e92c7f5d9fab270925722",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1102019,
+          "layout_hash": "674a9ee18cd514c2515d48b17abfd71ae778fa55db8efa9df7bf06906ceebb84",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102020,
+          "layout_hash": "60d9390186dba94ae2b3d45d57525c03fec62f7e2eb94966e46fb2c3a8c68115",
+          "original_start": [
+            4,
+            3
+          ]
+        },
+        {
+          "map_seed": 1102021,
+          "layout_hash": "68277a7bff7330500ba5d1a4e42161ff12370b6abe9de0d16dccaae5e556b09f",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1102022,
+          "layout_hash": "c2cbb716f230a5d9de6337054726be9e95504a65da2b26f02e5b60999e843c6f",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1102023,
+          "layout_hash": "0cc9692c579549722e4c98e1a5b6542b20323e0c56bca6eb30c6c7c416628234",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102025,
+          "layout_hash": "08e84b8065a77b43112451ea0ff00266a7e3231b3313bf715205efd6860ae076",
+          "original_start": [
+            0,
+            3
+          ]
+        },
+        {
+          "map_seed": 1102026,
+          "layout_hash": "2f4dbc91df3a3bd77d4ceed84c46b9d78d45bde5d65ea61ef2b8dc8ad1b1f744",
+          "original_start": [
+            2,
+            4
+          ]
+        },
+        {
+          "map_seed": 1102027,
+          "layout_hash": "410f43767ec4a3d8d4e597e57f9c8a6deb95ddff67c6da50ab003ef73bdff278",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1102028,
+          "layout_hash": "f937c55b8d288a2d775764ab7e6e8a8a6c142bfe43c02f8f784ff76d3ea1652b",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1102029,
+          "layout_hash": "7a5b2bca3e359d944bb014a38b336f84602d1997721baba49dce2dc17b429661",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1102030,
+          "layout_hash": "df2fc5fdefda6b5f618fb1eb6fe1d4b5f10af382ce0bda1c51c5903c8ab7972a",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1102031,
+          "layout_hash": "fd1763d14b10332176261bbd84e9feca61342deb9d6bed123bc68e921d0d6f95",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1102032,
+          "layout_hash": "9d769e67a284fa46cadc0cba027428b43f293a552d8afd8e071e606e35cf5fd1",
+          "original_start": [
+            4,
+            3
+          ]
+        },
+        {
+          "map_seed": 1102033,
+          "layout_hash": "746cc4a796e1b596a6dd300cda99806106a3743ca9cf5c62e73f89331359d6a4",
+          "original_start": [
+            0,
+            0
+          ]
+        },
+        {
+          "map_seed": 1102034,
+          "layout_hash": "112c4bae9b29c83353fa08d2f12c562c94b3e0debae47dbe8581732c70ace0e0",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102035,
+          "layout_hash": "045ae03933c9f1a5381009b1241fd9b45f21d64ca4bf3bf22410ed5d988d4d07",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102036,
+          "layout_hash": "fd7a0e2e568f7f97be2e23ea171b99808584446f6321391527d0f852055448c6",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1102037,
+          "layout_hash": "f12982ef50904e5ce39248cd99ab4a82d161771b0b2dc26a9ee97b1e4e508d39",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102038,
+          "layout_hash": "7c59f2709c47f27d514a6af3391715f4aa52b98d96325e539862003baf3cac19",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1102039,
+          "layout_hash": "5fb18c179f4fb4e30cc57d487890468204dc8cbb126a218d8d959fa1d5022621",
+          "original_start": [
+            2,
+            4
+          ]
+        },
+        {
+          "map_seed": 1102040,
+          "layout_hash": "6f01ed90c337a00d34dbe12651ce616144b2269a4b72e6a89f07ef4cb7edfc7d",
+          "original_start": [
+            0,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102041,
+          "layout_hash": "8908c1ccd63f1248b026a0bb1ccafbf60d591573c309efe525e60ebfaf55e668",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102042,
+          "layout_hash": "8754ddd6914c1f29d0f366b08dbaa40efe5e74ab07d3c92111f67dcea9343e02",
+          "original_start": [
+            0,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102043,
+          "layout_hash": "0f194d9fe4cab68f8019a974f2a863a5e355064113b1eed7ebf900a415fd9082",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1102044,
+          "layout_hash": "2cbbbbb3b9c96735f18e1f5a810a87eb75680e32dbf15619fd413f035db2d78e",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1102045,
+          "layout_hash": "43d14680b7877e882664a7f3593970a7ab8fa93b7fde054e3273184f0305560f",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1102046,
+          "layout_hash": "3f4aac7618a95f580483c9d2ec532bcf8cb068b09dc3914dccd260930ea805bb",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1102047,
+          "layout_hash": "b3288bc5805862926942123ea17f9400db5ced123ba164fa9d2092b56eba26bf",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1102048,
+          "layout_hash": "d0f512a3270ecdaa91065a22dd58e8f1793f3a6111c9e4aef6507d4b7d48f17a",
+          "original_start": [
+            1,
+            3
+          ]
+        },
+        {
+          "map_seed": 1102049,
+          "layout_hash": "5ee08745c5a8d572120e5b15d25cdf79f1064ca85a4893ef6d5685cca0189b64",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102050,
+          "layout_hash": "f4a4074e4972c11260acec03c9a4652473e1e8569206beaa23997cc8a6c374e6",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1102051,
+          "layout_hash": "a54fe861283c12079d149f14fbf6440956e372b4f2cf959e20bd04cff0b1a91f",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102052,
+          "layout_hash": "1cbf9503fcb3dce8d6920ed3701c78d4fefcb7a35f05edcbb7432ff485165891",
+          "original_start": [
+            4,
+            4
+          ]
+        },
+        {
+          "map_seed": 1102053,
+          "layout_hash": "c7a914f1da356c39210036021181c0451c5dab00f714f5e65a253ad73054ddf6",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102054,
+          "layout_hash": "7a2003aba97d797635d5ed73059f0eb09c0eb873c997208ba0994ed5df081b8c",
+          "original_start": [
+            0,
+            2
+          ]
+        },
+        {
+          "map_seed": 1102055,
+          "layout_hash": "616e598a3efd23ff83ce35d50a354c0520910f81a02ef94e3ab548d035db660a",
+          "original_start": [
+            2,
+            4
+          ]
+        },
+        {
+          "map_seed": 1102056,
+          "layout_hash": "8f8efa148ba39ed22e5a25da7f860934ef99c7d69dcbb8adafac6c1470327502",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1102057,
+          "layout_hash": "e8d30712ff043cdbaedab9fd43b06cdb4a104efffa3f151aa196032627903038",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1102058,
+          "layout_hash": "dffc532023049a592e6cddcf46a0371362cfc7f08303d3434705c0f86bf641c7",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1102059,
+          "layout_hash": "648a06576377a19a792d22ca579e38c1adb480b25fa82339da55695ed681a413",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1102060,
+          "layout_hash": "5aef90eb29d72acb515263cb755625a5cf177050a87e3be6620e1d708e587a84",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1102061,
+          "layout_hash": "dc93e2b6c76b8b1f5571a512ea478cae83ad6c19a1190f3e24965b8bb633aaf8",
+          "original_start": [
+            4,
+            3
+          ]
+        },
+        {
+          "map_seed": 1102062,
+          "layout_hash": "8e3251c0f43d81b10bc9ac15fb8cef25f4b0be131fb337928a36d32ab73b03a1",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1102063,
+          "layout_hash": "42631cd389b31adc67e8196957de299144d40ff4868d88e86777f1e8d4ec7560",
+          "original_start": [
+            4,
+            3
+          ]
+        },
+        {
+          "map_seed": 1102064,
+          "layout_hash": "ad292da85972b8dabcafa1e76c69788df9e30d86aa4fd9b41e4984d8da2a417d",
+          "original_start": [
+            0,
+            0
+          ]
+        }
+      ],
+      "map_seeds": [
+        1102000,
+        1102001,
+        1102002,
+        1102003,
+        1102004,
+        1102005,
+        1102006,
+        1102007,
+        1102008,
+        1102009,
+        1102010,
+        1102011,
+        1102012,
+        1102013,
+        1102014,
+        1102015,
+        1102016,
+        1102017,
+        1102018,
+        1102019,
+        1102020,
+        1102021,
+        1102022,
+        1102023,
+        1102025,
+        1102026,
+        1102027,
+        1102028,
+        1102029,
+        1102030,
+        1102031,
+        1102032,
+        1102033,
+        1102034,
+        1102035,
+        1102036,
+        1102037,
+        1102038,
+        1102039,
+        1102040,
+        1102041,
+        1102042,
+        1102043,
+        1102044,
+        1102045,
+        1102046,
+        1102047,
+        1102048,
+        1102049,
+        1102050,
+        1102051,
+        1102052,
+        1102053,
+        1102054,
+        1102055,
+        1102056,
+        1102057,
+        1102058,
+        1102059,
+        1102060,
+        1102061,
+        1102062,
+        1102063,
+        1102064
+      ]
+    },
+    {
+      "id": "panel_3",
+      "scan_start": 1103000,
+      "layouts": [
+        {
+          "map_seed": 1103001,
+          "layout_hash": "2a808f0c4fcd6327d03ce4274f97bb948cde90e4b9e7801e3dce12762f3f4cb1",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1103003,
+          "layout_hash": "8b50b57414f635481c970dbe1eb2e77c5a2204f8d541f0382f8499604ba51162",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1103004,
+          "layout_hash": "a7264f01cf5b7a14a11865a7ab3be0a9c39d947c12ffed71943854b901a612d2",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1103005,
+          "layout_hash": "ebd4927caf2d5f0708000ab2783b9ebaf5236f03731591ac7943149551b8be40",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1103006,
+          "layout_hash": "6e1dfdcc56c9bf7aebc365af76c96cf10c729f18f5519f3eeb90a904c0e49c1a",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103007,
+          "layout_hash": "4847fc0709e9b1bf942d5bb13ef5e8d4114233de60c66ffe7cefbc75d7bc65d6",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1103008,
+          "layout_hash": "fcbec248889e35b2bce950331e5e46e3a776b3a8e94bc24b34a666304e8e230b",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1103009,
+          "layout_hash": "d4462dda9fe26583fd64febd190d656f2482b7b63e8e853f090c7cf56b5ce374",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1103010,
+          "layout_hash": "cd4694bb90f345ef2f96909558cd3f2f9ad9dbcd3b93ca2877105699eca14d29",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1103011,
+          "layout_hash": "33dc08d6595adf2dc717d2d887116295a3580a10b3fb56925293da2797a4bc3c",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1103012,
+          "layout_hash": "1c5e6e9900b6d301d03675284a9a46d074b1d866fc42686babb331adf4cf9945",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103013,
+          "layout_hash": "6da1135d216ef9ffa1849913ad72cd06d1087e8ecd9dd9ace753bcde6bdabd05",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103014,
+          "layout_hash": "cbf9a83ba152048f738b61cbdeb52d344b017ecaf46277e4cd1d389e6c86ac2f",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103015,
+          "layout_hash": "3ecfd92c87ef8db15c748443d2c301dd81bced1cce091e677d7078fb96205748",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103016,
+          "layout_hash": "d1631f20f6dac8f6c841cb747520a648b13673b9969aa58ede53b52a23658b97",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103017,
+          "layout_hash": "1f54d5f12497e1faf08fdc0ba19ca8007f31a8c9b29751ad863205bfae46c02c",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1103018,
+          "layout_hash": "2ce1303d9ab3452ae0a23f4aea94303721fd7a29e919330c28487c74fc7c9dd7",
+          "original_start": [
+            0,
+            3
+          ]
+        },
+        {
+          "map_seed": 1103019,
+          "layout_hash": "9e9c645e2c832f7c42658b4a717bb71f27d9fb8174134f8e1e83585d53100908",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103020,
+          "layout_hash": "bf18ad7f1df6a5d009090a102fd39c62c02adf7fd81f5004f34675fd03178560",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1103021,
+          "layout_hash": "7d6b37159f65fb1884797bb0ad5a7c32f42ed8a39ad4910f1af21a8851aaa5c1",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103022,
+          "layout_hash": "3a139a8069241dfb885aadaac04c70f5edb357ef381f199310de6fe84533096d",
+          "original_start": [
+            4,
+            3
+          ]
+        },
+        {
+          "map_seed": 1103023,
+          "layout_hash": "c656eb1d004456e480c5ee802fb2c51e339662f6151ef797cde53613986d6250",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103024,
+          "layout_hash": "523aa8b67702ebf3e3f7619188d3fda315c30b251621d7a35f60834f40eb460f",
+          "original_start": [
+            4,
+            4
+          ]
+        },
+        {
+          "map_seed": 1103025,
+          "layout_hash": "5d17924b9fd089cf10c5ce9a210fb2e7345a256f88cfe7bc7330ee4a817074ad",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103026,
+          "layout_hash": "0d3688909523b48b12c554f4205a094713620f7a3762239b6899dcea923a4a73",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1103027,
+          "layout_hash": "d4441a1bcf44b407623c162c5541688790481c87fc18b051fabe818912c17233",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1103028,
+          "layout_hash": "6010b882cd1da9ed67110c5aa145252f712839e5695232e2c29c7b2f2bfb8e3d",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1103029,
+          "layout_hash": "775a4f7d41d5580954dd570702b5ddcd396ccb7c39f66120025384dd6ad2b7bc",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103030,
+          "layout_hash": "4fc09b569cf20fffc0d294db994e9a4a82aea7c36c32b81c52e9992ab5d84d9e",
+          "original_start": [
+            0,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103031,
+          "layout_hash": "9a2a50238d6792694a2cfce94f0a7361ec6f4af33643ad008c0179f90ff48791",
+          "original_start": [
+            0,
+            0
+          ]
+        },
+        {
+          "map_seed": 1103032,
+          "layout_hash": "6899053a412334fb146fc7147e702ba0729a80431e8c4d6ada279831df2ccb62",
+          "original_start": [
+            0,
+            3
+          ]
+        },
+        {
+          "map_seed": 1103033,
+          "layout_hash": "f6794bade314df7aaaf3417167bce586b4cf37d102e018e6c8571ee80c11f1d1",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103034,
+          "layout_hash": "d72635393b40bf94a5d0eff190a935972a6ff34351c269a43a18f932b31074bd",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1103035,
+          "layout_hash": "0c38547fd7c44f2629f33a2ce9b5d099fe29fa9eb3d176032546faeb2dba6c08",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1103036,
+          "layout_hash": "bc350db90dc1278ece262690396245f977fe903deadd19031d2b2654c84fd6e7",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1103037,
+          "layout_hash": "acf2e916dc4c6dd7057f04a4a8cd878fbaed0ce28cafca785873aec7334a5cc5",
+          "original_start": [
+            0,
+            3
+          ]
+        },
+        {
+          "map_seed": 1103038,
+          "layout_hash": "113e869815eb12211de48e60a7f1251279efacbbb31c68128ae6d264ff0d2986",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1103039,
+          "layout_hash": "4a63cdb97832c4b61aa74d54ab6a46e5fbc90e5b0e58895f4b31acbdd0c8ca80",
+          "original_start": [
+            4,
+            4
+          ]
+        },
+        {
+          "map_seed": 1103040,
+          "layout_hash": "7ab573a9bde281cffdc0c92e6909005c2f0c7f0509ca91f801549e7725dc224c",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1103041,
+          "layout_hash": "112c8cece285bd1dae524072efde0ec2a522568507d69b2c7ee4017b612a8c14",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1103042,
+          "layout_hash": "ebbed585247febbf77d44191fdada50934093515d847db489a3962f109a45bc3",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1103043,
+          "layout_hash": "4dbc1ecec1b82dbe10b8ad09388a121d7839e51057e1753e5f6a2359383a8f9f",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103044,
+          "layout_hash": "248dc04d1a98bb8797fe08ad9c39b99193983c540346fa36be2cfc951ec1232e",
+          "original_start": [
+            0,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103045,
+          "layout_hash": "26d1e044ca157dc6979b81049655ac4063e5c0b74a3b7cabdaecebc559beb5fa",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103046,
+          "layout_hash": "9bf79c7eef6c766e96c5392b586d8a088343cc74e443a21e7eb25976007ffbee",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1103047,
+          "layout_hash": "6146631e117d635a773aa5e47b45f54b58d78b81d63be97f20a026515a610e33",
+          "original_start": [
+            1,
+            3
+          ]
+        },
+        {
+          "map_seed": 1103048,
+          "layout_hash": "ac896babc5e09d1eef077e2f1d850b0c685578456caf731ded69b9c5e347a97a",
+          "original_start": [
+            4,
+            3
+          ]
+        },
+        {
+          "map_seed": 1103049,
+          "layout_hash": "e6312a5d37be35140287dea448aea98a3eabd9263f4903f379ceb57d9991b8d7",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1103050,
+          "layout_hash": "72038b414352c67453d23c4a98fef4285cf91016c22367d55ea235f058879c3f",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103051,
+          "layout_hash": "af5981d2d055ca2102f364811d4eeb906670deaed4b68329276d973113414b18",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1103052,
+          "layout_hash": "08f16217530a4213710ac1fdf042e1386d20c22692ec5a689a1eababbc8c948a",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1103053,
+          "layout_hash": "c7cd0c3f2ea4e1a95816c83b5bb7a8915290524bd2f20d47ac0a5602e00b3e77",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1103054,
+          "layout_hash": "efa98e83add0f4b90abfa030c531275360eb3143cef264601bee7b9790bef6e7",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1103055,
+          "layout_hash": "363bccfab5a667a088a76487d624f53a258bf06656fbf42d3aca4d759992a74b",
+          "original_start": [
+            1,
+            3
+          ]
+        },
+        {
+          "map_seed": 1103056,
+          "layout_hash": "0da1cdaedb705fb3b2988a97df0e3c863372ae95b78d4beab69642786fd1f09e",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103057,
+          "layout_hash": "51fb406e3738b6c6f90429b9ae31c93636b27be7ede88ae9966b5b5cd3ec4aae",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103058,
+          "layout_hash": "4c48e5ffe2118a6a0bf9f0340222bf5015ed1afd9241f70c185ca62a566774b2",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1103059,
+          "layout_hash": "53848f14e179fbc46c5f505c840a73b786b56dbacbbbf1c881288555160dbaa3",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1103060,
+          "layout_hash": "990e7f57b4a8ffbed3bb3aeb4ff4dc279ca7273389ed18854425e13744cec31b",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103061,
+          "layout_hash": "4af13d0830c551c34eb794382cfc1c6eb3eb474e1009f2b2f086011d7fb15878",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103062,
+          "layout_hash": "7b9678df0826b7ed3825e9bbb770d3f7c899d70c8bf57ea5b34901117845bf77",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1103063,
+          "layout_hash": "f986d4c2f922378f1249c56a834fed1add0989d1916117db9bde488f8c2169e5",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1103064,
+          "layout_hash": "70f3ce6d69cd0451cd2d7cc880f0509dc0ad126083849d6c2b686c64ddf8166d",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1103065,
+          "layout_hash": "2ec4117a89bd48098c8ec580d9c13a77089c7013ae95c2a96666d46ca3493e23",
+          "original_start": [
+            3,
+            0
+          ]
+        }
+      ],
+      "map_seeds": [
+        1103001,
+        1103003,
+        1103004,
+        1103005,
+        1103006,
+        1103007,
+        1103008,
+        1103009,
+        1103010,
+        1103011,
+        1103012,
+        1103013,
+        1103014,
+        1103015,
+        1103016,
+        1103017,
+        1103018,
+        1103019,
+        1103020,
+        1103021,
+        1103022,
+        1103023,
+        1103024,
+        1103025,
+        1103026,
+        1103027,
+        1103028,
+        1103029,
+        1103030,
+        1103031,
+        1103032,
+        1103033,
+        1103034,
+        1103035,
+        1103036,
+        1103037,
+        1103038,
+        1103039,
+        1103040,
+        1103041,
+        1103042,
+        1103043,
+        1103044,
+        1103045,
+        1103046,
+        1103047,
+        1103048,
+        1103049,
+        1103050,
+        1103051,
+        1103052,
+        1103053,
+        1103054,
+        1103055,
+        1103056,
+        1103057,
+        1103058,
+        1103059,
+        1103060,
+        1103061,
+        1103062,
+        1103063,
+        1103064,
+        1103065
+      ]
+    },
+    {
+      "id": "panel_4",
+      "scan_start": 1104000,
+      "layouts": [
+        {
+          "map_seed": 1104000,
+          "layout_hash": "edf0bb4417de0b8204c9be700f622ceacf2d5274b32837f16b2405bc398bba2f",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1104001,
+          "layout_hash": "1c56e344282bdc22e441cc1e7e602daf46d0714f6a6b8d9218454dde328e2c7f",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104002,
+          "layout_hash": "e24ba9c9b30efbd3a53f68fc475e1b7c604524e19da62c8a2301c9db944e91ae",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104003,
+          "layout_hash": "e3d23672f1dc55cdae62fb89cf6dd974f6d6cb1996e93d83ba3c5069a8edc03a",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104004,
+          "layout_hash": "a4a2652dbe109ed4de2c808a5eb2e28fd8e1adc9b6a7f42d3859ab574670850e",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1104005,
+          "layout_hash": "fba85ea416c5bf3ce7edc585b8c7155e7ad5d0fce5089e26ec4b1182f9222c12",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104006,
+          "layout_hash": "d5580f88d0319642359064cf1c14e0e427dab5bf10eeec05fb646ccd496ece37",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1104007,
+          "layout_hash": "08554ff9fc85cf2dc86c77711cd13ca8829cd5610587ce9110168421d5db3092",
+          "original_start": [
+            4,
+            4
+          ]
+        },
+        {
+          "map_seed": 1104008,
+          "layout_hash": "fded10922d599c5c0b46e33dc90b3eb182b331bd1c0b5732c859d18eb695868d",
+          "original_start": [
+            1,
+            3
+          ]
+        },
+        {
+          "map_seed": 1104009,
+          "layout_hash": "9b942e2db20e014afb8a5d9d6e7fcac173030cdb76c5304995ee17b4f439213f",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104010,
+          "layout_hash": "b04ea0e5a1687f6b92fd99f367d748b7406b038ef4a44cdcd8b066c8ff963886",
+          "original_start": [
+            0,
+            2
+          ]
+        },
+        {
+          "map_seed": 1104011,
+          "layout_hash": "2681ccd4a3e77aff5ad64502e4cce8d25a22943c585395171e565ac95d92cdcf",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1104012,
+          "layout_hash": "757115ba1e0cb6cb131993abb4e314a4f4c7db06b601bd9596cdba3955250dbc",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1104013,
+          "layout_hash": "8e9fa3743250e5c6a799e7b3daa769dfc791a3470e78d75c7f230fe3c7dd0886",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104014,
+          "layout_hash": "bba9522012dec5b03810debc3eb0a15aae1b23a3d249cf6df68daa5a22217d1a",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1104015,
+          "layout_hash": "171033ad70c695050acbd3e1828427172577118947f4a074a20d6d1633d3549c",
+          "original_start": [
+            2,
+            4
+          ]
+        },
+        {
+          "map_seed": 1104016,
+          "layout_hash": "9037346304c42e27fac9e7bbae01158ac675026436967adfb56b9cb34875c2ac",
+          "original_start": [
+            4,
+            4
+          ]
+        },
+        {
+          "map_seed": 1104017,
+          "layout_hash": "041f3f7e6936b1f9811abb5c05e5af437f601359dcd6b7eab537f8652b5ab5e3",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104018,
+          "layout_hash": "b19b7a3281116b5bcb5581314cfa6e48683cd52b4d334377d97f068e7c33c20d",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1104019,
+          "layout_hash": "ebc48d3b071a956266d38dfa33bd217f5b8746499b7206c7959e95b31f1d1fd0",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104020,
+          "layout_hash": "d57f0b3d566e169068451d50914bb54bb000655c71f0a981d25b0329ce3e59de",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1104021,
+          "layout_hash": "e08d86329240b45d3a3dacc70690ec0e1f307e1574f9f35062c31027db0fabe7",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1104022,
+          "layout_hash": "f1438108345b0df04c7b325954bf4270e7ce3f940aa65660af6e0a50f3782afe",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104023,
+          "layout_hash": "37a3c2b722c1dd2dcbd24796a21a066e97ba469c2101eea2ef86906cf763a5c4",
+          "original_start": [
+            4,
+            4
+          ]
+        },
+        {
+          "map_seed": 1104024,
+          "layout_hash": "fe9fafa4365c8cce3e7f2c24599f5a11f05ab634a722b414f0069f55eb5bcdea",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1104025,
+          "layout_hash": "64a389186e7524b5a6316c0206a7c1bb76199487888d5304586de986d549da31",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1104027,
+          "layout_hash": "5cd102880139e8950d47c479fe98d22e453ef057c2b3a96196dba4c4fdddff1e",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1104028,
+          "layout_hash": "29a4e63b579634dc69636b3da8c6ae1b70185fd69936583c337d1f45de283b99",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1104029,
+          "layout_hash": "a26956cf720708945551870af8c5c8f65b0f97f0777b0a1ffbd4223a8a31faba",
+          "original_start": [
+            1,
+            3
+          ]
+        },
+        {
+          "map_seed": 1104030,
+          "layout_hash": "855a0e42f7f05cc9e5cc59f49fb00c5771447fa2cc042fe91ce8912578301859",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1104031,
+          "layout_hash": "4a2581d21b8fdacec5751649f3d9e82538e3fbe1c5641fed8248ffaf868a4a4a",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1104032,
+          "layout_hash": "663ed5bd7ffefc95511deb66e242547d906605bfdb38279c0c55e633dd3f8f0b",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104033,
+          "layout_hash": "88347da78d60077c9cf5e78514305c0ef6b2b827ac24ac926576b23539e16808",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1104034,
+          "layout_hash": "47b6c3ef565a13440cff00b39c79f7b874baa158b175c109bb73af6d2d162411",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104035,
+          "layout_hash": "64ca0550da03b5088b8439f538c586c5b90e835d771eebd469b7219e1580d11e",
+          "original_start": [
+            0,
+            3
+          ]
+        },
+        {
+          "map_seed": 1104036,
+          "layout_hash": "8e79bd08ce9a3af532f9b326a80e27d34a1bc4720f310d3566d1114124be8b4e",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1104037,
+          "layout_hash": "45aa5872016d1552b2b982c5c134bf122c8bda7eca682fab226001fee2f36e1a",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104038,
+          "layout_hash": "7851a3c1930e5447dc349b2e17f4e20221c01428d32277a7df6e0d98472d31f1",
+          "original_start": [
+            1,
+            3
+          ]
+        },
+        {
+          "map_seed": 1104039,
+          "layout_hash": "f1238d317ed813f9203e9db687183a3ac7d897180fd41a77bb88fdccde9634db",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1104040,
+          "layout_hash": "f0ea5f2043f29a2c9704608858d662bbfbd9755baf39b096ca83da71feebcf07",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1104041,
+          "layout_hash": "d44458198d6fe4cf02f3b1c145bfc832ca8845956e72a38ebb80aad82f6e005a",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1104042,
+          "layout_hash": "ab3946a5af5c410993a857113a3ce4fbbe5186dd19b7a0d4290394d5b7031193",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104043,
+          "layout_hash": "700e7beb7011f5e061c5285647741cd3824b69f9e7937b5087f310fdef0b29fd",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104044,
+          "layout_hash": "d2c3cf79c98775c085d03b4bb5091cacc1a1470254682c50f4fa86d0a334fa46",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1104045,
+          "layout_hash": "9351d68d0240baf5710037496b1546cb5bc1557aaf78e3346f6ba9850b093771",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104046,
+          "layout_hash": "4d37ccdc1097da49734ba61de12555af7f45f3f3269ccfb6ce0d987411c59173",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104047,
+          "layout_hash": "76065cd413e6e14813089beafc8d3e27d842f687aea85ccdc0c9c5a449d95d7d",
+          "original_start": [
+            2,
+            4
+          ]
+        },
+        {
+          "map_seed": 1104048,
+          "layout_hash": "2f96a44956eacc29778410be24448f67ab16e3d6fbd016e8b2d802f2c6b94268",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1104049,
+          "layout_hash": "75788f5714e999b75fd1a78a246447500efa289e9ddd8aa40add17932061ab94",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104050,
+          "layout_hash": "dd265cddfa6e2c9a8a4b45861b1c2b33ad7edc8268deee3881f6404299af6e12",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1104051,
+          "layout_hash": "81439c8ca5fa871c92a7f23ff6b61146d2f158597f9ec077ca8aac7fdff2b578",
+          "original_start": [
+            4,
+            3
+          ]
+        },
+        {
+          "map_seed": 1104052,
+          "layout_hash": "ae9073e6f4797359e2deb5c59e557ec403fb9b71e98e1e151f8ed9f71b69750f",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104053,
+          "layout_hash": "8ae1c6c616342c48666e424a1a94afeb24efb55bec828447ce0c60016bffab92",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104054,
+          "layout_hash": "865da7bb16e6cf6ecde695e261b4c7b7c51493f99447be02be3060202102a0bd",
+          "original_start": [
+            0,
+            2
+          ]
+        },
+        {
+          "map_seed": 1104056,
+          "layout_hash": "00e0aa7610b894820499365fecb879b0b283dcd096670aa0f88575a6d68d3ae2",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1104057,
+          "layout_hash": "ff4e49ed07a281a763d0249ac9353f390287c48d6e34dcb27255ad2e7868b56e",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1104058,
+          "layout_hash": "64dd86cb30517f001954a3963d7a665a1e9fa56dfe4aceed591cb3414e6508d8",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104059,
+          "layout_hash": "1e915c52ee907fa0e9ae820ade541af013481266017255893072e032ed07ba9d",
+          "original_start": [
+            1,
+            3
+          ]
+        },
+        {
+          "map_seed": 1104060,
+          "layout_hash": "f6e90d9b1daa781d21d9e02b3dafbe117ea581e4f2c23e73d2799d133d10191e",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1104061,
+          "layout_hash": "d943c1a7897ca12eb1037e98a5f03612b9ab0425e2e410941d113cc4bf776ba1",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104062,
+          "layout_hash": "b1285c233873e860a6365d8f118a735d3db12903efdca3eabaf71b0ae740b178",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1104063,
+          "layout_hash": "7d0745f9ba9fe9c1716fb5d2213320b43e3b15dc336870c95342f9362007f0ad",
+          "original_start": [
+            1,
+            3
+          ]
+        },
+        {
+          "map_seed": 1104064,
+          "layout_hash": "3bee28bb6fcd1bcbdbe59cd5605cb72e03aa87b3a3fac22ec0a9c0542a93909b",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1104065,
+          "layout_hash": "90515cccfd24b0449775b61b0fc35774144792c42ea2caab6ff5c9f7ae5c008e",
+          "original_start": [
+            0,
+            0
+          ]
+        }
+      ],
+      "map_seeds": [
+        1104000,
+        1104001,
+        1104002,
+        1104003,
+        1104004,
+        1104005,
+        1104006,
+        1104007,
+        1104008,
+        1104009,
+        1104010,
+        1104011,
+        1104012,
+        1104013,
+        1104014,
+        1104015,
+        1104016,
+        1104017,
+        1104018,
+        1104019,
+        1104020,
+        1104021,
+        1104022,
+        1104023,
+        1104024,
+        1104025,
+        1104027,
+        1104028,
+        1104029,
+        1104030,
+        1104031,
+        1104032,
+        1104033,
+        1104034,
+        1104035,
+        1104036,
+        1104037,
+        1104038,
+        1104039,
+        1104040,
+        1104041,
+        1104042,
+        1104043,
+        1104044,
+        1104045,
+        1104046,
+        1104047,
+        1104048,
+        1104049,
+        1104050,
+        1104051,
+        1104052,
+        1104053,
+        1104054,
+        1104056,
+        1104057,
+        1104058,
+        1104059,
+        1104060,
+        1104061,
+        1104062,
+        1104063,
+        1104064,
+        1104065
+      ]
+    },
+    {
+      "id": "panel_5",
+      "scan_start": 1105000,
+      "layouts": [
+        {
+          "map_seed": 1105000,
+          "layout_hash": "639379010febc95613c435b282933634ae2af3f4a32ca8612315d1e410db7b08",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105001,
+          "layout_hash": "8023dee7c743c485637f2fc0fb7d4cc60256868baff26c8a679731706ca7f447",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1105002,
+          "layout_hash": "d982768e5d06c9c307bb5b43b4c1d35865a1c680b3e6533792f9bc65d8b08035",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1105003,
+          "layout_hash": "71e8194d9668d5f77a4ae57d2d4f6c0e1ddd1d611ccb3419847103ad3d4ed329",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105004,
+          "layout_hash": "5c17ea29bce66b923c2e0dd579d104ee067056eb727fb2e57a3f2922d01cd053",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1105005,
+          "layout_hash": "48bc4207da6b362cc5d7935dc149f52f3f3951a7d66463cfaa8fad29d8bdf720",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1105006,
+          "layout_hash": "c3e116905488a3ac1ae3c73d9731a6ba2acc6906d76fe4e97d4187306784da5b",
+          "original_start": [
+            4,
+            4
+          ]
+        },
+        {
+          "map_seed": 1105007,
+          "layout_hash": "164ef33f2ae44c442929b50de8cb0e547ba845915cbeb0835da59e605be316f6",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105008,
+          "layout_hash": "ec5decbea2900fe2ff4f2cffb0dbd8f1c52085d7bd4826e51eaf96ad329b7132",
+          "original_start": [
+            4,
+            3
+          ]
+        },
+        {
+          "map_seed": 1105009,
+          "layout_hash": "1b6b0d2c418e06a2fed29c948f1a144f9ecddc026f88adea87910aa99a79fc3d",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105010,
+          "layout_hash": "299b90930ebf6dd8e9666352499dfa1772ed0c0ab5a38ff0b5b3fb2faa4bd68a",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1105011,
+          "layout_hash": "e897e77626439eb1700584ba2d49c279f544099c365e1f8de60b1541c2a0df15",
+          "original_start": [
+            1,
+            3
+          ]
+        },
+        {
+          "map_seed": 1105012,
+          "layout_hash": "8236a6052c31f4d25e49a1cce2f5d02bcc7d85390989903a4556933b59d03c6b",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1105013,
+          "layout_hash": "ab1076e93254f46b6c7d77cbc61e5e066bbef46fd18d232238223cab393694e1",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105014,
+          "layout_hash": "957b4d3b79a3d00e7e73a4ae13511bcb16bb219a1dcd22c313b03e1d565ba30d",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1105015,
+          "layout_hash": "768eb2ebd32923133947ee0969e06369ab8fb8dd9f97ce796eab34e0eda43c4b",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1105016,
+          "layout_hash": "057583430b1cda34d30cc0988e7c9bfe340e51a4ec158de78ec55cca321d0374",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1105018,
+          "layout_hash": "948b42bc78b2ebf38a7c44a6ded80566b1f09e368fde130ccb35966c3285ec27",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1105019,
+          "layout_hash": "1b9afd8d523d5e51974303a43c8d3e063ad0f5c1c254d2b71da3224d5fe6e9f8",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105020,
+          "layout_hash": "c2338a9743b690b3216af6ba6e199e5646efbd78e4b4642d84a32e4e8ba3db2f",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105021,
+          "layout_hash": "e78928dcc73bb29f25daf9c10ae2f008ef9a7d13eb771b9c69d8b419b46dce21",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1105022,
+          "layout_hash": "f82e86e27068f757191eab91c6c70efc841bb0a59bb555dc62803a30c3ec611c",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1105023,
+          "layout_hash": "017f240d810d1e095525f8f5adb997b3b2aabf1b379f113ea1368b7df5d3d172",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1105024,
+          "layout_hash": "14a450f1d2710476e0ce9ccbc178f38cd3506d5bcf6e49b096debaceffcef930",
+          "original_start": [
+            0,
+            2
+          ]
+        },
+        {
+          "map_seed": 1105025,
+          "layout_hash": "f75ad8ec166dbcab052e241151cbe90c6cc02021239c2f4acd60dac7a7fee42a",
+          "original_start": [
+            0,
+            2
+          ]
+        },
+        {
+          "map_seed": 1105026,
+          "layout_hash": "ff7d856921e866474fbcc1a677bd37ea29856293cd3eb72ef55577375664bc87",
+          "original_start": [
+            0,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105027,
+          "layout_hash": "af2d6cfc3a7361fec1c82d4b8843d6da3e9b50f1c8a0a21abc233de44302613c",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1105028,
+          "layout_hash": "7c6fb7da965fa31384c45bd0e533aba0bc1afd978320958c4eff9490ff8acbe3",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1105029,
+          "layout_hash": "1544ee4aa716bccde105b1f3e50eaf25ec257007bc8a440fbb54ce629e68c934",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1105030,
+          "layout_hash": "94c459feb5b7129c73aed83a17c5156aff8ca1a70b532adb64ca25e4c4b94ca7",
+          "original_start": [
+            2,
+            4
+          ]
+        },
+        {
+          "map_seed": 1105031,
+          "layout_hash": "886a80df13dffb255d0fad613c5bac9910fc126f98ec2a760098f8c80661b53d",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1105032,
+          "layout_hash": "252877df6f46ca286193e020738af4687742c5ace78c375d746beb2f9806800f",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105033,
+          "layout_hash": "368b21a6e31a5cf51516659519e4f7ff0a743504d304ed0c2c383d32e24fe60d",
+          "original_start": [
+            0,
+            3
+          ]
+        },
+        {
+          "map_seed": 1105034,
+          "layout_hash": "8b5196eabb2751a45792de119d46ad865705c86456dbab2df4fba8107890296c",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1105035,
+          "layout_hash": "7184891345b80949f9e15289a0b7d2135c79e4721c789fdba0bb4909c8cc6600",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1105036,
+          "layout_hash": "8b890f36c8e429736464547ed8d96ea2ccb3afbfbb13dc858813a9af0f7f5ab0",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1105037,
+          "layout_hash": "66b136462dee8347b2649cc878ec7560148887948df068c79b6013b54d60c58c",
+          "original_start": [
+            2,
+            4
+          ]
+        },
+        {
+          "map_seed": 1105038,
+          "layout_hash": "121e8b00b2ec0eeaf4d0ccdc09b42e4b8542f2c9a445896feb6a970a556ef835",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105039,
+          "layout_hash": "e553eee05e7cc1836c508ba8db328b9e127d8fda57f9b9b81f85fae4326b334d",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1105040,
+          "layout_hash": "36fc9962a8da3189a279ef2ef12de293f992d5156d4d88c510b708ab50f2dfd4",
+          "original_start": [
+            0,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105041,
+          "layout_hash": "68ee221ce9a44f0603d40fc5a14b6c99d7e874a54ac19f59c311b165097d2a00",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1105042,
+          "layout_hash": "f882dc358b3e673248a1a49d07b65f9ca73515c0c1f1c560378e3ae709028dc5",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1105043,
+          "layout_hash": "c906aac9f6eedb16ae41f46671705dcb14c8427edf4e9c0ec578b6a3023adfb5",
+          "original_start": [
+            4,
+            3
+          ]
+        },
+        {
+          "map_seed": 1105044,
+          "layout_hash": "9ef01b65a030a76d6a5ecc380193376e2a6b95e743111450e9e88c5e0a533576",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105045,
+          "layout_hash": "824aabc90fa23a24c1acc21da09ae91163026b6ce18bb0e5467d8b99c223f20d",
+          "original_start": [
+            1,
+            3
+          ]
+        },
+        {
+          "map_seed": 1105046,
+          "layout_hash": "8154d0ff5a2e608d2abe98cee913b844687480d3d5680af4846beb2b8f3c6dbc",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105047,
+          "layout_hash": "45b3a28caa41b08c755632b08392be393550c8ebf7cc079d295d5d371181876d",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1105048,
+          "layout_hash": "e9b404bfa0b34e87efc509905a6a1ad7e8a3d20244ec98088dcdde69f74f72d1",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1105049,
+          "layout_hash": "91e46fe26581e3c77c512c9c4c020c3011784bda0fccd44351bcb24ce853950c",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1105050,
+          "layout_hash": "4b3b8d28522ce2cd4585a124a8a8f4ed0d28f1e6ec8123716678a67ed9a3a38b",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105051,
+          "layout_hash": "bef568f62a4a4440cd4b21976a1564ec4b95061e81052e9844b7b0f06b037ab8",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1105052,
+          "layout_hash": "cb290b43ede41aa77a746b60d76616212d480112c5f956c4356a3c8d0010890b",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1105053,
+          "layout_hash": "06bc312a4341f21cf8e65703dc17f793433ce06b279883e7fc086b2ddf2e9bae",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1105054,
+          "layout_hash": "dee40074f0fe83e9da5269e02ac90316042460206cbc88715c2757b7e2862760",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105055,
+          "layout_hash": "462726c5fd2663687e7e8bff3ae9cfd40c05700cad7b120d47508151af4df474",
+          "original_start": [
+            0,
+            2
+          ]
+        },
+        {
+          "map_seed": 1105056,
+          "layout_hash": "7f3e2965b8cf185840c028b3d8f8b0b144364ba5a3d89ff3bb4e50fd77f96019",
+          "original_start": [
+            0,
+            3
+          ]
+        },
+        {
+          "map_seed": 1105057,
+          "layout_hash": "6fe80451f0827bab37524400862cb9a71a038af95be9e2f203d31b8311a03e08",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1105058,
+          "layout_hash": "df0706b7dfdc2e4927b1836f0b4cef60c49955f4b24754727e0e518c88c247c6",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1105059,
+          "layout_hash": "77ea890ced06345f3aeb8848b5d57b0b8b53c7c27e7c94d3cdaa6ef1639f5c74",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1105060,
+          "layout_hash": "9f841b1f32ba26488186d2297bd992818ee82c6a3eb9eebe4e76d04653ec39c8",
+          "original_start": [
+            4,
+            3
+          ]
+        },
+        {
+          "map_seed": 1105061,
+          "layout_hash": "4b1cf4bf9ef4b7d9eb664da9f0756e0dc0dbc62e126b69d162fc8ade50b82c5f",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1105062,
+          "layout_hash": "3b3d393b8f2370a934010e5cb4eef7e6e8b9b93b0b788251e8e586ee8b79e84f",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1105063,
+          "layout_hash": "5e7072513d456d7699e8f7d247563834af70cdeebd1444a4e924514319f3886f",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1105064,
+          "layout_hash": "33b543ef978997e8b48d2df9d410c6ff830c54cf5b3e7a7475d67ed83548a15b",
+          "original_start": [
+            4,
+            1
+          ]
+        }
+      ],
+      "map_seeds": [
+        1105000,
+        1105001,
+        1105002,
+        1105003,
+        1105004,
+        1105005,
+        1105006,
+        1105007,
+        1105008,
+        1105009,
+        1105010,
+        1105011,
+        1105012,
+        1105013,
+        1105014,
+        1105015,
+        1105016,
+        1105018,
+        1105019,
+        1105020,
+        1105021,
+        1105022,
+        1105023,
+        1105024,
+        1105025,
+        1105026,
+        1105027,
+        1105028,
+        1105029,
+        1105030,
+        1105031,
+        1105032,
+        1105033,
+        1105034,
+        1105035,
+        1105036,
+        1105037,
+        1105038,
+        1105039,
+        1105040,
+        1105041,
+        1105042,
+        1105043,
+        1105044,
+        1105045,
+        1105046,
+        1105047,
+        1105048,
+        1105049,
+        1105050,
+        1105051,
+        1105052,
+        1105053,
+        1105054,
+        1105055,
+        1105056,
+        1105057,
+        1105058,
+        1105059,
+        1105060,
+        1105061,
+        1105062,
+        1105063,
+        1105064
+      ]
+    },
+    {
+      "id": "panel_6",
+      "scan_start": 1106000,
+      "layouts": [
+        {
+          "map_seed": 1106000,
+          "layout_hash": "240f79af82999bfcea30d4b0a776d02b1abaa85aeb1d708f99f4fd77d0224536",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1106001,
+          "layout_hash": "a4fe30acca2b5b1e04dff3d948a5dbcfec36a7987f8c040f7797603f6bb4faa3",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1106002,
+          "layout_hash": "7f7aafd81cc4d16721ac6d98c9564cac4cee3dc61c084d712715b6986306ae23",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106003,
+          "layout_hash": "20cc5f74ed1fb36cce5a4e971bf1019d9a27105d45cbd8ed5a4ae08ce47f71dd",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106004,
+          "layout_hash": "e3f005f62556346607f4c9576b04f7f59ee9d5645fc687004dfc8d9896748464",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1106005,
+          "layout_hash": "c029279a4ad289195dedb2435cd342f5e11ac9c80b7cd94e75362fa9962619c0",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106006,
+          "layout_hash": "29be700702da46b3fb54b622c9b97e320e08c08f12c76febad6bba9ad67dadae",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1106007,
+          "layout_hash": "85b0e7dba422e68d6707b058409fe8063a931563be28a020f82b6a48629e5e24",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1106008,
+          "layout_hash": "cdf1b6db0e953bebeb00f7ebc901229cb0accc0ae79e38ed7d71bd80717738b3",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1106009,
+          "layout_hash": "3ee017e41f04d48132513719f5c545ddd94ce7edbaa7fabd4f9ee79c05062f85",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106011,
+          "layout_hash": "02e66a7c18d93b9b3de12ae78f318bfe24a646cab7874cc5ecb298ebcd657a91",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1106012,
+          "layout_hash": "61f3954380aba3c3a204b3979941dfd957ea66afc542d700846f96a07d9a13b1",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1106013,
+          "layout_hash": "aff268470b77668757b82d6c78a263188ff17a2ae195395e907dc153672220e7",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1106014,
+          "layout_hash": "bf2d08018f731b99920d7f8d2bba372698dd149a3ec6ecc09c6f75169a7b3ab6",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1106015,
+          "layout_hash": "fb955131fa70cace8cd3739a6a4418b3b9691125be145520090775e3906a7c08",
+          "original_start": [
+            4,
+            4
+          ]
+        },
+        {
+          "map_seed": 1106016,
+          "layout_hash": "2a82a0047d14e66859414a8d900d72bed59d1ff4c0fbb5c24609406d87c6ce24",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1106017,
+          "layout_hash": "61f519d8b27aebeb653d2df858ce7151130cf685b7d323b9988a196787e3a11c",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106018,
+          "layout_hash": "96097ce1d5d623a116e710064a1ad95a11e78a1d918beb7f2f830e99b29220b2",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1106019,
+          "layout_hash": "42e2fa8d461e561da12c1034ed6288b78580b1d7e258114feafcb5d3dc800ec4",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106020,
+          "layout_hash": "2af66edcfc23407e83c61ff7c22d0ecfbf3fb3c9b000c6d8a5591ebf7643fbe8",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1106021,
+          "layout_hash": "0ce381bbdf239d19ca767cbc9e6a2f9e5d9a30c9686b8aed7b45273ff22eda7c",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106022,
+          "layout_hash": "26c633f21803e8d4255ebb826fc6ab65860a686f9c3e6d1ec1951156ec4962fb",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1106023,
+          "layout_hash": "d88583dcd1c5be51a04a7d1e2fad344f5c20f9a9f3f2cb3c4c03f42d9c37d7e6",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1106024,
+          "layout_hash": "6c919d1abf2febe15570850a6fbc6fac2d5d52228b2f69547c6f676e727d4164",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106025,
+          "layout_hash": "d97ba6e06c973a9eaeb7778fb484ae5792874d74bbd24d98f42b1d68e03991e2",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1106026,
+          "layout_hash": "1c30c7d68d6e377513f126c85b28f70dd517c97dd0e65f0d441245f5b89827d8",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1106027,
+          "layout_hash": "4db71557d9c358603e83dc9541481163380de8b985606b2fde07335ae838048e",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106028,
+          "layout_hash": "ad73e9ad092cb8772ec126627978a1591d2161787218ff6b491f3249dc8cd2c8",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1106029,
+          "layout_hash": "7e11589cfcae75dac93a6cc12b8476ffef021e97b0e7f3b664781ea5c95ac197",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1106030,
+          "layout_hash": "8e49213d29ba46f7cdffa0a5e056d705ccc9e9196185df02b4019b2250ae5b47",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1106031,
+          "layout_hash": "d1263c4a15acadb07df12f259548166defc958cbb116e6be2d15741f52099a5a",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1106032,
+          "layout_hash": "c2f501e371ea2df078e16932243ed9cf6d78f0256272691257f8b78f55c33881",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106033,
+          "layout_hash": "dc803ab9e70cb70d01ea20596cb0802e80cc35e13221ee20dc72d9d5c974dc10",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1106034,
+          "layout_hash": "5473f4b99c4958ffcfe967a0ff296ce92820e314151df869d34fac8d759744bf",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1106035,
+          "layout_hash": "e2d2162ff07ab7e4092491d57a8869c217fd289922b9f85be656333cedebd558",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1106036,
+          "layout_hash": "2aa58d4ca854f1a38921f5238b4817590fb0cebfcf2b49ea1f99800b90b09743",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106037,
+          "layout_hash": "0d599e7dac61b7060d4148ffcbc0b2b5de7919a66c6f82a9a583ba4b211d026e",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106038,
+          "layout_hash": "9d7ebfa6abf4ca9c40c696bd30910f131685a86fcb24aa1ffb1dcec31ba2aba9",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1106039,
+          "layout_hash": "4fef6267b4dfa7ffdc4d776c5a58b6bfe4f5e89023c286310a0a73b4350e70dc",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1106040,
+          "layout_hash": "e62842e2a144b59f1a054abc614f9ab7f2c8fe6e49698a94f7b4eacd21e2bae0",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1106041,
+          "layout_hash": "c16b536ee161255e003d21cb6009d570c41eec750bd2134f5abeed0637c7a0ca",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106042,
+          "layout_hash": "eeeb9ca9147695a7785bc0b4d6b270d9c3823ffe9be5c619fee80db0ea460dcf",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106043,
+          "layout_hash": "5f823b884734e50a16812c51ae7770969ae0879460cdde4f331bd12741894ab7",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1106044,
+          "layout_hash": "ab1411d671994cf64b25fa0c9f77221ba491c55b231fe1959fe6b9f5a4011473",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1106045,
+          "layout_hash": "1bafc2cf82c518a00652ccae4c12e8cb30392472720a95bd07f92924a2c8dd70",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106046,
+          "layout_hash": "e616c8fe47a38ee19fb230014a93442480294974b16df85ccdf6c63e35ba5b3b",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1106047,
+          "layout_hash": "c986795ef5f0502399a00c16f7dad6f306127912360c4bc489030149567e82de",
+          "original_start": [
+            0,
+            0
+          ]
+        },
+        {
+          "map_seed": 1106048,
+          "layout_hash": "252139c5445ca534f5ea058861e591329fc52a52d1c1a019c146b0d09f3fdce6",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1106049,
+          "layout_hash": "ea67e0262196ad8a6500c941b5a50f4d01327a3372d34c07fd793b46a552aac7",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106050,
+          "layout_hash": "1925a43f3fdffe31f4634725cd0930adf6fa91260032b5339e11e4689de15b4d",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1106051,
+          "layout_hash": "564c9bfc7c1087f521167b0adfa4209cee6683852adaad848e5c4a15b29c1976",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106052,
+          "layout_hash": "9ba0a9c7b30a16f12a0b07042581b4efd6f22c702b422d2a0ced0b2bf68e7ad2",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1106053,
+          "layout_hash": "5b904c789aa0fd69755a035f06e470050c1d1c6ff5f511f2745dca22fc03aa30",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106054,
+          "layout_hash": "742b9ada012996eeca1b3cbe54ae621926db1fa40fea2f0c8647bf8b8bae5188",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1106055,
+          "layout_hash": "c7e964bd446f82e3668c03dbc4313a1753fcc4e31b3762bdece855bc7998b5d2",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106056,
+          "layout_hash": "3630c9ded756fb36dc204263612f54fa6c090efa2ba949c322c8d819ff90e8fa",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1106057,
+          "layout_hash": "fd70814b4b452109f4f3bbe947736f98607938848fa2f2564a7cc74045462a3e",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1106058,
+          "layout_hash": "f72154d7628ea437811417a3bd42029fed3b5a2a378715af5386596202c5a01c",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1106059,
+          "layout_hash": "22670b6d809abe87294118d18baece20c289bc5390335ea086b9286569fcea41",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1106060,
+          "layout_hash": "01a5c08094ac0f7a9daa161f68bede350ea39aa4b8439f20575d6165f75a607b",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1106061,
+          "layout_hash": "0ad7d95a123728038d9890da0b202203871a032aee4758810c95675bfd5cb8d1",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1106062,
+          "layout_hash": "e1722ea729d441992d38b65bcf6c8bf3b95e4a476fbe16d7a33fd3d2154e567b",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1106063,
+          "layout_hash": "1040c7ff7d6aa6bc7cf2632d5c83a5c4f80c88e8a02f15f102daadd6db4bbeb9",
+          "original_start": [
+            1,
+            3
+          ]
+        },
+        {
+          "map_seed": 1106064,
+          "layout_hash": "95ef7533fd7c4dc64b330b8ce785f20ad9533a87e35c70f1952e82907a8824db",
+          "original_start": [
+            3,
+            0
+          ]
+        }
+      ],
+      "map_seeds": [
+        1106000,
+        1106001,
+        1106002,
+        1106003,
+        1106004,
+        1106005,
+        1106006,
+        1106007,
+        1106008,
+        1106009,
+        1106011,
+        1106012,
+        1106013,
+        1106014,
+        1106015,
+        1106016,
+        1106017,
+        1106018,
+        1106019,
+        1106020,
+        1106021,
+        1106022,
+        1106023,
+        1106024,
+        1106025,
+        1106026,
+        1106027,
+        1106028,
+        1106029,
+        1106030,
+        1106031,
+        1106032,
+        1106033,
+        1106034,
+        1106035,
+        1106036,
+        1106037,
+        1106038,
+        1106039,
+        1106040,
+        1106041,
+        1106042,
+        1106043,
+        1106044,
+        1106045,
+        1106046,
+        1106047,
+        1106048,
+        1106049,
+        1106050,
+        1106051,
+        1106052,
+        1106053,
+        1106054,
+        1106055,
+        1106056,
+        1106057,
+        1106058,
+        1106059,
+        1106060,
+        1106061,
+        1106062,
+        1106063,
+        1106064
+      ]
+    },
+    {
+      "id": "panel_7",
+      "scan_start": 1107000,
+      "layouts": [
+        {
+          "map_seed": 1107000,
+          "layout_hash": "be811b2ba61c62ca2d190743d93e1c979e554defea659c165eff7f42d8fa68dd",
+          "original_start": [
+            2,
+            4
+          ]
+        },
+        {
+          "map_seed": 1107001,
+          "layout_hash": "73f5ab518ddf609a7c6c3b1405545e3b55b2533139f4e05e89f58d741ae544e4",
+          "original_start": [
+            4,
+            3
+          ]
+        },
+        {
+          "map_seed": 1107002,
+          "layout_hash": "d82d4ecf13a8ff6e63bce5ad704e919bb5f6d9a931832285165834123c139697",
+          "original_start": [
+            0,
+            2
+          ]
+        },
+        {
+          "map_seed": 1107003,
+          "layout_hash": "81b345db0412dc04c9cadb037cab640b40cc4d752f11aa9df1435a8922558b30",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107004,
+          "layout_hash": "188f9bb46528986d6f8038ca756e56c1ee3698f0aa3fa20bf7a69510bc48a333",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1107005,
+          "layout_hash": "06664a13755dae7787e0cb32fdaaea89ee4f205e0a1bd5f74b81e82605b1427f",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1107006,
+          "layout_hash": "c1e18a0aae143e3bca4f8b9c15b3c5740a59444a570bd186d59020c4e87e7716",
+          "original_start": [
+            0,
+            3
+          ]
+        },
+        {
+          "map_seed": 1107007,
+          "layout_hash": "26075e7b2b3550da359842c93ef16f0cb22aa7707ffa9b17cfc9f45a59f953de",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107008,
+          "layout_hash": "618961495f74cf8866699f5b7fb2b3af6e068dce688a873344123d4055513d2c",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1107009,
+          "layout_hash": "cdd5d393c4f69f62f87c279719bb057925d97cc7c0df0f68500bf8edecad9722",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1107010,
+          "layout_hash": "78e8aaffb4a9415414c502bbdef550f2eeff708cb7f439983c5b2f1df0fa71ac",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1107011,
+          "layout_hash": "e6655169071c4c5321acc0005712a55f0bf0acc99207331fa46df23c4f58df54",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107012,
+          "layout_hash": "ff53ace171674496fb539adfd8d7743baaeb390b382cc5d7558eed70ae8795e3",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107013,
+          "layout_hash": "5cbcc3adb4490229c118b36162966fb62345f0e0705ff0d9c9f31c660ab9c7b9",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1107014,
+          "layout_hash": "6ad2bd428a06e1354ad6f64017185919ff47583621ab22e583f351bd592f231d",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107015,
+          "layout_hash": "860d9c312fe14b1c8ed5298cdfac027aeeebc00c2d8933f23885e30ad1c53da2",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1107016,
+          "layout_hash": "44d9d696da242fcab6fcbb7aea057aba04817146cacfabbd5b2fe7b6cd3eca26",
+          "original_start": [
+            3,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107017,
+          "layout_hash": "7a912e1bfdb72c04f3b3feaa39a1eef813845c7d9a864b1fed2667a142caa0a0",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1107018,
+          "layout_hash": "f9b21dd8e769899c7d4b7a722e1a961f8a179d7b6a0e4e324b484a8422d196e3",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1107019,
+          "layout_hash": "590a0ec56779251c64bf3d9df5a697620f2e2eff4564d2ce0ee03d59b406130e",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1107020,
+          "layout_hash": "d73f07bf38531d03e2384d33c24147a083c6514f29804d8c7d0df782e00aa371",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1107021,
+          "layout_hash": "226d529e1c5785c5093c5c5ab79d89c45ab9e4f03ded4dd006a06f0cd38990ae",
+          "original_start": [
+            2,
+            4
+          ]
+        },
+        {
+          "map_seed": 1107022,
+          "layout_hash": "bf11c0b142e0c83eac4c1407696638b0d915056fdf955bf39e5feae520420e5a",
+          "original_start": [
+            2,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107023,
+          "layout_hash": "8385c5f0b243cff5b3b3f7cf18ce9a3504909f69fe50d70548f535a2a7fbe96d",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1107024,
+          "layout_hash": "5fc03070c6d26e4610372239b6292171c681ecf61127908d9e7af2dd8569ef1c",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1107025,
+          "layout_hash": "de759345309b9cddb5205280a82022539d52d498ff4139beff276fbe63cfd9ce",
+          "original_start": [
+            1,
+            2
+          ]
+        },
+        {
+          "map_seed": 1107026,
+          "layout_hash": "7f182e4cf67caf711e640ec566a5ae92092294067e49613049e7cc630dfad8c1",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1107027,
+          "layout_hash": "3c8dc3ed4c90fd3b9b2518464fad93eeefa53b0e0da3fe621c1ad0eb3ecd9de6",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107028,
+          "layout_hash": "23b932c20792547b11a143fcb227131f19eb773265fa9cfec819caa1ca7bb74c",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107029,
+          "layout_hash": "5d9d5f3c86e382dc59b438807a41370f6313b9c3d2125daf6c7d45991c9ec4e1",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1107030,
+          "layout_hash": "37518d4a95b538c1935c02d9f7c0d941bcc56f47d6bf730dad28a8c30e188b53",
+          "original_start": [
+            0,
+            4
+          ]
+        },
+        {
+          "map_seed": 1107031,
+          "layout_hash": "e12fbbff2480d6346826f644a5e85de6b650ac115f131fd4ca730c35f9a211a5",
+          "original_start": [
+            4,
+            0
+          ]
+        },
+        {
+          "map_seed": 1107032,
+          "layout_hash": "28fb2cc5661b632798930c1fd395d1647a8919ca6148790586cbe4b55ac5cebc",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107033,
+          "layout_hash": "b326d0d4168d79ae60fd4de16d60a1f1fbd3b5f3ad2e48c68fb7b209887125c9",
+          "original_start": [
+            1,
+            3
+          ]
+        },
+        {
+          "map_seed": 1107034,
+          "layout_hash": "6bc79a15d2dc75e45aa0bbb586e9113c32955392cd2ed0091e241d8c01e5dccb",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1107035,
+          "layout_hash": "3c7cf8d8685ff2395f7dbb8abc9160d5a6663c2c7d8698aee08dbb6675b7f8af",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1107036,
+          "layout_hash": "66dd3757294ee185daa35c914f2bab74ee46b7e8639436aff5f21a76dd41c943",
+          "original_start": [
+            1,
+            0
+          ]
+        },
+        {
+          "map_seed": 1107037,
+          "layout_hash": "a12b0eaa88fe256759b0293fc2b242aa2182c1c93461bded935babe4a06a8585",
+          "original_start": [
+            0,
+            3
+          ]
+        },
+        {
+          "map_seed": 1107038,
+          "layout_hash": "a4cef22fa0e73bfbe027dc31ba80a66748a919a216cf50d01fc12025ecf6fde5",
+          "original_start": [
+            0,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107039,
+          "layout_hash": "1b8079da3859133f439f5bf01c737083474d44780d3710388e64c09273090f7c",
+          "original_start": [
+            2,
+            4
+          ]
+        },
+        {
+          "map_seed": 1107040,
+          "layout_hash": "63c1839869ab866c9008d77476ac88810b5658f866b2f5761229b1db670b6424",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107041,
+          "layout_hash": "f74b7552f47d5bffc15134db00f8ca6d32ae6418d3da3448bef7f0cdd9559a50",
+          "original_start": [
+            0,
+            0
+          ]
+        },
+        {
+          "map_seed": 1107042,
+          "layout_hash": "8bba344709b4d341b28eba1a09484f5b8d19a5b67f12238c13246c19cb2736ac",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1107043,
+          "layout_hash": "206acc746bbb04822f1b7defec47d35c340394b030af4f82c6d5e221a4f35127",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1107044,
+          "layout_hash": "5f6361c47a6bf245f887522ae07a4db514bd5b8d1d8555ffd65efce5895eb9d4",
+          "original_start": [
+            2,
+            3
+          ]
+        },
+        {
+          "map_seed": 1107045,
+          "layout_hash": "0e2e659770c404b01bc1cc8544fbc67c2763ce54113abe8a1c7fbd0da82b29ec",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1107046,
+          "layout_hash": "6d6ac034b0cbb3e47a7ecba38e52ff548ba00e30a277b12434935a19f2d30400",
+          "original_start": [
+            0,
+            0
+          ]
+        },
+        {
+          "map_seed": 1107047,
+          "layout_hash": "a0d8d4f4d0d8e4e047a9afe4169b521809ebdf5833908399a1688a11a61b10a2",
+          "original_start": [
+            1,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107048,
+          "layout_hash": "e90c511cc7b9ec7975f268f6838f7c7a6e38a234f464ad1d521e040e2f610e6b",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107049,
+          "layout_hash": "c21df840ca64ff055e94cd57a846f717cbc8fbf8456201ce79693226b10b692f",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1107050,
+          "layout_hash": "98fc67405720f0a8c9bb355137cb4c1c73ca973cdd79519c9fd2d477c2ad1c0f",
+          "original_start": [
+            3,
+            2
+          ]
+        },
+        {
+          "map_seed": 1107051,
+          "layout_hash": "2d184c5029915db15e8a5e774116e9194ea07be530a95cf05343dd2ae2ce215e",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107052,
+          "layout_hash": "780debb67da90ef40e6c8c049c8c7ec06ca42e72fcbfbda7f90fd2c3fd5904e9",
+          "original_start": [
+            4,
+            3
+          ]
+        },
+        {
+          "map_seed": 1107053,
+          "layout_hash": "dc9c46b369dfd9b4ee39cc578a4ded1f624d28e731ad86671319744f1ecc9969",
+          "original_start": [
+            3,
+            4
+          ]
+        },
+        {
+          "map_seed": 1107054,
+          "layout_hash": "5d9951097c5d0b09250231d732efc0ed5c4317321ffe4b9361fbc3598a638f91",
+          "original_start": [
+            4,
+            1
+          ]
+        },
+        {
+          "map_seed": 1107055,
+          "layout_hash": "85978b3d6100ac71f8596aae3af3cbcdcb1ca1e69e1569b8450bcc392800446a",
+          "original_start": [
+            2,
+            2
+          ]
+        },
+        {
+          "map_seed": 1107056,
+          "layout_hash": "0cd3397150050b3540bff248929c6ad2e71fe5b64ab216159ee79372cab5cb4b",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1107057,
+          "layout_hash": "cecc3c6b4e9dce01d9ffde07795baa109eceff01631b95bbdc7c6060d0f07e0b",
+          "original_start": [
+            3,
+            0
+          ]
+        },
+        {
+          "map_seed": 1107058,
+          "layout_hash": "34136dc63d24d768133c69bb66ca4593c4505717631d594177384032135627c3",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1107059,
+          "layout_hash": "a5e71556ea22234b03e0163c9e38a6adf7578158946202d14800bd3ebc026a06",
+          "original_start": [
+            4,
+            2
+          ]
+        },
+        {
+          "map_seed": 1107060,
+          "layout_hash": "17c861ee7b5e6f02cb7c3c47267dfd6adb7fe2137c77f14fc9d9162af09dc8ad",
+          "original_start": [
+            2,
+            0
+          ]
+        },
+        {
+          "map_seed": 1107061,
+          "layout_hash": "eba353e22ace667389fcabe650004458a9289d348345dea75882bce091205eee",
+          "original_start": [
+            1,
+            4
+          ]
+        },
+        {
+          "map_seed": 1107062,
+          "layout_hash": "0d7f4d8b0879e27ffca71b5de9b377899ffc9435b95124a25f6df8334d28174a",
+          "original_start": [
+            3,
+            3
+          ]
+        },
+        {
+          "map_seed": 1107063,
+          "layout_hash": "d70449936f7fdaa113aeb06a2c9fd79d9edd5fad349ab304128b35757bd9569a",
+          "original_start": [
+            4,
+            3
+          ]
+        }
+      ],
+      "map_seeds": [
+        1107000,
+        1107001,
+        1107002,
+        1107003,
+        1107004,
+        1107005,
+        1107006,
+        1107007,
+        1107008,
+        1107009,
+        1107010,
+        1107011,
+        1107012,
+        1107013,
+        1107014,
+        1107015,
+        1107016,
+        1107017,
+        1107018,
+        1107019,
+        1107020,
+        1107021,
+        1107022,
+        1107023,
+        1107024,
+        1107025,
+        1107026,
+        1107027,
+        1107028,
+        1107029,
+        1107030,
+        1107031,
+        1107032,
+        1107033,
+        1107034,
+        1107035,
+        1107036,
+        1107037,
+        1107038,
+        1107039,
+        1107040,
+        1107041,
+        1107042,
+        1107043,
+        1107044,
+        1107045,
+        1107046,
+        1107047,
+        1107048,
+        1107049,
+        1107050,
+        1107051,
+        1107052,
+        1107053,
+        1107054,
+        1107055,
+        1107056,
+        1107057,
+        1107058,
+        1107059,
+        1107060,
+        1107061,
+        1107062,
+        1107063
+      ]
+    }
+  ],
+  "world": {
+    "size": 5,
+    "wall_count": 4,
+    "pellet_count": 1,
+    "horizon": 32,
+    "action_mapping": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "step_cost": -0.01,
+    "pellet_reward": 1.0,
+    "shaping_weight": 0.2,
+    "gamma": 0.97
+  },
+  "rule_visibility": "observed",
+  "runtime": {
+    "python": "3.12.13",
+    "torch": "2.8.0",
+    "numpy": "2.0.2",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "machine": "arm64",
+    "device": "cpu",
+    "torch_threads": 1
+  },
+  "git": {
+    "revision": "7b70b43aa9df08ddd3e71fe5ef3d54cbc688c7ec",
+    "dirty": false
+  },
+  "smoke": false,
+  "deviations": [],
+  "source_sha256": {
+    "q6/__init__.py": "54f1cd94584f782985a0a69c7e12717905008a959b1604b49874894003b8737f",
+    "q6/adaptation.py": "a2a9e4b189b72872ff0e4c8f522fb829f721ef369088fd4469d9236ec2194916",
+    "q6/bank_replication.py": "ade988d79c7fa7124d8757c8493b08947d3c628dd3a9ab24cc57861bc10ff364",
+    "q6/competence.py": "9398c06dd62f5413b1fbef92bd2dbae07f3f3c8ee48b126a2eab771098aa066d",
+    "q6/constrained_bootstrap.py": "c1e45fc16e38f646451a7947edce3e53268338672c88ef4d9af0d143359a8910",
+    "q6/coverage.py": "c1ad625bea27f26d09e90b727e6b26d986608cccded298d60d17867ffab96eab",
+    "q6/diagnostics.py": "229f604a62c1f899fc7e07740430c6fcd1dbd5bfddac93b76faa6b4f62214e79",
+    "q6/equal_support.py": "2ea94acf37699ed905fbc3501770fe37f37ff9bf4688d6cebde2ea738b402cf1",
+    "q6/fixed_targets.py": "768bbe8f506c168d6ae057b8859d61dedc2bfb2d0049507375cba9222dbbce59",
+    "q6/learning.py": "ef1272d170b4eaa6b2efa731f851e58bf39bdd19af8e4d16dbe575cae1991a9c",
+    "q6/map_replay.py": "14fe4c647cf97e218f48bc3a69a38817d9fe7caa81e2b70f4a55a0cf39130215",
+    "q6/optimal.py": "47022d66bfa4b72a76a9339c6f40ac09e8676ddf88e8cc89d23c0490dcbc3adf",
+    "q6/panel_evaluation.py": "dac43a21cfa8887250452dfd0eac28c277c15d2243f32baa7a988dec903409ac",
+    "q6/recorded_actions.py": "ab00e706a33310a71324dd708b3b85197a4630101728c6f243b585175aba68bf",
+    "q6/supervised.py": "b85d361a3492bd35a429c32f0c8b06395ff4b644e32c9940bce387a65166536d",
+    "q6/within_map.py": "989836bb87dfa00e2ae33c78c7bd4ef1f6d1311fdf7874bfb1ee9b71bc1d01a4",
+    "q6/world.py": "478cf48343af888ddd6087ea7bc1ac6f311abb10327ac11937b799b685f8156f"
+  },
+  "protocol_sha256": "06bd992f2cdcab4681dfd5cce66ad8f15454112544dd7ec462f2ff4717476172",
+  "created_at": "2026-09-07T19:27:59.177757+00:00",
+  "collection": {
+    "new_steps": 0,
+    "new_episodes": 0,
+    "new_support_draws": 0,
+    "source": "bank_replication/pilot_v1 collected banks1,2,3"
+  },
+  "optimizer": {
+    "implementation": "constrained_bootstrap.constrained_update",
+    "learning_rate": 0.001,
+    "loss": "mean over states of mean SmoothL1 beta1 over each state's distinct recorded actions",
+    "gradient_norm_cap": 5.0,
+    "gamma": 0.97,
+    "target_tau": 0.01,
+    "batch_size": 64,
+    "observed_only": true,
+    "successor_argmax": "logged successor action mask only; lowest allowed label on ties; no fallback"
+  },
+  "sampling": {
+    "rng": "SeedSequence([seed,66301])",
+    "implementation": "unchanged coverage.SupportSampler",
+    "batch_size": 64,
+    "paired_local_global_map_schedule_within_bank": true,
+    "baseline_reconstruction": "full30000 draws checked; same-budget prefix used in smoke",
+    "target_access": "recorded rewards, ends and successors only; all4 model predictions at recorded successors allowed"
+  },
+  "evaluation": {
+    "final_only": true,
+    "after_all_treatment_fits": true,
+    "greedy_repetitions": 1,
+    "epsilon_0_1_repetitions": 2,
+    "rng": "SeedSequence([seed,map_seed,repetition,55219])",
+    "greedy_ties": "lowest label",
+    "optimal_q_atol": 1e-06,
+    "optimal_q_rtol": 0,
+    "action_selection": "all four actions at fresh states; no recorded masks at deployment"
+  },
+  "panel_selection": {
+    "count": 8,
+    "maps_per_panel": 64,
+    "start": 1100000,
+    "stride": 1000
+  },
+  "budget": {
+    "maximum_updates": 270000,
+    "updates_per_fit": 30000,
+    "new_baseline_updates": 0,
+    "maximum_collection_steps": 0,
+    "maximum_collection_episodes": 0,
+    "admission_seconds": 1200,
+    "peak_process_rss_bytes": 4294967296,
+    "all_phases_included": true
+  },
+  "primary_comparison": "constrained_minus_recorded",
+  "primary_metric": "greedy efficient success",
+  "new_competence_gates": false,
+  "recorded_actions": {
+    "deduplication": "state/action repeats must agree on reward, terminated, truncated and successor; no frequency weighting",
+    "absent_entries": "observed=false,reward=NaN,ends=true,terminated=false,truncated=false,next=-1,occurrences=0",
+    "equal_action_target_budget": true,
+    "all_tables_frozen_before_training": true
+  },
+  "control_archive": "recorded_actions/pilot_v1",
+  "bootstrap_diagnostics": {
+    "scope": "same pre-update treatment weights; unrestricted alternative never enters loss",
+    "window_updates": 100,
+    "query_denominator": "optimizer nonterminal recorded-edge presentations",
+    "online_gap": "online unrestricted max minus online restricted selected value",
+    "target_delta": "complete restricted float32 DDQN target minus complete unrestricted float32 DDQN target",
+    "sign_tolerance": 1e-12,
+    "empty_query_windows": "zero counts/sums; null means/extrema",
+    "historical_control_diagnostics": false
+  },
+  "probes": {
+    "selection": "first64 original SupportSampler batch per bank/seed, independently reconstructed and frozen before fits",
+    "checkpoints": [
+      0,
+      1000,
+      3000,
+      10000,
+      30000
+    ],
+    "expected": 45,
+    "no_optimizer_or_policy_evaluation": true,
+    "full_online_target_vectors": true
+  },
+  "dataset": {
+    "train_states": 163840,
+    "train_map_seeds": [
+      300000,
+      300001,
+      300002,
+      300003,
+      300004,
+      300005,
+      300006,
+      300007,
+      300008,
+      300009,
+      300010,
+      300011,
+      300012,
+      300013,
+      300014,
+      300015,
+      300016,
+      300017,
+      300018,
+      300019,
+      300020,
+      300021,
+      300022,
+      300023,
+      300024,
+      300025,
+      300026,
+      300027,
+      300028,
+      300029,
+      300030,
+      300031,
+      300032,
+      300033,
+      300034,
+      300035,
+      300036,
+      300037,
+      300038,
+      300039,
+      300040,
+      300041,
+      300042,
+      300043,
+      300044,
+      300045,
+      300046,
+      300047,
+      300048,
+      300049,
+      300050,
+      300051,
+      300052,
+      300053,
+      300054,
+      300055,
+      300056,
+      300057,
+      300058,
+      300059,
+      300060,
+      300061,
+      300062,
+      300063,
+      300064,
+      300065,
+      300066,
+      300067,
+      300068,
+      300069,
+      300070,
+      300071,
+      300072,
+      300073,
+      300074,
+      300075,
+      300076,
+      300077,
+      300078,
+      300079,
+      300080,
+      300081,
+      300082,
+      300083,
+      300084,
+      300085,
+      300086,
+      300087,
+      300088,
+      300089,
+      300090,
+      300091,
+      300092,
+      300093,
+      300094,
+      300095,
+      300096,
+      300097,
+      300098,
+      300099,
+      300100,
+      300101,
+      300102,
+      300103,
+      300104,
+      300105,
+      300106,
+      300107,
+      300108,
+      300109,
+      300110,
+      300111,
+      300112,
+      300113,
+      300114,
+      300115,
+      300116,
+      300117,
+      300118,
+      300119,
+      300120,
+      300121,
+      300122,
+      300123,
+      300124,
+      300125,
+      300126,
+      300127,
+      300128,
+      300129,
+      300130,
+      300131,
+      300132,
+      300133,
+      300134,
+      300135,
+      300136,
+      300137,
+      300138,
+      300139,
+      300140,
+      300141,
+      300142,
+      300143,
+      300144,
+      300145,
+      300146,
+      300147,
+      300148,
+      300149,
+      300150,
+      300151,
+      300152,
+      300153,
+      300154,
+      300155,
+      300156,
+      300157,
+      300158,
+      300159,
+      300160,
+      300161,
+      300162,
+      300163,
+      300164,
+      300165,
+      300166,
+      300167,
+      300168,
+      300169,
+      300170,
+      300171,
+      300172,
+      300173,
+      300174,
+      300175,
+      300176,
+      300177,
+      300178,
+      300179,
+      300180,
+      300181,
+      300182,
+      300183,
+      300184,
+      300185,
+      300186,
+      300187,
+      300188,
+      300189,
+      300190,
+      300191,
+      300192,
+      300193,
+      300194,
+      300195,
+      300196,
+      300197,
+      300198,
+      300199,
+      300200,
+      300201,
+      300202,
+      300203,
+      300204,
+      300205,
+      300206,
+      300207,
+      300208,
+      300209,
+      300210,
+      300211,
+      300212,
+      300213,
+      300214,
+      300215,
+      300216,
+      300217,
+      300218,
+      300219,
+      300220,
+      300221,
+      300222,
+      300223,
+      300224,
+      300225,
+      300226,
+      300227,
+      300228,
+      300229,
+      300230,
+      300231,
+      300232,
+      300233,
+      300234,
+      300235,
+      300236,
+      300237,
+      300238,
+      300239,
+      300240,
+      300241,
+      300242,
+      300243,
+      300244,
+      300245,
+      300246,
+      300247,
+      300248,
+      300249,
+      300250,
+      300251,
+      300252,
+      300253,
+      300254,
+      300255
+    ],
+    "fresh_state_enumeration": false
+  }
+}

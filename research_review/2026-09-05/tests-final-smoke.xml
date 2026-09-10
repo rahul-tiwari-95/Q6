@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="186.881" timestamp="2026-09-05T23:27:13.213893-04:00" hostname="rahuls-M5-Pro.local"><testcase classname="tests.test_train_phase2" name="test_smoke_run_writes_artifacts" time="186.845" /></testsuite></testsuites>

@@ -1,0 +1,40 @@
+{
+  "pellet_erasure": {
+    "pellet_exists": true,
+    "observed_cell": 6,
+    "pellet_cell_id": 1
+  },
+  "cher_transition": {
+    "replacement_action": 3,
+    "next_state_matches_actual_dynamics": false,
+    "synthetic_reward": 29.699,
+    "true_reward": 0.299
+  },
+  "cher_wall_action": {
+    "action": 3,
+    "blocked": true
+  },
+  "hidden_invulnerability": {
+    "same_observation": true,
+    "lives_after_same_action": [
+      2,
+      3
+    ]
+  },
+  "map_connectivity": {
+    "seeds_checked": 2000,
+    "unreachable_maps": 22,
+    "example_seeds": [
+      68,
+      115,
+      401,
+      548,
+      583,
+      623,
+      640,
+      719,
+      1097,
+      1133
+    ]
+  }
+}
