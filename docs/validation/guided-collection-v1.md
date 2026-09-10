@@ -110,6 +110,14 @@ branch. Default `main` receives the README update only; PR #1 stays open and
 the license remains undecided. Final publication CI links are recorded in
 [PR #1](https://github.com/rahul-tiwari-95/Q6/pull/1).
 
+The first publication's push workflow passed both Python versions. Its PR
+Python 3.10 job completed every test, evidence/dashboard check and cleanup
+step successfully, but GitHub marked the overall job cancelled at its
+15-minute boundary (`34419810089`, job `102692625553`). The annotation explicitly
+reports the execution-time limit. The fast CI allowance was increased to
+**20 minutes** to provide completion headroom; no checks were removed or
+relaxed. Experiment budgets, source snapshots and results are unchanged.
+
 ```bash
 python scripts/verify_pilot_artifacts.py
 python scripts/audit_guided_collection.py --study experiments/guided_collection/pilot_v1
